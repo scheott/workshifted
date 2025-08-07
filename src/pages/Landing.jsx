@@ -13,9 +13,9 @@ const Landing = () => {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">How it Works</a>
               <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">Success Stories</a>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <a href="/auth" aria-label="Sign in to your account" className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                 Sign In
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -25,7 +25,7 @@ const Landing = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Discover how your{' '}
+            <span className="block md:inline">Discover how your </span>
             <span className="text-blue-600">white collar skills</span>{' '}
             translate to{' '}
             <span className="text-green-600">high-paying blue collar careers</span>
@@ -33,9 +33,9 @@ const Landing = () => {
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Stop feeling trapped in your office job. Find meaningful, well-paid work that matches your existing skills and gets you started in months, not years.
           </p>
-          <button className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          <a href="/auth" aria-label="Start your skills assessment" className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
             Start Skills Assessment
-          </button>
+          </a>
           <p className="text-sm text-gray-500 mt-4">Free • Takes 2 minutes • No spam</p>
         </div>
       </section>
@@ -52,7 +52,7 @@ const Landing = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">Skills Assessment</h3>
             <p className="text-gray-600">
-              Our AI-powered assessment analyzes your transferable skills and matches you with blue collar careers where you'll excel from day one.
+              Our AI-powered assessment analyzes your <strong>transferable skills</strong> and matches you with blue collar careers where you'll excel from day one.
             </p>
           </div>
 
@@ -65,7 +65,7 @@ const Landing = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">Earning Potential</h3>
             <p className="text-gray-600">
-              Discover careers with $50k-$95k+ salaries, often higher than your current role. Many blue collar jobs offer better work-life balance too.
+              Discover careers with <strong>$50k-$95k+ salaries</strong>, often higher than your current role. Many blue collar jobs offer better work-life balance too.
             </p>
           </div>
 
@@ -78,7 +78,7 @@ const Landing = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">Learning Path</h3>
             <p className="text-gray-600">
-              Get personalized course recommendations and step-by-step plans to transition into your new career in 4-12 months.
+              Get personalized course recommendations and <strong>step-by-step plans</strong> to transition into your new career in 4-12 months.
             </p>
           </div>
         </div>
@@ -93,11 +93,9 @@ const Landing = () => {
           <p className="text-xl text-gray-300 mb-8">
             Join thousands who've discovered fulfilling, high-paying careers that actually use their skills.
           </p>
-            <a href="/auth">
-            <button className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                Start Skills Assessment
-            </button>
-            </a>
+          <a href="/auth" aria-label="Start your skills assessment" className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+            Start Skills Assessment
+          </a>
         </div>
       </section>
 
@@ -111,6 +109,9 @@ const Landing = () => {
               <a href="#" className="text-gray-600 hover:text-blue-600">Terms</a>
               <a href="#" className="text-gray-600 hover:text-blue-600">Contact</a>
             </div>
+          </div>
+          <div className="mt-8 pt-8 border-t text-center text-gray-500 text-sm">
+            © 2025 WorkShifted. All rights reserved.
           </div>
         </div>
       </footer>
