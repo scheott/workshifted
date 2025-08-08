@@ -1,25 +1,43 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../lib/supabase';
 
 export const useAuth = () => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const mounted = useRef(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    mounted.current = true;
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    const init = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!mounted.current) return;
+        setSession(data.session ?? null);
+        setUser(data.session?.user ?? null);
+      } catch (e) {
+        console.error('getSession error:', e);
+      } finally {
+        if (mounted.current) setLoading(false);
+      }
+    };
 
-    return () => subscription.unsubscribe()
-  }, [])
+    init();
 
-  return { user, loading }
-}
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (!mounted.current) return;
+      setSession(newSession ?? null);
+      setUser(newSession?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      mounted.current = false;
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  return { user, session, userId: user?.id ?? null, isAuthenticated: !!user, loading };
+};

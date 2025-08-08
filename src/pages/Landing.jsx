@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Landing = () => {
   return (
@@ -13,9 +14,13 @@ const Landing = () => {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">How it Works</a>
               <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">Success Stories</a>
-              <a href="/auth" aria-label="Sign in to your account" className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <Link
+                to="/auth"
+                aria-label="Sign in to your account"
+                className="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
                 Sign In
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -33,9 +38,13 @@ const Landing = () => {
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Stop feeling trapped in your office job. Find meaningful, well-paid work that matches your existing skills and gets you started in months, not years.
           </p>
-          <a href="/auth" aria-label="Start your skills assessment" className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          <Link
+            to="/auth"
+            aria-label="Start your skills assessment"
+            className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
             Start Skills Assessment
-          </a>
+          </Link>
           <p className="text-sm text-gray-500 mt-4">Free • Takes 2 minutes • No spam</p>
         </div>
       </section>
@@ -87,15 +96,17 @@ const Landing = () => {
       {/* CTA Section */}
       <section className="bg-gray-900 text-white py-16">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to escape the cubicle?
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to escape the cubicle?</h2>
           <p className="text-xl text-gray-300 mb-8">
             Join thousands who've discovered fulfilling, high-paying careers that actually use their skills.
           </p>
-          <a href="/auth" aria-label="Start your skills assessment" className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+          <Link
+            to="/auth"
+            aria-label="Start your skills assessment"
+            className="inline-block bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
             Start Skills Assessment
-          </a>
+          </Link>
         </div>
       </section>
 
