@@ -1,33 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import CheckoutModal from '../components/CheckoutModal';
+import { usePayments } from '../hooks/usePayments';
 
 const UserDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
-  const [assessmentHistory, setAssessmentHistory] = useState([]);
+  const [assessmentResults, setAssessmentResults] = useState([]);
+  const [topMatches, setTopMatches] = useState([]);
   const [activityLog, setActivityLog] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showPaywall, setShowPaywall] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const { checkPaymentStatus } = usePayments();
 
+  // ✅ Fixed: Added useEffect for fetchUserData
   useEffect(() => {
     if (user) {
       fetchUserData();
     }
   }, [user]);
 
+  // Check premium status on load
+  useEffect(() => {
+    if (user) {
+      checkPaymentStatus(user.id).then(result => {
+        setIsPremium(result.isPremium);
+      });
+    }
+  }, [user, checkPaymentStatus]);
+
   const fetchUserData = async () => {
     try {
       // Fetch user profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      // Fetch assessment history
+      if (!profile || (!profile.first_name && user.user_metadata)) {
+        const { error: updateError } = await supabase.rpc('update_user_profile_from_oauth', {
+          p_user_id: user.id
+        });
+        if (!updateError) {
+          const { data: updatedProfile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+          setUserProfile(updatedProfile);
+        }
+      } else {
+        setUserProfile(profile);
+      }
+
+      // Fetch assessment results (most recent)
       const { data: assessments } = await supabase
-        .from('assessment_responses')
+        .from('assessment_results')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -40,12 +74,14 @@ const UserDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      setUserProfile(profile);
-      setAssessmentHistory(assessments || []);
+      setAssessmentResults(assessments || []);
+      setTopMatches(assessments?.[0]?.career_matches?.slice(0, 3) || []);
       setActivityLog(activity || []);
       
-      // Check if user needs to upgrade
-      setShowPaywall(!profile?.subscription_status || profile.subscription_status === 'free');
+      // Check premium status
+      const currentProfile = profile || userProfile;
+      setIsPremium(currentProfile?.subscription_status === 'premium' || currentProfile?.subscription_status === 'paid');
+      
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
@@ -53,8 +89,32 @@ const UserDashboard = () => {
     }
   };
 
+  const getDisplayName = () => {
+    if (userProfile?.first_name) {
+      return userProfile.first_name + (userProfile.last_name ? ` ${userProfile.last_name}` : '');
+    }
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    if (user?.user_metadata?.first_name) return user.user_metadata.first_name;
+    return user?.email?.split('@')[0] || 'User';
+  };
+
+  const getProgressPercentage = () => {
+    let progress = 0;
+    if (assessmentResults.length > 0) progress += 30;
+    if (topMatches.length > 0) progress += 20;
+    if (isPremium) progress += 25; // Premium adds more progress
+    // TODO: Add more progress indicators based on courses completed, etc.
+    return Math.min(progress, 100);
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+  };
+
+  // ✅ Fixed: Updated to use checkout modal
+  const handleUpgrade = () => {
+    setShowCheckoutModal(true);
   };
 
   const formatDate = (dateString) => {
@@ -65,9 +125,17 @@ const UserDashboard = () => {
     });
   };
 
+  // ✅ Added: Handle successful payment
+  const handlePaymentSuccess = () => {
+    setIsPremium(true);
+    setShowCheckoutModal(false);
+    // Refresh user data to reflect premium status
+    fetchUserData();
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-green-50">
         <div className="flex items-center space-x-2">
           <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -80,19 +148,43 @@ const UserDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="text-2xl font-bold text-blue-600">WorkShifted</div>
+          <div className="flex justify-between items-center py-4">
+            {/* Left: Logo + Dashboard */}
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
-                Welcome, {userProfile?.first_name || user?.email?.split('@')[0]}!
+              <div className="text-2xl font-bold text-blue-600">WorkShifted</div>
+              <div className="text-lg text-gray-600">Dashboard</div>
+            </div>
+
+            {/* Center: Progress */}
+            <div className="hidden md:flex items-center space-x-3">
+              <span className="text-sm font-medium text-gray-700">
+                Transition Progress: {getProgressPercentage()}%
               </span>
+              <div className="w-32 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${getProgressPercentage()}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Right: User menu */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {getDisplayName().charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-gray-700 font-medium">{getDisplayName()}</span>
+              </div>
               <button
                 onClick={handleSignOut}
-                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
               >
                 Sign Out
               </button>
@@ -101,232 +193,352 @@ const UserDashboard = () => {
         </div>
       </header>
 
-      {/* Paywall Modal */}
-      {showPaywall && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Upgrade to Access Full Dashboard</h3>
-              <p className="text-sm text-gray-500 mb-6">
-                Get personalized career recommendations, course suggestions, and track your progress for just $29.
-              </p>
-              <div className="space-y-3">
-                <button className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                  Upgrade Now - $29
-                </button>
-                <button
-                  onClick={() => setShowPaywall(false)}
-                  className="w-full text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Maybe later
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Welcome Banner */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl text-white p-6 mb-8">
+          <h1 className="text-2xl font-bold mb-2">
+            Welcome back, {getDisplayName()} 👋
+          </h1>
+          <p className="text-blue-100">
+            {topMatches.length > 0 
+              ? `Based on your assessment, you're on track to start as a ${topMatches[0]?.title} in ${topMatches[0]?.timeline?.replace('apprenticeship', '') || '6-12 months'}.`
+              : "Ready to discover your perfect blue collar career? Take the assessment to get started!"
+            }
+          </p>
         </div>
-      )}
+      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Dashboard Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Assessments Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{assessmentHistory.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Learning Progress</p>
-                <p className="text-2xl font-bold text-gray-900">0%</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Career Matches</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {assessmentHistory.length > 0 ? '3' : '0'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Assessment History */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Assessment History
-            </h3>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="grid lg:grid-cols-3 gap-8">
+          
+          {/* Left Column: Career Matches & Learning Path */}
+          <div className="lg:col-span-2 space-y-8">
             
-            {assessmentHistory.length > 0 ? (
-              <div className="space-y-3">
-                {assessmentHistory.slice(0, 3).map((assessment, index) => (
-                  <div key={assessment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">Skills Assessment #{index + 1}</p>
-                      <p className="text-sm text-gray-500">{formatDate(assessment.created_at)}</p>
+            {/* Career Matches Section */}
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-6">Your Career Matches</h2>
+              
+              {topMatches.length > 0 ? (
+                <div className="grid md:grid-cols-3 gap-6">
+                  {topMatches.map((career, index) => (
+                    <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <h3 className="text-lg font-bold text-gray-900">{career.title}</h3>
+                        <div className="flex flex-col items-center">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-600 to-green-600 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">{career.matchPercentage}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Salary:</span>
+                          <span className="font-semibold">{career.salary}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Time to start:</span>
+                          <span className="font-semibold">{career.timeline}</span>
+                        </div>
+                      </div>
+
+                      {/* Why This Fits You - Premium Preview */}
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">Why This Fits You</h4>
+                        <div className={`text-sm text-gray-600 ${!isPremium ? 'relative' : ''}`}>
+                          {!isPremium && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-white z-10 flex items-center justify-end">
+                              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className={!isPremium ? 'filter blur-sm' : ''}>
+                            <p>Your analytical skills translate perfectly to electrical troubleshooting...</p>
+                            <p>Strong attention to detail matches safety requirements...</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={isPremium ? () => navigate('/results') : handleUpgrade}
+                        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                          isPremium 
+                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-300'
+                        }`}
+                      >
+                        {isPremium ? 'View Full Career Plan →' : 'Unlock Full Plan'}
+                      </button>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      View Results
-                    </button>
-                  </div>
-                ))}
-                {assessmentHistory.length > 3 && (
-                  <button className="w-full text-center text-blue-600 hover:text-blue-800 text-sm font-medium py-2">
-                    View All Assessments ({assessmentHistory.length})
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h4 className="mt-2 text-sm font-medium text-gray-900">No assessments yet</h4>
-                <p className="mt-1 text-sm text-gray-500">Get started by taking your first skills assessment.</p>
-                <div className="mt-6">
-                  <a
-                    href="/assessment"
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Career Matches Yet</h3>
+                  <p className="text-gray-500 mb-6">Take our assessment to discover careers that match your skills!</p>
+                  <button
+                    onClick={() => navigate('/assessment')}
+                    className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                   >
-                    Take Assessment
-                  </a>
+                    Take Skills Assessment
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Learning Path Section */}
+            {topMatches.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Your Learning Path</h2>
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="space-y-6">
+                    {/* Step 1 - Always unlocked */}
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">Complete Skills Assessment</h3>
+                        <p className="text-sm text-gray-500">✓ Done! You've identified your career matches.</p>
+                      </div>
+                    </div>
+
+                    {/* Step 2 - Courses Preview */}
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 font-semibold text-sm">2</span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">Take Foundation Courses</h3>
+                        <div className={`${!isPremium ? 'relative' : ''}`}>
+                          {!isPremium && (
+                            <div className="absolute inset-0 bg-white bg-opacity-80 z-10 flex items-center">
+                              <span className="text-yellow-700 font-medium text-sm">🔒 Upgrade to see personalized courses</span>
+                            </div>
+                          )}
+                          <div className={`space-y-2 ${!isPremium ? 'filter blur-sm' : ''}`}>
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <div className="text-sm font-medium">Electrical Fundamentals</div>
+                              <div className="text-xs text-gray-500">Coursera • 8-12 hours • Free audit</div>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded-lg">
+                              <div className="text-sm font-medium">OSHA Safety Training</div>
+                              <div className="text-xs text-gray-500">edX • 10 hours • Free</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Premium Steps */}
+                    {[3, 4, 5].map((stepNum) => (
+                      <div key={stepNum} className="flex items-start space-x-4">
+                        <div className="flex-shrink-0">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isPremium ? 'bg-gray-100' : 'bg-gray-50 border-2 border-dashed border-gray-300'
+                          }`}>
+                            {!isPremium ? (
+                              <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <span className="text-gray-600 font-semibold text-sm">{stepNum}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className={`font-semibold ${isPremium ? 'text-gray-900' : 'text-gray-400'}`}>
+                            {stepNum === 3 && 'Get Certified'}
+                            {stepNum === 4 && 'Apply for Apprenticeships'}
+                            {stepNum === 5 && 'Network with Industry Pros'}
+                          </h3>
+                          <p className={`text-sm ${isPremium ? 'text-gray-500' : 'text-gray-400'}`}>
+                            {!isPremium && '🔒 '}
+                            {stepNum === 3 && 'Complete certification requirements for your chosen career'}
+                            {stepNum === 4 && 'Find and apply to local apprenticeship programs'}
+                            {stepNum === 5 && 'Connect with professionals in your target field'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {!isPremium && (
+                    <div className="mt-6 pt-4 border-t">
+                      <button
+                        onClick={handleUpgrade}
+                        className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                      >
+                        Unlock Full Learning Path - $29
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Recent Activity
-            </h3>
+          {/* Right Column: Progress & Activity */}
+          <div className="space-y-8">
             
-            {activityLog.length > 0 ? (
-              <div className="space-y-3">
-                {activityLog.map((activity, index) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
+            {/* Skills Progress */}
+            {topMatches.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Skills Match</h3>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-green-600">
+                      <span className="text-white font-bold text-xl">{topMatches[0]?.matchPercentage}%</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">Match with {topMatches[0]?.title}</p>
+                  </div>
+                  
+                  {/* Progress Badges */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                      <div className="text-green-600 font-semibold text-sm">✓ Assessment Complete</div>
+                    </div>
+                    <div className={`border rounded-lg p-3 text-center ${
+                      isPremium ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className={`font-semibold text-sm ${
+                        isPremium ? 'text-green-600' : 'text-gray-400'
+                      }`}>
+                        {isPremium ? '✓' : '🔒'} Career Selected
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        {activity.activity_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </p>
-                      <p className="text-xs text-gray-500">{formatDate(activity.created_at)}</p>
+                    <div className="bg-gray-50 border-gray-200 border rounded-lg p-3 text-center">
+                      <div className="text-gray-400 font-semibold text-sm">⭘ First Course</div>
+                    </div>
+                    <div className="bg-gray-50 border-gray-200 border rounded-lg p-3 text-center">
+                      <div className="text-gray-400 font-semibold text-sm">⭘ Certification</div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <h4 className="mt-2 text-sm font-medium text-gray-900">No activity yet</h4>
-                <p className="mt-1 text-sm text-gray-500">Your learning journey will be tracked here.</p>
+                </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <a
-              href="/assessment"
-              className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
-            >
-              <svg className="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <p className="font-medium text-gray-900">Take Assessment</p>
-                <p className="text-sm text-gray-500">Discover career matches</p>
+            {/* Quick Stats */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Assessments</span>
+                  <span className="font-semibold text-gray-900">{assessmentResults.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Career Matches</span>
+                  <span className="font-semibold text-gray-900">{topMatches.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Plan Status</span>
+                  <span className={`font-semibold ${isPremium ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {isPremium ? 'Premium' : 'Free'}
+                  </span>
+                </div>
               </div>
-            </a>
+            </div>
 
-            <button
-              onClick={() => setShowPaywall(true)}
-              className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
-            >
-              <svg className="w-8 h-8 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              <div>
-                <p className="font-medium text-gray-900">Browse Courses</p>
-                <p className="text-sm text-gray-500">Find learning paths</p>
-              </div>
-            </button>
+            {/* Recent Activity */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
+              {activityLog.length > 0 ? (
+                <div className="space-y-3">
+                  {activityLog.slice(0, 5).map((activity, index) => (
+                    <div key={activity.id} className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="h-2 w-2 rounded-full bg-blue-600 mt-2"></div>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          {activity.activity_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </p>
+                        <p className="text-xs text-gray-500">{formatDate(activity.created_at)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
+              )}
+            </div>
 
-            <button
-              onClick={() => setShowPaywall(true)}
-              className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
-            >
-              <svg className="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-              </svg>
-              <div>
-                <p className="font-medium text-gray-900">Find Apprenticeships</p>
-                <p className="text-sm text-gray-500">Near your location</p>
-              </div>
-            </button>
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => navigate('/assessment')}
+                  className="w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-left transition-colors"
+                >
+                  <div className="font-medium text-gray-900">Retake Assessment</div>
+                  <div className="text-xs text-gray-500">Update your career matches</div>
+                </button>
+                
+                {topMatches.length > 0 && (
+                  <button
+                    onClick={() => navigate('/results')}
+                    className="w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-3 text-left transition-colors"
+                  >
+                    <div className="font-medium text-blue-900">View Full Results</div>
+                    <div className="text-xs text-blue-600">See detailed career information</div>
+                  </button>
+                )}
 
-            <button
-              onClick={() => setShowPaywall(true)}
-              className="flex items-center p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-200"
-            >
-              <svg className="w-8 h-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              <div>
-                <p className="font-medium text-gray-900">Track Progress</p>
-                <p className="text-sm text-gray-500">Monitor your journey</p>
+                {!isPremium && (
+                  <button
+                    onClick={handleUpgrade}
+                    className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg p-3 text-left hover:shadow-lg transition-all"
+                  >
+                    <div className="font-medium">Upgrade to Premium</div>
+                    <div className="text-xs text-blue-100">Unlock full career plans & courses</div>
+                  </button>
+                )}
               </div>
-            </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ✅ Fixed: Removed old upgrade modal, keeping only checkout modal */}
+      
+      {/* ✅ Added: CheckoutModal Component */}
+      <CheckoutModal 
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSuccess={handlePaymentSuccess}
+      />
+
+      {/* Bottom CTA for Free Users */}
+      {!isPremium && topMatches.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium text-gray-900">Ready for your full career plan?</div>
+                <div className="text-sm text-gray-500">Get courses, certifications, and local opportunities.</div>
+              </div>
+              {/* ✅ Fixed: Connected to checkout modal */}
+              <button 
+                onClick={() => setShowCheckoutModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
+              >
+                Upgrade - $29
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

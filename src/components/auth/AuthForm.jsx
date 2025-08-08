@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-// ⬇️ Adjust this path to wherever your supabase client is.
 import { supabase } from '../../lib/supabase';
 
 const EnhancedAuthForm = ({ onSuccess }) => {
@@ -21,20 +20,43 @@ const EnhancedAuthForm = ({ onSuccess }) => {
   };
 
   const createUserProfile = async (userId, userData) => {
-    if (!userId) return;
-    const { error } = await supabase
-      .from('user_profiles')
-      .upsert(
-        { user_id: userId, first_name: userData.firstName || null, subscription_status: 'free' },
-        { onConflict: 'user_id', ignoreDuplicates: false }
-      );
-    if (error) console.error('Error creating user profile:', error);
+    if (!userId) {
+      console.error('No user ID provided to createUserProfile');
+      return;
+    }
+    
+    console.log('Creating user profile for:', userId, userData);
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .upsert(
+          { 
+            user_id: userId, 
+            first_name: userData.firstName || null, 
+            subscription_status: 'free' 
+          },
+          { 
+            onConflict: 'user_id', 
+            ignoreDuplicates: false 
+          }
+        )
+        .select(); // Add select() to return the inserted data
+
+      if (error) {
+        console.error('Error creating user profile:', error);
+        // Don't throw here, just log - profile creation shouldn't block signup
+      } else {
+        console.log('User profile created successfully:', data);
+      }
+    } catch (err) {
+      console.error('Exception in createUserProfile:', err);
+    }
   };
 
-
-    const handleInputChange = (field, value) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-    };
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -70,6 +92,9 @@ const EnhancedAuthForm = ({ onSuccess }) => {
         if (signInErr) throw signInErr;
         
         if (data?.user) {
+          console.log('User signed in:', data.user.id);
+          
+          // Check if they have assessment results
           const { count, error } = await supabase
             .from('assessment_results')
             .select('id', { count: 'exact', head: true })
@@ -77,7 +102,7 @@ const EnhancedAuthForm = ({ onSuccess }) => {
             .limit(1);
 
           if (error) {
-            console.error(error);
+            console.error('Error checking assessment results:', error);
             window.location.href = '/assessment';
           } else {
             window.location.href = count > 0 ? '/dashboard' : '/assessment';
@@ -86,25 +111,48 @@ const EnhancedAuthForm = ({ onSuccess }) => {
 
       } else {
         // Sign up
+        console.log('Attempting signup with:', { 
+          email: formData.email.trim(), 
+          firstName: formData.firstName 
+        });
+        
         const { data, error: signUpErr } = await supabase.auth.signUp({
           email: formData.email.trim(),
           password: formData.password,
           options: {
-            data: { first_name: formData.firstName || undefined },
+            data: { 
+              first_name: formData.firstName || undefined 
+            },
             emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
-        if (signUpErr) throw signUpErr;
+        
+        if (signUpErr) {
+          console.error('Signup error:', signUpErr);
+          throw signUpErr;
+        }
 
-        const newUserId = data?.user?.id;
-        await createUserProfile(newUserId, formData);
+        console.log('Signup response:', data);
 
-        setSuccessMessage('Success! Check your email to confirm your account, then you can sign in.');
-        setFormData({ email: '', password: '', firstName: '' });
-        setTimeout(() => {
-          setIsLogin(true);
-          setSuccessMessage('');
-        }, 2500);
+        // The trigger should create the profile automatically, but let's be safe
+        if (data?.user?.id) {
+          // Wait a moment for the trigger to execute
+          setTimeout(() => {
+            createUserProfile(data.user.id, formData);
+          }, 1000);
+        }
+
+        if (data?.user && !data?.user?.email_confirmed_at) {
+          setSuccessMessage('Success! Check your email to confirm your account, then you can sign in.');
+          setFormData({ email: '', password: '', firstName: '' });
+          setTimeout(() => {
+            setIsLogin(true);
+            setSuccessMessage('');
+          }, 2500);
+        } else if (data?.user) {
+          // Email confirmation not required (auto-confirm enabled)
+          window.location.href = '/assessment';
+        }
       }
     } catch (err) {
       console.error('Auth error:', err);
@@ -113,7 +161,6 @@ const EnhancedAuthForm = ({ onSuccess }) => {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
