@@ -5,30 +5,25 @@ import Assessment from './pages/Assessment';
 import Results from './pages/Results'; // Assuming you have this from previous phases
 import UserDashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
+import AuthCallback from './pages/AuthCallback';
+import RedirectIfAuthed from './components/RedirectIfAuthed';
+
+
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/assessment" element={
-            <PrivateRoute>
-              <Assessment />
-            </PrivateRoute>
-          } />
-          <Route path="/results" element={
-            <PrivateRoute>
-              <Results />
-            </PrivateRoute>
-          } />
-          <Route path="/dashboard" element={
-            <PrivateRoute>
-              <UserDashboard />
-            </PrivateRoute>
-          } />
+          <Route path="/" element={<RedirectIfAuthed><Landing /></RedirectIfAuthed>} />
+          <Route path="/auth" element={<RedirectIfAuthed><Auth /></RedirectIfAuthed>} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+
+          <Route path="/assessment" element={<PrivateRoute><Assessment /></PrivateRoute>} />
+          <Route path="/results" element={<PrivateRoute><Results /></PrivateRoute>} />
+          <Route path="/dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
         </Routes>
+
       </div>
     </Router>
   );

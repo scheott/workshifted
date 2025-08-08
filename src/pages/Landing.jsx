@@ -1,7 +1,54 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+// Update your existing Landing.jsx with this logic at the top of the component
+
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 const Landing = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const checkUserStatus = async () => {
+      if (authLoading) return;
+      if (!user) {
+        setChecking(false);
+        return;
+      }
+
+      const { count, error } = await supabase
+        .from('assessment_results')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (error) {
+        console.error(error);
+        navigate('/assessment', { replace: true }); // safer fallback
+      } else {
+        navigate(count > 0 ? '/dashboard' : '/assessment', { replace: true });
+      }
+    };
+
+    checkUserStatus();
+  }, [user, authLoading, navigate]);
+
+  // Show loading while checking user status
+  if (authLoading || checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span className="text-lg text-gray-700">Loading...</span>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       {/* Header */}
