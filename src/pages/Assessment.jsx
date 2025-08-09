@@ -49,8 +49,15 @@ const Assessment = () => {
 
       if (error) throw error;
 
-      // 3) Navigate to results
-      navigate('/results', { state: { topMatches, userWeights } });
+      // 3) Navigate to dashboard with assessment results for career selection
+      // FIXED: Changed from /results to /dashboard with state
+      navigate('/dashboard', { 
+        state: { 
+          topMatches, 
+          userWeights,
+          fromAssessment: true 
+        } 
+      });
     } catch (error) {
       console.error('Error saving assessment:', error);
       alert('There was an error saving your responses. Please try again.');

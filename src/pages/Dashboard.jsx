@@ -1,4 +1,4 @@
-// Update to src/pages/Dashboard.jsx - Add career selection functionality
+// Update to src/pages/Dashboard.jsx - Streamlined dashboard with confirmation modals
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -20,6 +20,8 @@ const UserDashboard = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showCareerSelection, setShowCareerSelection] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState(null);
   const { checkPaymentStatus } = usePayments();
 
   useEffect(() => {
@@ -56,21 +58,17 @@ const UserDashboard = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (!profile || (!profile.first_name && user.user_metadata)) {
-        const { error: updateError } = await supabase.rpc('update_user_profile_from_oauth', {
-          p_user_id: user.id
-        });
-        if (!updateError) {
-          const { data: updatedProfile } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-          setUserProfile(updatedProfile);
-        }
-      } else {
-        setUserProfile(profile);
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
       }
+
+      // Set the profile (remove the RPC call that's causing 404)
+      setUserProfile(profile);
+
+      // Debug: Log the profile data to check selected_career
+      console.log('User profile data:', profile);
+      console.log('Selected career:', profile?.selected_career);
+      console.log('Selected career data:', profile?.selected_career_data);
 
       // Fetch assessment results (most recent)
       const { data: assessments } = await supabase
@@ -97,13 +95,19 @@ const UserDashboard = () => {
       setActivityLog(activity || []);
       
       // Check if user has selected a career
+      console.log('Checking selected career logic:', profile?.selected_career);
       if (profile?.selected_career) {
+        console.log('User has selected career, hiding career selection modal');
         setShowCareerSelection(false);
+      } else {
+        console.log('User has no selected career');
       }
       
       // Check premium status
       const currentProfile = profile || userProfile;
       setIsPremium(currentProfile?.subscription_status === 'premium' || currentProfile?.subscription_status === 'paid');
+      
+      console.log('Final userProfile state will be:', profile);
       
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -139,12 +143,87 @@ const UserDashboard = () => {
           }
         });
 
+      // Update local state immediately
+      setUserProfile(prev => ({
+        ...prev,
+        selected_career: selectedCareer.key || selectedCareer.title.toLowerCase().replace(/\s+/g, '_'),
+        selected_career_data: selectedCareer
+      }));
+
+      // Hide career selection modal
+      setShowCareerSelection(false);
+
       // Navigate to Results page with the selected career
       navigate('/results');
       
     } catch (error) {
       console.error('Error selecting career:', error);
     }
+  };
+
+  const handleRetakeAssessment = () => {
+    if (userProfile?.selected_career) {
+      setConfirmationAction('retake');
+      setShowConfirmationModal(true);
+    } else {
+      navigate('/assessment');
+    }
+  };
+
+  const handleChangeCareerFocus = () => {
+    setConfirmationAction('change_career');
+    setShowConfirmationModal(true);
+  };
+
+  const confirmAction = async () => {
+    if (confirmationAction === 'retake') {
+      // Clear selected career when retaking assessment
+      try {
+        const { error } = await supabase
+          .from('user_profiles')
+          .update({
+            selected_career: null,
+            selected_career_data: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        // Update local state
+        setUserProfile(prev => ({
+          ...prev,
+          selected_career: null,
+          selected_career_data: null
+        }));
+
+        // Log the activity
+        await supabase
+          .from('user_activity_log')
+          .insert({
+            user_id: user.id,
+            activity_type: 'assessment_retaken',
+            activity_data: {
+              previous_career: userProfile?.selected_career_data?.title,
+              retaken_at: new Date().toISOString()
+            }
+          });
+
+      } catch (error) {
+        console.error('Error clearing career selection:', error);
+      }
+      
+      navigate('/assessment');
+    } else if (confirmationAction === 'change_career') {
+      setShowCareerSelection(true);
+    }
+    setShowConfirmationModal(false);
+    setConfirmationAction(null);
+  };
+
+  // Add function to refresh user data after changes
+  const refreshUserData = async () => {
+    await fetchUserData();
   };
 
   const getDisplayName = () => {
@@ -157,29 +236,12 @@ const UserDashboard = () => {
     return user?.email?.split('@')[0] || 'User';
   };
 
-  const getProgressPercentage = () => {
-    let progress = 0;
-    if (assessmentResults.length > 0) progress += 30;
-    if (topMatches.length > 0) progress += 20;
-    if (userProfile?.selected_career) progress += 25;
-    if (isPremium) progress += 25;
-    return Math.min(progress, 100);
-  };
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
   };
 
   const handleUpgrade = () => {
     setShowCheckoutModal(true);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
   };
 
   const handlePaymentSuccess = () => {
@@ -200,7 +262,7 @@ const UserDashboard = () => {
         </div>
       </div>
     );
-  }
+  };
 
   // Show career selection modal if user just completed assessment
   if (showCareerSelection && topMatches.length > 0) {
@@ -308,19 +370,6 @@ const UserDashboard = () => {
               <div className="text-lg text-gray-600">Dashboard</div>
             </div>
 
-            {/* Center: Progress */}
-            <div className="hidden md:flex items-center space-x-3">
-              <span className="text-sm font-medium text-gray-700">
-                Transition Progress: {getProgressPercentage()}%
-              </span>
-              <div className="w-32 bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${getProgressPercentage()}%` }}
-                />
-              </div>
-            </div>
-
             {/* Right: User menu */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
@@ -350,7 +399,7 @@ const UserDashboard = () => {
           </h1>
           <p className="text-blue-100">
             {userProfile?.selected_career 
-              ? `You're focused on becoming a ${topMatches[0]?.title || 'skilled tradesperson'}. Check your progress below!`
+              ? `You're focused on becoming a ${userProfile.selected_career_data?.title || 'skilled tradesperson'}. Check your progress below!`
               : topMatches.length > 0 
                 ? `Based on your assessment, you have ${topMatches.length} great career matches. Ready to pick your focus?`
                 : "Ready to discover your perfect blue collar career? Take the assessment to get started!"
@@ -362,7 +411,7 @@ const UserDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="grid lg:grid-cols-3 gap-8">
           
-          {/* Left Column: Career Matches & Learning Path */}
+          {/* Left Column: Career Focus & Quick Actions */}
           <div className="lg:col-span-2 space-y-8">
             
             {/* Career Focus Section */}
@@ -371,18 +420,10 @@ const UserDashboard = () => {
                 <h2 className="text-xl font-bold text-gray-900">
                   {userProfile?.selected_career ? 'Your Career Focus' : 'Your Career Matches'}
                 </h2>
-                {userProfile?.selected_career && (
-                  <button
-                    onClick={() => setShowCareerSelection(true)}
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Change Focus
-                  </button>
-                )}
               </div>
               
               {userProfile?.selected_career ? (
-                // Show selected career with action button
+                // Show career progress tracking
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -404,6 +445,27 @@ const UserDashboard = () => {
                     <div className="bg-green-50 rounded-lg p-3">
                       <div className="text-sm text-gray-500">Timeline</div>
                       <div className="font-semibold">{userProfile.selected_career_data?.timeline}</div>
+                    </div>
+                  </div>
+
+                  {/* Progress Steps */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Your Progress</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">Assessment Complete</span>
+                        <span className="text-green-600">✓</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">Career Selected</span>
+                        <span className="text-green-600">✓</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">Learning Plan Started</span>
+                        <span className={isPremium ? "text-green-600" : "text-gray-400"}>
+                          {isPremium ? "✓" : "○"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -467,12 +529,12 @@ const UserDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            {topMatches.length > 0 && (
+            {(topMatches.length > 0 || userProfile?.selected_career) && (
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <button
-                    onClick={() => navigate('/assessment')}
+                    onClick={handleRetakeAssessment}
                     className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 text-left transition-colors"
                   >
                     <div className="font-medium text-gray-900">Retake Assessment</div>
@@ -481,11 +543,11 @@ const UserDashboard = () => {
                   
                   {userProfile?.selected_career ? (
                     <button
-                      onClick={() => navigate('/results')}
-                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-left transition-colors"
+                      onClick={handleChangeCareerFocus}
+                      className="bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg p-4 text-left transition-colors"
                     >
-                      <div className="font-medium text-blue-900">View Career Plan</div>
-                      <div className="text-sm text-blue-600">See your learning path and courses</div>
+                      <div className="font-medium text-orange-900">Change Career Focus</div>
+                      <div className="text-sm text-orange-600">Switch to a different career path</div>
                     </button>
                   ) : (
                     <button
@@ -501,61 +563,8 @@ const UserDashboard = () => {
             )}
           </div>
 
-          {/* Right Column: Progress & Stats */}
+          {/* Right Column: Upgrade Card */}
           <div className="space-y-8">
-            
-            {/* Progress Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Your Progress</h3>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-green-600">
-                  <span className="text-white font-bold text-xl">{getProgressPercentage()}%</span>
-                </div>
-                <p className="text-sm text-gray-600 mt-2">Career Transition Progress</p>
-              </div>
-              
-              {/* Progress Steps */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Assessment Complete</span>
-                  <span className="text-green-600">✓</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Career Selected</span>
-                  <span className={userProfile?.selected_career ? "text-green-600" : "text-gray-400"}>
-                    {userProfile?.selected_career ? "✓" : "○"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Premium Plan</span>
-                  <span className={isPremium ? "text-green-600" : "text-gray-400"}>
-                    {isPremium ? "✓" : "○"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Assessments</span>
-                  <span className="font-semibold text-gray-900">{assessmentResults.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Career Matches</span>
-                  <span className="font-semibold text-gray-900">{topMatches.length}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Plan Status</span>
-                  <span className={`font-semibold ${isPremium ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {isPremium ? 'Premium' : 'Free'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
             {/* Upgrade Card */}
             {!isPremium && (
               <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl text-white p-6">
@@ -574,6 +583,37 @@ const UserDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              {confirmationAction === 'retake' ? 'Retake Assessment?' : 'Change Career Focus?'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {confirmationAction === 'retake' 
+                ? 'This will update your career matches and may change your current career focus. You might lose some progress.'
+                : 'Changing your career focus will reset your learning progress. You might lose some completed milestones.'
+              }
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowConfirmationModal(false)}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Checkout Modal */}
       <CheckoutModal 

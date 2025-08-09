@@ -1,198 +1,225 @@
-// src/pages/Results.jsx - Complete Rewrite
+// src/pages/Results.jsx - Fixed to use working CheckoutModal instead of broken SubscriptionGate
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { fetchApprenticeships } from '../lib/apprenticeships';
+import CheckoutModal from '../components/CheckoutModal';
 
-// Radar Chart Component for Skills Visualization
-const SkillsRadarChart = ({ userSkills, requiredSkills, skillsBreakdown }) => {
-  const categories = skillsBreakdown?.categories || [];
-  
-  // Calculate angles for each skill category
-  const getCoordinates = (value, index, total, radius = 80) => {
-    const angle = (index * 2 * Math.PI) / total - Math.PI / 2;
-    const adjustedValue = (value / 10) * radius; // Scale to 0-80px radius
-    return {
-      x: 120 + adjustedValue * Math.cos(angle),
-      y: 120 + adjustedValue * Math.sin(angle)
-    };
+// ⬇️ NEW: manual location helpers + UI
+import { getUserLocation, getStateName } from '../lib/location';
+import LocationInput from '../components/LocationInput';
+
+// Fixed component that properly matches your skill keys
+const FixedSkillsDisplay = ({ userSkills, selectedCareer, skillsBreakdown }) => {
+  // Create mapping between display names and actual userSkills keys
+  const skillKeyMapping = {
+    "Problem Solving": "problem_solving",
+    "Technical Aptitude": "technical", 
+    "Technical Skills": "technical",
+    "Customer Service": "customer_service",
+    "Independent Work": "independent",
+    "Electrical Basics": "electrical",
+    "Mechanical Aptitude": "mechanical", 
+    "Attention to Detail": "detail",
+    "Physical Stamina": "physical_stamina",
+    "Safety Conscious": "safety_conscious",
+    "Communication": "customer_service",
+    "Precision": "precision",
+    "Analytical Thinking": "analytical",
+    "Organization": "detail",
+    "Trust Building": "trust_building",
+    "Modern Technology": "modern_tech",
+    "Outdoor Work": "outdoor_work",
+    "Resilience": "resilience"
   };
 
-  const userPoints = categories.map((category, index) => {
-    const userValue = userSkills[category.name.toLowerCase().replace(/\s+/g, '_')] || 0;
-    return getCoordinates(Math.min(userValue, 10), index, categories.length);
-  });
+  const getSkillsData = () => {
+    // If we have detailed breakdown, use that
+    if (skillsBreakdown?.categories) {
+      return skillsBreakdown.categories.map(category => {
+        const skillKey = skillKeyMapping[category.name] || category.name.toLowerCase().replace(/\s+/g, '_');
+        const userValue = userSkills[skillKey] || 0;
+        
+        return {
+          name: category.name,
+          description: category.description,
+          userValue: userValue,
+          required: category.weight || 5,
+          skillKey: skillKey
+        };
+      }).filter(skill => skill.userValue > 0); // Only show skills they have some rating for
+    }
+    
+    // Fallback: use career's requiredWeights if available
+    if (selectedCareer?.requiredWeights) {
+      return Object.entries(selectedCareer.requiredWeights).map(([key, required]) => {
+        const userValue = userSkills[key] || 0;
+        const displayName = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        
+        return {
+          name: displayName,
+          description: getSkillDescription(key),
+          userValue: userValue,
+          required: required,
+          skillKey: key
+        };
+      }).filter(skill => skill.userValue > 0);
+    }
+    
+    // Final fallback: show all userSkills that have values
+    return Object.entries(userSkills || {})
+      .filter(([key, value]) => value > 0)
+      .map(([key, value]) => ({
+        name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        description: getSkillDescription(key),
+        userValue: value,
+        required: 7, // Default
+        skillKey: key
+      }));
+  };
 
-  const requiredPoints = categories.map((category, index) => {
-    const requiredValue = category.weight || 5;
-    return getCoordinates(requiredValue, index, categories.length);
-  });
+  // Helper to get descriptions for skill keys
+  const getSkillDescription = (key) => {
+    const descriptions = {
+      technical: "Understanding systems and technology",
+      problem_solving: "Diagnosing and fixing issues",
+      detail: "Precision and accuracy in work",
+      customer_service: "Professional communication",
+      independent: "Working with minimal supervision",
+      physical_stamina: "Handling physical demands",
+      safety_conscious: "Prioritizing safety procedures",
+      electrical: "Electrical systems knowledge",
+      mechanical: "Mechanical systems understanding",
+      precision: "Exact and careful work",
+      analytical: "Breaking down complex problems",
+      modern_tech: "Current technology skills",
+      outdoor_work: "Comfortable working outside",
+      resilience: "Handling challenges and setbacks",
+      trust_building: "Building client confidence"
+    };
+    return descriptions[key] || "Important skill for this career";
+  };
+
+  const skills = getSkillsData();
+  
+  if (!skills || skills.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-4">
+        <h3 className="text-lg font-bold text-gray-900 mb-2">Skills Match</h3>
+        <p className="text-gray-500 text-sm">Complete your assessment to see your skills analysis.</p>
+      </div>
+    );
+  }
+
+  // Calculate strengths (above 70% match) and growth areas (below 70% match)
+  const strengths = skills.filter(skill => (skill.userValue / skill.required) >= 0.7);
+  const growthAreas = skills.filter(skill => (skill.userValue / skill.required) < 0.7);
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-xl font-bold text-gray-900 mb-4">Your Skills Match Analysis</h3>
+    <div className="bg-white rounded-xl shadow-lg p-4">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">Your Skills for {selectedCareer?.title}</h3>
       
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* SVG Radar Chart */}
-        <div className="flex-shrink-0">
-          <svg width="240" height="240" className="mx-auto">
-            {/* Grid circles */}
-            {[2, 4, 6, 8, 10].map(radius => (
-              <circle
-                key={radius}
-                cx="120"
-                cy="120"
-                r={radius * 8}
-                fill="none"
-                stroke="#e5e7eb"
-                strokeWidth="1"
-              />
-            ))}
-            
-            {/* Grid lines */}
-            {categories.map((_, index) => {
-              const end = getCoordinates(10, index, categories.length);
-              return (
-                <line
-                  key={index}
-                  x1="120"
-                  y1="120"
-                  x2={end.x}
-                  y2={end.y}
-                  stroke="#e5e7eb"
-                  strokeWidth="1"
-                />
-              );
-            })}
-            
-            {/* Required skills polygon */}
-            <polygon
-              points={requiredPoints.map(p => `${p.x},${p.y}`).join(' ')}
-              fill="rgba(59, 130, 246, 0.1)"
-              stroke="#3b82f6"
-              strokeWidth="2"
-              strokeDasharray="5,5"
-            />
-            
-            {/* User skills polygon */}
-            <polygon
-              points={userPoints.map(p => `${p.x},${p.y}`).join(' ')}
-              fill="rgba(16, 185, 129, 0.2)"
-              stroke="#10b981"
-              strokeWidth="3"
-            />
-            
-            {/* Labels */}
-            {categories.map((category, index) => {
-              const labelPos = getCoordinates(12, index, categories.length, 100);
-              return (
-                <text
-                  key={index}
-                  x={labelPos.x}
-                  y={labelPos.y}
-                  textAnchor="middle"
-                  className="text-xs font-medium fill-gray-700"
-                  dominantBaseline="middle"
-                >
-                  {category.name}
-                </text>
-              );
-            })}
-          </svg>
-          
-          {/* Legend */}
-          <div className="flex justify-center gap-4 mt-2">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600">Your Skills</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-blue-500 border-dashed rounded"></div>
-              <span className="text-sm text-gray-600">Required</span>
-            </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Strengths */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-green-600">✅</span>
+            <h4 className="font-semibold text-green-800">Your Strengths</h4>
+            <span className="text-xs text-gray-500">({strengths.length})</span>
           </div>
-        </div>
-        
-        {/* Skills breakdown */}
-        <div className="flex-1">
-          <div className="space-y-3">
-            {categories.map((category, index) => {
-              const userValue = userSkills[category.name.toLowerCase().replace(/\s+/g, '_')] || 0;
-              const required = category.weight;
-              const percentage = Math.min((userValue / required) * 100, 100);
-              
-              return (
-                <div key={index} className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-900">{category.name}</span>
-                    <span className="text-sm text-gray-500">{userValue}/{required}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${
-                        percentage >= 80 ? 'bg-green-500' : 
-                        percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-600">{category.description}</p>
+          {strengths.length > 0 ? (
+            <div className="space-y-2">
+              {strengths.slice(0, 5).map((skill, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900">{skill.name}</span>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+              {strengths.length > 5 && (
+                <div className="text-xs text-gray-500 ml-4">
+                  +{strengths.length - 5} more strengths
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Great opportunity to develop new strengths!</p>
+          )}
         </div>
+
+        {/* Growth Areas */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-blue-600">🎯</span>
+            <h4 className="font-semibold text-blue-800">Growth Opportunities</h4>
+            <span className="text-xs text-gray-500">({growthAreas.length})</span>
+          </div>
+          {growthAreas.length > 0 ? (
+            <div className="space-y-2">
+              {growthAreas.slice(0, 5).map((skill, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900">{skill.name}</span>
+                </div>
+              ))}
+              {growthAreas.length > 5 && (
+                <div className="text-xs text-gray-500 ml-4">
+                  +{growthAreas.length - 5} more to develop
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">You're well-matched across all key skills!</p>
+          )}
+        </div>
+      </div>
+
+      {/* Simple summary */}
+      <div className="mt-4 pt-3 border-t border-gray-200">
+        <p className="text-sm text-gray-600">
+          {strengths.length >= growthAreas.length 
+            ? `Strong match! You have ${strengths.length} key strengths for this career.`
+            : `Good potential! Focus on developing ${Math.min(growthAreas.length, 3)} key areas through training.`
+          }
+        </p>
       </div>
     </div>
   );
 };
 
 // Learning Path Step Component
-const LearningStep = ({ step, isCompleted, onToggle, userProgress }) => {
+const LearningStep = ({ step, isCompleted, onToggle, isPremium }) => {
   const [expanded, setExpanded] = useState(false);
   
   const getStepIcon = (type) => {
     switch (type) {
-      case 'education':
-        return '📚';
-      case 'certification':
-        return '🏆';
-      case 'experience':
-        return '🔧';
-      case 'networking':
-        return '🤝';
-      default:
-        return '📋';
+      case 'education': return '📚';
+      case 'certification': return '🏆';
+      case 'experience': return '🔧';
+      case 'networking': return '🤝';
+      default: return '📋';
     }
   };
 
   const getTypeColor = (type) => {
     switch (type) {
-      case 'education':
-        return 'bg-blue-100 text-blue-800';
-      case 'certification':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'experience':
-        return 'bg-green-100 text-green-800';
-      case 'networking':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'education': return 'bg-blue-100 text-blue-800';
+      case 'certification': return 'bg-yellow-100 text-yellow-800';
+      case 'experience': return 'bg-green-100 text-green-800';
+      case 'networking': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
     <div className={`border rounded-lg p-4 transition-all ${isCompleted ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
       <div className="flex items-start gap-4">
-        {/* Checkbox */}
         <button
-          onClick={() => onToggle(step.id)}
+          onClick={() => isPremium && onToggle(step.id)}
+          disabled={!isPremium}
           className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-            isCompleted 
-              ? 'bg-green-500 border-green-500 text-white' 
-              : 'border-gray-300 hover:border-green-400'
-          }`}
+            isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
+          } ${!isPremium ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isCompleted && '✓'}
         </button>
@@ -228,7 +255,6 @@ const LearningStep = ({ step, isCompleted, onToggle, userProgress }) => {
             </button>
           </div>
           
-          {/* Resources (expandable) */}
           {expanded && step.resources && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <h5 className="font-medium text-gray-900 mb-3">Resources:</h5>
@@ -273,7 +299,6 @@ const Results = () => {
   const [searchParams] = useSearchParams();
   const careerParam = searchParams.get('career');
   
-  // State
   const [loading, setLoading] = useState(true);
   const [selectedCareer, setSelectedCareer] = useState(null);
   const [userMatches, setUserMatches] = useState([]);
@@ -283,15 +308,17 @@ const Results = () => {
   const [skillsBreakdown, setSkillsBreakdown] = useState(null);
   const [userProgress, setUserProgress] = useState([]);
   const [apprenticeships, setApprenticeships] = useState([]);
-  const [userLocation, setUserLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null); // { state, city, country, location_consent }
+  const [userProfile, setUserProfile] = useState(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
-  // Load user data and career info
+  // Check if user is premium
+  const isPremium = userProfile?.subscription_status === 'premium' || userProfile?.subscription_status === 'paid';
+
   useEffect(() => {
     if (!user) return;
-    
     const loadData = async () => {
       try {
-        // Get user's assessment results
         const { data: assessmentData } = await supabase
           .from('assessment_results')
           .select('*')
@@ -308,23 +335,27 @@ const Results = () => {
         setUserMatches(assessmentData.career_matches || []);
         setUserTraits(assessmentData.user_traits || {});
 
-        // Get user profile for selected career and location
+        // Get user profile for premium status and selected_career
         const { data: profileData } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        setUserLocation(profileData);
+        setUserProfile(profileData);
+
+        // ⬇️ NEW: fetch saved manual location (state/city)
+        const profileLocation = await getUserLocation();
+        setUserLocation(profileLocation);
 
         // Determine which career to show
         let targetCareer = null;
         if (careerParam) {
-          targetCareer = assessmentData.career_matches.find(c => c.key === careerParam);
+          targetCareer = (assessmentData.career_matches || []).find(c => c.key === careerParam);
         } else if (profileData?.selected_career) {
-          targetCareer = assessmentData.career_matches.find(c => c.key === profileData.selected_career);
+          targetCareer = (assessmentData.career_matches || []).find(c => c.key === profileData.selected_career);
         } else {
-          targetCareer = assessmentData.career_matches[0]; // Default to top match
+          targetCareer = (assessmentData.career_matches || [])[0];
         }
 
         if (!targetCareer) {
@@ -334,18 +365,20 @@ const Results = () => {
 
         setSelectedCareer(targetCareer);
 
-        // Load career-specific data files
         await loadCareerData(targetCareer.key);
 
-        // Load user progress for this career
-        await loadUserProgress(targetCareer.key);
-
-        // Load apprenticeships if location available
-        if (profileData?.state) {
-          const apprenticeshipData = await fetchApprenticeships(targetCareer.title, profileData.state);
-          setApprenticeships(apprenticeshipData);
+        // Only load progress if premium
+        if (profileData?.subscription_status === 'premium' || profileData?.subscription_status === 'paid') {
+          await loadUserProgress(targetCareer.key);
         }
 
+        // ⬇️ NEW: fetch apprenticeships using manual state if present
+        if (profileLocation?.state) {
+          const apprenticeshipData = await fetchApprenticeships(targetCareer.title, profileLocation.state);
+          setApprenticeships(apprenticeshipData);
+        } else {
+          setApprenticeships([]);
+        }
       } catch (error) {
         console.error('Error loading results data:', error);
       } finally {
@@ -356,15 +389,12 @@ const Results = () => {
     loadData();
   }, [user, careerParam, navigate]);
 
-  // Helper function to convert career key to camelCase export name
   const toCamelCase = (str) => {
     return str.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
   };
 
-  // Load career-specific data files
   const loadCareerData = async (careerKey) => {
     try {
-      // Dynamically import the career data files
       const [learningPathModule, realityCheckModule, skillsModule] = await Promise.all([
         import(`../data/learningPaths/${careerKey}.js`).catch(() => null),
         import(`../data/realityChecks/${careerKey}.js`).catch(() => null),
@@ -385,13 +415,11 @@ const Results = () => {
         const skillsKey = `${toCamelCase(careerKey)}SkillsBreakdown`;
         setSkillsBreakdown(skillsModule[skillsKey] || null);
       }
-
     } catch (error) {
       console.error('Error loading career data files:', error);
     }
   };
 
-  // Load user's progress for this career
   const loadUserProgress = async (careerKey) => {
     try {
       const { data, error } = await supabase
@@ -403,11 +431,7 @@ const Results = () => {
 
       if (error) throw error;
 
-      // Filter for this career's progress
-      const careerProgress = data.filter(p => 
-        p.milestone_data?.career === careerKey
-      );
-
+      const careerProgress = (data || []).filter(p => p.milestone_data?.career === careerKey);
       setUserProgress(careerProgress);
     } catch (error) {
       console.error('Error loading user progress:', error);
@@ -415,23 +439,18 @@ const Results = () => {
     }
   };
 
-  // Toggle learning step completion
   const toggleStepCompletion = async (stepId) => {
+    if (!isPremium) return;
+    
     try {
       const existingProgress = userProgress.find(p => 
         p.milestone_data?.step_id === stepId && p.milestone_data?.career === selectedCareer.key
       );
 
       if (existingProgress) {
-        // Remove completion
-        await supabase
-          .from('user_progress')
-          .delete()
-          .eq('id', existingProgress.id);
-
+        await supabase.from('user_progress').delete().eq('id', existingProgress.id);
         setUserProgress(prev => prev.filter(p => p.id !== existingProgress.id));
       } else {
-        // Add completion
         const { data, error } = await supabase
           .from('user_progress')
           .insert({
@@ -448,7 +467,6 @@ const Results = () => {
           .single();
 
         if (error) throw error;
-
         setUserProgress(prev => [...prev, data]);
       }
     } catch (error) {
@@ -456,9 +474,8 @@ const Results = () => {
     }
   };
 
-  // Calculate progress percentage
   const getProgressPercentage = () => {
-    if (!learningPath?.steps) return 0;
+    if (!learningPath?.steps || !isPremium) return 0;
     const requiredSteps = learningPath.steps.filter(s => s.required);
     const completedRequired = requiredSteps.filter(s => 
       userProgress.some(p => p.milestone_data?.step_id === s.id)
@@ -466,10 +483,53 @@ const Results = () => {
     return Math.round((completedRequired.length / requiredSteps.length) * 100);
   };
 
-  // Check if step is completed
   const isStepCompleted = (stepId) => {
     return userProgress.some(p => p.milestone_data?.step_id === stepId);
   };
+
+  // ⬇️ NEW: called when LocationInput saves a new state/city
+  const handleLocationUpdate = async (loc) => {
+    setUserLocation(loc);
+    if (selectedCareer?.title && loc?.state) {
+      try {
+        const data = await fetchApprenticeships(selectedCareer.title, loc.state);
+        setApprenticeships(data || []);
+      } catch (e) {
+        console.error('Error fetching apprenticeships for updated location:', e);
+        setApprenticeships([]);
+      }
+    } else {
+      setApprenticeships([]);
+    }
+  };
+
+  // Helper function to get master level salary dynamically
+  const getMasterLevelSalary = (realityCheck) => {
+    const earnings = realityCheck?.earningsReality;
+    if (!earnings) return 'Not available';
+    
+    // Try different field names used across careers
+    return earnings.masterElectrician || 
+           earnings.masterPlumber || 
+           earnings.masterLead || 
+           earnings.seniorLead || 
+           earnings.masterLevel ||
+           'Not available';
+  };
+
+  const handleUpgrade = () => {
+    setShowCheckoutModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    // Refresh user profile to get updated premium status
+    loadUserData();
+    setShowCheckoutModal(false);
+  };
+
+  const displayLocation = userLocation?.state
+    ? `${userLocation?.city ? `${userLocation.city}, ` : ''}${getStateName(userLocation.state)}`
+    : '';
 
   if (loading) {
     return (
@@ -516,16 +576,14 @@ const Results = () => {
               </button>
               <div className="text-2xl font-bold text-blue-600">WorkShifted</div>
             </div>
-            
-            {/* Progress indicator */}
             <div className="flex items-center space-x-3">
               <span className="text-sm font-medium text-gray-700">
-                Progress: {getProgressPercentage()}%
+                Progress: {isPremium ? getProgressPercentage() : '?'}%
               </span>
               <div className="w-32 bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${getProgressPercentage()}%` }}
+                  style={{ width: `${isPremium ? getProgressPercentage() : 0}%` }}
                 />
               </div>
             </div>
@@ -557,202 +615,268 @@ const Results = () => {
             </div>
             <div className="text-right">
               <div className="text-blue-200 text-sm mb-1">Completion</div>
-              <div className="text-4xl font-bold">{getProgressPercentage()}%</div>
+              <div className="text-4xl font-bold">{isPremium ? getProgressPercentage() : '?'}%</div>
             </div>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Content */}
+          {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Skills Analysis */}
-            {skillsBreakdown && (
-              <SkillsRadarChart 
-                userSkills={userTraits}
-                requiredSkills={selectedCareer.requiredWeights}
-                skillsBreakdown={skillsBreakdown}
-              />
-            )}
+            {/* Skills Display - FREE */}
+            <FixedSkillsDisplay 
+              userSkills={userTraits}
+              selectedCareer={selectedCareer}
+              skillsBreakdown={skillsBreakdown}
+            />
 
-            {/* Learning Path */}
-            {learningPath && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-bold text-gray-900">Your Learning Path</h3>
-                  <div className="text-sm text-gray-500">
-                    Estimated Duration: {learningPath.estimatedDuration}
+            {/* Learning Path - PREMIUM with Compact Paywall */}
+            {isPremium ? (
+              learningPath && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">Your Learning Roadmap</h3>
+                    <div className="text-sm text-gray-500">
+                      Estimated Duration: {learningPath.estimatedDuration}
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {learningPath.steps.map((step) => (
+                      <LearningStep
+                        key={step.id}
+                        step={step}
+                        isCompleted={isStepCompleted(step.id)}
+                        onToggle={toggleStepCompletion}
+                        isPremium={isPremium}
+                      />
+                    ))}
                   </div>
                 </div>
-                
-                <div className="space-y-4">
-                  {learningPath.steps.map((step, index) => (
-                    <LearningStep
-                      key={step.id}
-                      step={step}
-                      isCompleted={isStepCompleted(step.id)}
-                      onToggle={toggleStepCompletion}
-                      userProgress={userProgress}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Reality Check */}
-            {realityCheck && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">Reality Check: What You Need to Know</h3>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Physical Demands */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                      💪 Physical Demands
-                    </h4>
-                    <ul className="space-y-2">
-                      {realityCheck.physicalDemands.map((demand, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                          <span className="text-orange-500 mt-0.5">•</span>
-                          {demand}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Work Conditions */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                      🏗️ Work Conditions
-                    </h4>
-                    <ul className="space-y-2">
-                      {realityCheck.workConditions.map((condition, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                          <span className="text-blue-500 mt-0.5">•</span>
-                          {condition}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Mental Challenges */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                      🧠 Mental Challenges
-                    </h4>
-                    <ul className="space-y-2">
-                      {realityCheck.mentalChallenges.map((challenge, index) => (
-                        <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
-                          <span className="text-purple-500 mt-0.5">•</span>
-                          {challenge}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Time Commitment */}
-                  <div className="space-y-3">
-                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                      ⏰ Time Commitment
-                    </h4>
-                    <div className="space-y-2 text-sm text-gray-700">
-                      <div><strong>Apprenticeship:</strong> {realityCheck.timeCommitment.apprenticeship}</div>
-                      <div><strong>Weekly Hours:</strong> {realityCheck.timeCommitment.weeklyHours}</div>
-                      <div><strong>Continuing Ed:</strong> {realityCheck.timeCommitment.continuingEducation}</div>
+              )
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
                     </div>
                   </div>
-                </div>
-
-                {/* Earnings Reality */}
-                <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    💰 Earnings Reality
-                  </h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <div className="text-gray-600">Apprentice Start</div>
-                      <div className="font-semibold text-gray-900">{realityCheck.earningsReality.apprenticeStarting}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Journeyman</div>
-                      <div className="font-semibold text-gray-900">{realityCheck.earningsReality.journeymanAverage}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Master Level</div>
-                      <div className="font-semibold text-gray-900">{realityCheck.earningsReality.masterElectrician}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Business Owner</div>
-                      <div className="font-semibold text-gray-900">{realityCheck.earningsReality.businessOwner}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Local Apprenticeships */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">
-                Local Opportunities {userLocation?.state && `in ${userLocation.state}`}
-              </h3>
-              
-              {apprenticeships.length > 0 ? (
-                <div className="grid gap-4">
-                  {apprenticeships.slice(0, 5).map((program, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-semibold text-gray-900">{program.title || 'Apprenticeship Program'}</h4>
-                        <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {program.type || 'Apprenticeship'}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-2">{program.description}</p>
-                      <div className="flex justify-between items-center text-sm text-gray-500">
-                        <span>{program.location || userLocation?.city}</span>
-                        {program.url && (
-                          <a 
-                            href={program.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            Learn More →
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">
-                    {userLocation?.state 
-                      ? `Loading apprenticeships in ${userLocation.state}...`
-                      : 'Enable location access to see local apprenticeship opportunities.'
-                    }
-                  </p>
-                  {!userLocation?.location_consent && (
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Learning Roadmap</h3>
+                    <p className="text-gray-600 text-sm mb-3">
+                      Get step-by-step guidance tailored for {selectedCareer.title} with progress tracking.
+                    </p>
                     <button 
-                      onClick={() => {/* TODO: Request location permission */}}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                      onClick={handleUpgrade}
+                      className="text-blue-600 text-sm font-medium hover:text-blue-800 cursor-pointer"
                     >
-                      Enable Location Access
+                      Unlock Complete Roadmap →
                     </button>
-                  )}
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* All Resources & Certifications */}
+            {/* Reality Check - PREMIUM with Compact Paywall */}
+            {isPremium ? (
+              realityCheck && (
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Reality Check: What You Need to Know</h3>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 flex items-center gap-2">💪 Physical Demands</h4>
+                      <ul className="space-y-2">
+                        {realityCheck.physicalDemands.map((demand, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-orange-500 mt-0.5">•</span>
+                            {demand}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 flex items-center gap-2">🏗️ Work Conditions</h4>
+                      <ul className="space-y-2">
+                        {realityCheck.workConditions.map((condition, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-blue-500 mt-0.5">•</span>
+                            {condition}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 flex items-center gap-2">🧠 Mental Challenges</h4>
+                      <ul className="space-y-2">
+                        {realityCheck.mentalChallenges.map((challenge, index) => (
+                          <li key={index} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-purple-500 mt-0.5">•</span>
+                            {challenge}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 flex items-center gap-2">⏰ Time Commitment</h4>
+                      <div className="space-y-2 text-sm text-gray-700">
+                        <div><strong>Apprenticeship:</strong> {realityCheck.timeCommitment.apprenticeship}</div>
+                        <div><strong>Weekly Hours:</strong> {realityCheck.timeCommitment.weeklyHours}</div>
+                        <div><strong>Continuing Ed:</strong> {realityCheck.timeCommitment.continuingEducation}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg">
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">💰 Earnings Reality</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <div className="text-gray-600">Apprentice Start</div>
+                        <div className="font-semibold text-gray-900">{realityCheck.earningsReality.apprenticeStarting}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Journeyman</div>
+                        <div className="font-semibold text-gray-900">{realityCheck.earningsReality.journeymanAverage}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Master Level</div>
+                        <div className="font-semibold text-gray-900">{getMasterLevelSalary(realityCheck)}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-600">Business Owner</div>
+                        <div className="font-semibold text-gray-900">{realityCheck.earningsReality.businessOwner}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.19 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Reality Check</h3>
+                    <p className="text-gray-600 text-sm mb-3">
+                      Honest insights about physical demands, work conditions, and salary expectations for {selectedCareer.title}.
+                    </p>
+                    <button 
+                      onClick={handleUpgrade}
+                      className="text-yellow-600 text-sm font-medium hover:text-yellow-800 cursor-pointer"
+                    >
+                      Unlock Reality Check →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Training Programs - PREMIUM with Compact Paywall */}
+            {isPremium ? (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Training Programs {displayLocation ? `in ${displayLocation}` : ''}
+                  </h3>
+                </div>
+
+                {/* ⬇️ If no state yet, prompt to set location */}
+                {!userLocation?.state && (
+                  <div>
+                    <p className="text-gray-600 mb-4">
+                      Set your state (and optional city) to see training programs near you.
+                    </p>
+                    <LocationInput
+                      currentState={null}
+                      onLocationUpdate={handleLocationUpdate}
+                    />
+                  </div>
+                )}
+
+                {/* If state exists, show results or an empty-state with a quick changer */}
+                {userLocation?.state && (
+                  <>
+                    {apprenticeships.length > 0 ? (
+                      <div className="grid gap-4">
+                        {apprenticeships.slice(0, 5).map((program, index) => (
+                          <div key={index} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-semibold text-gray-900">{program.title || 'Training Program'}</h4>
+                              <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {program.type || 'Program'}
+                              </span>
+                            </div>
+                            <p className="text-gray-600 text-sm mb-2">{program.description}</p>
+                            <div className="flex justify-between items-center text-sm text-gray-500">
+                              <span>{program.location || userLocation?.city || getStateName(userLocation.state)}</span>
+                              {program.url && (
+                                <a 
+                                  href={program.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                  Learn More →
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500 mb-4">
+                          No programs found for {getStateName(userLocation.state)} yet. Try another nearby state or adjust your search.
+                        </p>
+                        <LocationInput
+                          currentState={userLocation.state}
+                          onLocationUpdate={handleLocationUpdate}
+                          className="max-w-md mx-auto"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Regional Training Programs</h3>
+                    <p className="text-gray-600 text-sm mb-3">
+                      Find training programs and apprenticeships in your area.
+                    </p>
+                    <button 
+                      onClick={handleUpgrade}
+                      className="text-green-600 text-sm font-medium hover:text-green-800 cursor-pointer"
+                    >
+                      Find Programs Near You →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Certification Requirements - FREE */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Complete Resource Library</h3>
-              
+              <h3 className="text-xl font-bold text-gray-900 mb-6">Certification Requirements</h3>
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Certifications */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    🏆 Required Certifications
-                  </h4>
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">📜 Required Certifications</h4>
                   <div className="space-y-3">
                     {selectedCareer.certifications.map((cert, index) => (
                       <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -764,12 +888,8 @@ const Results = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Career Growth Path */}
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    📈 Career Growth Path
-                  </h4>
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">📈 Career Progression</h4>
                   <div className="space-y-2">
                     {selectedCareer.growth_path.split('→').map((stage, index, array) => (
                       <div key={index} className="flex items-center gap-2">
@@ -782,13 +902,9 @@ const Results = () => {
                           <div className={`font-medium ${index === 0 ? 'text-green-800' : 'text-gray-700'}`}>
                             {stage.trim()}
                           </div>
-                          {index === 0 && (
-                            <div className="text-xs text-green-600">← You start here</div>
-                          )}
+                          {index === 0 && <div className="text-xs text-green-600">← You start here</div>}
                         </div>
-                        {index < array.length - 1 && (
-                          <div className="text-gray-400">→</div>
-                        )}
+                        {index < array.length - 1 && <div className="text-gray-400">→</div>}
                       </div>
                     ))}
                   </div>
@@ -799,37 +915,53 @@ const Results = () => {
 
           {/* Right Sidebar */}
           <div className="space-y-6">
-            {/* Quick Stats */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Your Progress</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Completed Steps</span>
-                  <span className="font-semibold">
-                    {userProgress.length}/{learningPath?.steps?.length || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Required Steps</span>
-                  <span className="font-semibold">
-                    {userProgress.filter(p => {
-                      const step = learningPath?.steps?.find(s => s.id === p.milestone_data?.step_id);
-                      return step?.required;
-                    }).length}/{learningPath?.steps?.filter(s => s.required)?.length || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Overall Progress</span>
-                  <span className="font-semibold text-green-600">{getProgressPercentage()}%</span>
+            
+            {/* Progress Card */}
+            {isPremium ? (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Your Progress</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Completed Steps</span>
+                    <span className="font-semibold">
+                      {userProgress.length}/{learningPath?.steps?.length || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Required Steps</span>
+                    <span className="font-semibold">
+                      {userProgress.filter(p => {
+                        const step = learningPath?.steps?.find(s => s.id === p.milestone_data?.step_id);
+                        return step?.required;
+                      }).length}/{learningPath?.steps?.filter(s => s.required)?.length || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Overall Progress</span>
+                    <span className="font-semibold text-green-600">{getProgressPercentage()}%</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl text-white p-6">
+                <h3 className="text-lg font-bold mb-2">Track Your Progress</h3>
+                <p className="text-blue-100 text-sm mb-4">
+                  Upgrade to premium to track your learning progress and check off completed steps.
+                </p>
+                <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold mb-1">?</div>
+                    <div className="text-xs">Progress Tracking</div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            {/* Other Career Options */}
+            {/* Other Top Matches - FREE */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Other Top Matches</h3>
               <div className="space-y-3">
-                {userMatches.slice(0, 3).filter(c => c.key !== selectedCareer.key).map((career, index) => (
+                {userMatches.slice(0, 3).filter(c => c.key !== selectedCareer.key).map((career) => (
                   <button
                     key={career.key}
                     onClick={() => navigate(`/results?career=${career.key}`)}
@@ -845,9 +977,9 @@ const Results = () => {
               </div>
             </div>
 
-            {/* Networking Tips */}
+            {/* Networking Actions - FREE */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Networking Actions</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Next Steps</h3>
               <div className="space-y-3">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <div className="font-medium text-blue-900">Connect with Professionals</div>
@@ -872,7 +1004,7 @@ const Results = () => {
 
             {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Actions</h3>
               <div className="space-y-3">
                 <button
                   onClick={() => navigate('/dashboard')}
@@ -880,26 +1012,43 @@ const Results = () => {
                 >
                   Back to Dashboard
                 </button>
-                <button
-                  onClick={() => navigate('/assessment')}
-                  className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-lg transition-colors"
-                >
-                  Retake Assessment
-                </button>
-                <button
-                  onClick={() => {
-                    // TODO: Generate PDF report
-                    alert('PDF generation coming soon!');
-                  }}
-                  className="w-full bg-green-100 hover:bg-green-200 text-green-700 py-2 px-4 rounded-lg transition-colors"
-                >
-                  Download PDF Plan
-                </button>
+                
+                {/* PDF Download - PREMIUM */}
+                {isPremium ? (
+                  <button
+                    onClick={() => { alert('PDF generation coming soon!'); }}
+                    className="w-full bg-green-100 hover:bg-green-200 text-green-700 py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Download Career Guide
+                  </button>
+                ) : (
+                  <div className="relative">
+                    <button 
+                      className="w-full bg-gray-100 text-gray-400 py-2 px-4 rounded-lg cursor-not-allowed"
+                      disabled
+                    >
+                      Download Career Guide 🔒
+                    </button>
+                    <button
+                      onClick={handleUpgrade}
+                      className="absolute inset-0 bg-transparent cursor-pointer"
+                    >
+                      <span className="sr-only">Upgrade to download</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Checkout Modal */}
+      <CheckoutModal 
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        onSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };

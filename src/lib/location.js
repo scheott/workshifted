@@ -1,47 +1,37 @@
-// import { supabase } from './supabase';
+// src/lib/location.js - Simple manual location only
+import { supabase } from './supabase';
 
-// const ipApi = 'https://ipapi.co/json/'; // Free, no key (light limits)
+export async function getUserLocation() {
+  // Get user's saved location from profile
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-// export async function getOrCreateUserState() {
-//   // 1) Try profile first
-//   const { data: { user } } = await supabase.auth.getUser();
-//   if (!user) return null;
+  const { data: profile, error } = await supabase
+    .from('user_profiles')
+    .select('state, city, country, location_consent')
+    .eq('user_id', user.id)
+    .single();
 
-//   const { data: existing, error } = await supabase
-//     .from('user_profiles')
-//     .select('state, city, country')
-//     .eq('user_id', user.id)
-//     .single();
+  if (error || !profile) return null;
+  
+  return profile;
+}
 
-//   if (!error && existing?.state) return existing.state;
-
-//   // 2) Fall back to IP geolocation (client-side)
-//   try {
-//     const res = await fetch(ipApi, { cache: 'no-store' });
-//     const ip = await res.json();
-//     const inferred = {
-//       city: ip?.city || null,
-//       state: ip?.region_code || ip?.region || null, // US: region_code is 2-letter
-//       country: ip?.country || null,
-//     };
-
-//     // Normalize US state to 2-letter if possible
-//     if (inferred.country === 'US' && inferred.state && inferred.state.length !== 2 && ip?.region_code) {
-//       inferred.state = ip.region_code;
-//     }
-
-//     // Upsert profile for the user
-//     await supabase.from('user_profiles').upsert({
-//       user_id: user.id,
-//       city: inferred.city,
-//       state: inferred.state,
-//       country: inferred.country,
-//       updated_at: new Date().toISOString()
-//     });
-
-//     return inferred.state || null;
-//   } catch (e) {
-//     console.warn('IP geolocation failed', e);
-//     return null;
-//   }
-// }
+// Helper to get state name from code
+export function getStateName(stateCode) {
+  const US_STATES = {
+    'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+    'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+    'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+    'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+    'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+    'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+    'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+    'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+    'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+    'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+    'DC': 'District of Columbia'
+  };
+  
+  return US_STATES[stateCode] || stateCode;
+}

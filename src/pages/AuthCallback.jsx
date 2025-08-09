@@ -1,4 +1,4 @@
-// src/pages/AuthCallback.jsx
+// src/pages/AuthCallback.jsx - FIXED LOGIN ROUTING
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -45,21 +45,50 @@ export default function AuthCallback() {
           }
         }
         
-        // Check if they have assessment results
-        const { count, error } = await supabase
+        // FIXED: Check for both assessment results AND selected career
+        const { data: assessmentData, error: assessmentError } = await supabase
           .from('assessment_results')
-          .select('id', { count: 'exact', head: true })
+          .select('id')
           .eq('user_id', user.id)
           .limit(1);
 
         if (!active) return;
         
-        if (error) {
-          console.error('Error checking assessment results:', error);
+        if (assessmentError) {
+          console.error('Error checking assessment results:', assessmentError);
           navigate('/assessment', { replace: true });
-        } else {
-          navigate(count > 0 ? '/dashboard' : '/assessment', { replace: true });
+          return;
         }
+
+        // If no assessment, go to assessment
+        if (!assessmentData || assessmentData.length === 0) {
+          navigate('/assessment', { replace: true });
+          return;
+        }
+
+        // FIXED: Check if user has selected a career
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('selected_career, selected_career_data')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error checking user profile:', profileError);
+          // Fallback to dashboard if profile check fails
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+
+        // FIXED: Route based on whether they have selected a career
+        if (profileData?.selected_career && profileData?.selected_career_data) {
+          // User has completed assessment AND selected a career -> go to results
+          navigate('/results', { replace: true });
+        } else {
+          // User has assessment but hasn't selected career -> go to dashboard for career selection
+          navigate('/dashboard', { replace: true });
+        }
+        
       } catch (err) {
         console.error('Auth callback error:', err);
         if (active) navigate('/assessment', { replace: true });
