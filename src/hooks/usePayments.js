@@ -16,12 +16,16 @@ export const usePayments = () => {
     setError('');
 
     try {
+      console.log('Initiating payment for:', { userId, userEmail });
+      
       // Create checkout session
       const session = await createCheckoutSession(userId, userEmail);
       
       if (!session?.id) {
         throw new Error('Failed to create payment session');
       }
+
+      console.log('Checkout session created:', session);
 
       // Redirect to Stripe Checkout
       await redirectToCheckout(session.id);
@@ -45,15 +49,29 @@ export const usePayments = () => {
     setError('');
 
     try {
+      console.log('Handling payment success:', { sessionId, userId });
+      
       // Verify payment with Stripe
+      console.log('=== Payment Verification Debug ===');
+      console.log('Verifying payment with session ID:', sessionId);
+      console.log('Session ID type:', typeof sessionId);
+      console.log('Session ID length:', sessionId?.length);
+      console.log('Session ID value (JSON):', JSON.stringify(sessionId));
+      
       const paymentResult = await verifyPayment(sessionId);
       
+      console.log('Payment verification response:', paymentResult);
+      console.log('=== End Verification Debug ===');
+      
       if (!paymentResult.success) {
-        throw new Error('Payment verification failed');
+        throw new Error(paymentResult.error || 'Payment verification failed');
       }
 
+      console.log('Payment verified successfully:', paymentResult);
+
       // Update user profile in Supabase
-      const { error: updateError } = await supabase
+      console.log('Updating user profile for user:', userId);
+      const { data: updateData, error: updateError } = await supabase
         .from('user_profiles')
         .update({
           subscription_status: 'premium',
@@ -61,12 +79,25 @@ export const usePayments = () => {
           payment_date: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select(); // Add select to see what was updated
 
       if (updateError) {
-        console.error('Error updating user profile:', updateError);
-        throw new Error('Failed to activate premium features');
+        console.error('Database update error details:', updateError);
+        console.error('Update error code:', updateError.code);
+        console.error('Update error message:', updateError.message);
+        console.error('Update error details:', updateError.details);
+        throw new Error(`Database error: ${updateError.message}`);
       }
+
+      console.log('User profile update result:', updateData);
+      
+      if (!updateData || updateData.length === 0) {
+        console.error('No rows were updated. User might not exist in user_profiles table.');
+        throw new Error('No user profile found to update');
+      }
+
+      console.log('User profile updated to premium successfully');
 
       // Log the successful payment activity
       await supabase
@@ -77,9 +108,12 @@ export const usePayments = () => {
           activity_data: {
             payment_amount: 2900, // $29.00 in cents
             stripe_session_id: sessionId,
-            upgrade_date: new Date().toISOString()
+            upgrade_date: new Date().toISOString(),
+            mock_payment: true // Flag to indicate this was a mock payment
           }
         });
+
+      console.log('Activity logged successfully');
 
       return true;
     } catch (err) {
@@ -119,90 +153,12 @@ export const usePayments = () => {
     }
   }, []);
 
-  const requestRefund = useCallback(async (userId, reason = '') => {
-    setLoading(true);
-    setError('');
-
-    try {
-      // Get user's payment information
-      const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('stripe_customer_id, payment_date')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileError || !profile?.stripe_customer_id) {
-        throw new Error('No payment information found');
-      }
-
-      // Check if eligible for refund (within 30 days)
-      const paymentDate = new Date(profile.payment_date);
-      const daysSincePayment = (new Date() - paymentDate) / (1000 * 60 * 60 * 24);
-      
-      if (daysSincePayment > 30) {
-        throw new Error('Refund period has expired (30 days)');
-      }
-
-      // Request refund through backend API
-      const response = await fetch('/api/request-refund', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          customerId: profile.stripe_customer_id,
-          reason
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to process refund request');
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // Update user profile to reflect refund
-        await supabase
-          .from('user_profiles')
-          .update({
-            subscription_status: 'refunded',
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', userId);
-
-        // Log the refund activity
-        await supabase
-          .from('user_activity_log')
-          .insert({
-            user_id: userId,
-            activity_type: 'refund_processed',
-            activity_data: {
-              refund_amount: 2900,
-              refund_reason: reason,
-              refund_date: new Date().toISOString()
-            }
-          });
-      }
-
-      return result;
-    } catch (err) {
-      console.error('Refund request error:', err);
-      setError(err.message || 'Failed to process refund request');
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   return {
     loading,
     error,
     initiatePayment,
     handlePaymentSuccess,
     checkPaymentStatus,
-    requestRefund,
     clearError: () => setError('')
   };
 };

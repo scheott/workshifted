@@ -1,13 +1,16 @@
+// Update to src/pages/Dashboard.jsx - Add career selection functionality
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import CheckoutModal from '../components/CheckoutModal';
 import { usePayments } from '../hooks/usePayments';
 
 const UserDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [userProfile, setUserProfile] = useState(null);
   const [assessmentResults, setAssessmentResults] = useState([]);
   const [topMatches, setTopMatches] = useState([]);
@@ -16,14 +19,24 @@ const UserDashboard = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showCareerSelection, setShowCareerSelection] = useState(false);
   const { checkPaymentStatus } = usePayments();
 
-  // ✅ Fixed: Added useEffect for fetchUserData
   useEffect(() => {
     if (user) {
       fetchUserData();
     }
   }, [user]);
+
+  // Handle assessment results passed from Assessment page
+  useEffect(() => {
+    if (location.state?.topMatches) {
+      setTopMatches(location.state.topMatches);
+      setShowCareerSelection(true);
+      // Clear the state so it doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Check premium status on load
   useEffect(() => {
@@ -75,8 +88,18 @@ const UserDashboard = () => {
         .limit(10);
 
       setAssessmentResults(assessments || []);
-      setTopMatches(assessments?.[0]?.career_matches?.slice(0, 3) || []);
+      
+      // If no assessment results from navigation state, use stored ones
+      if (!location.state?.topMatches && assessments?.[0]?.career_matches) {
+        setTopMatches(assessments[0].career_matches.slice(0, 3));
+      }
+      
       setActivityLog(activity || []);
+      
+      // Check if user has selected a career
+      if (profile?.selected_career) {
+        setShowCareerSelection(false);
+      }
       
       // Check premium status
       const currentProfile = profile || userProfile;
@@ -86,6 +109,41 @@ const UserDashboard = () => {
       console.error('Error fetching user data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCareerSelection = async (selectedCareer) => {
+    try {
+      // Update user profile with selected career
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          selected_career: selectedCareer.key || selectedCareer.title.toLowerCase().replace(/\s+/g, '_'),
+          selected_career_data: selectedCareer,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Log the career selection activity
+      await supabase
+        .from('user_activity_log')
+        .insert({
+          user_id: user.id,
+          activity_type: 'career_selected',
+          activity_data: {
+            career_title: selectedCareer.title,
+            match_percentage: selectedCareer.matchPercentage,
+            selected_at: new Date().toISOString()
+          }
+        });
+
+      // Navigate to Results page with the selected career
+      navigate('/results');
+      
+    } catch (error) {
+      console.error('Error selecting career:', error);
     }
   };
 
@@ -103,8 +161,8 @@ const UserDashboard = () => {
     let progress = 0;
     if (assessmentResults.length > 0) progress += 30;
     if (topMatches.length > 0) progress += 20;
-    if (isPremium) progress += 25; // Premium adds more progress
-    // TODO: Add more progress indicators based on courses completed, etc.
+    if (userProfile?.selected_career) progress += 25;
+    if (isPremium) progress += 25;
     return Math.min(progress, 100);
   };
 
@@ -112,7 +170,6 @@ const UserDashboard = () => {
     await supabase.auth.signOut();
   };
 
-  // ✅ Fixed: Updated to use checkout modal
   const handleUpgrade = () => {
     setShowCheckoutModal(true);
   };
@@ -125,11 +182,9 @@ const UserDashboard = () => {
     });
   };
 
-  // ✅ Added: Handle successful payment
   const handlePaymentSuccess = () => {
     setIsPremium(true);
     setShowCheckoutModal(false);
-    // Refresh user data to reflect premium status
     fetchUserData();
   };
 
@@ -147,6 +202,100 @@ const UserDashboard = () => {
     );
   }
 
+  // Show career selection modal if user just completed assessment
+  if (showCareerSelection && topMatches.length > 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center space-x-4">
+                <div className="text-2xl font-bold text-blue-600">WorkShifted</div>
+                <div className="text-lg text-gray-600">Choose Your Path</div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {getDisplayName().charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-gray-700 font-medium">{getDisplayName()}</span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Career Selection */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-12">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              🎉 Great! Here are your top career matches
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Choose the career path you'd like to focus on. You can always change this later from your dashboard.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {topMatches.map((career, index) => (
+              <div 
+                key={index} 
+                className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 border-2 border-transparent hover:border-blue-300"
+                onClick={() => handleCareerSelection(career)}
+              >
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-white font-bold text-xl">{career.matchPercentage}%</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{career.title}</h3>
+                  <div className="text-sm text-gray-500 mb-4">Match Score</div>
+                </div>
+                
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Salary:</span>
+                    <span className="font-semibold">{career.salary}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Time to start:</span>
+                    <span className="font-semibold">{career.timeline}</span>
+                  </div>
+                </div>
+
+                <p className="text-gray-600 text-sm mb-6 line-clamp-3">
+                  {career.description}
+                </p>
+
+                <button className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-200">
+                  Choose This Path →
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <button
+              onClick={() => setShowCareerSelection(false)}
+              className="text-gray-500 hover:text-gray-700 underline"
+            >
+              I'll decide later - take me to dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular dashboard view
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
       {/* Header */}
@@ -200,9 +349,11 @@ const UserDashboard = () => {
             Welcome back, {getDisplayName()} 👋
           </h1>
           <p className="text-blue-100">
-            {topMatches.length > 0 
-              ? `Based on your assessment, you're on track to start as a ${topMatches[0]?.title} in ${topMatches[0]?.timeline?.replace('apprenticeship', '') || '6-12 months'}.`
-              : "Ready to discover your perfect blue collar career? Take the assessment to get started!"
+            {userProfile?.selected_career 
+              ? `You're focused on becoming a ${topMatches[0]?.title || 'skilled tradesperson'}. Check your progress below!`
+              : topMatches.length > 0 
+                ? `Based on your assessment, you have ${topMatches.length} great career matches. Ready to pick your focus?`
+                : "Ready to discover your perfect blue collar career? Take the assessment to get started!"
             }
           </p>
         </div>
@@ -214,11 +365,57 @@ const UserDashboard = () => {
           {/* Left Column: Career Matches & Learning Path */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* Career Matches Section */}
+            {/* Career Focus Section */}
             <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Your Career Matches</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {userProfile?.selected_career ? 'Your Career Focus' : 'Your Career Matches'}
+                </h2>
+                {userProfile?.selected_career && (
+                  <button
+                    onClick={() => setShowCareerSelection(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    Change Focus
+                  </button>
+                )}
+              </div>
               
-              {topMatches.length > 0 ? (
+              {userProfile?.selected_career ? (
+                // Show selected career with action button
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">{userProfile.selected_career_data?.title}</h3>
+                      <p className="text-gray-600">{userProfile.selected_career_data?.description}</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold">{userProfile.selected_career_data?.matchPercentage}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-blue-50 rounded-lg p-3">
+                      <div className="text-sm text-gray-500">Salary</div>
+                      <div className="font-semibold">{userProfile.selected_career_data?.salary}</div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-3">
+                      <div className="text-sm text-gray-500">Timeline</div>
+                      <div className="font-semibold">{userProfile.selected_career_data?.timeline}</div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => navigate('/results')}
+                    className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                  >
+                    View Full Career Plan →
+                  </button>
+                </div>
+              ) : topMatches.length > 0 ? (
+                // Show career matches for selection
                 <div className="grid md:grid-cols-3 gap-6">
                   {topMatches.map((career, index) => (
                     <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
@@ -242,38 +439,17 @@ const UserDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Why This Fits You - Premium Preview */}
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-gray-900 mb-2">Why This Fits You</h4>
-                        <div className={`text-sm text-gray-600 ${!isPremium ? 'relative' : ''}`}>
-                          {!isPremium && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-white z-10 flex items-center justify-end">
-                              <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          )}
-                          <div className={!isPremium ? 'filter blur-sm' : ''}>
-                            <p>Your analytical skills translate perfectly to electrical troubleshooting...</p>
-                            <p>Strong attention to detail matches safety requirements...</p>
-                          </div>
-                        </div>
-                      </div>
-
                       <button 
-                        onClick={isPremium ? () => navigate('/results') : handleUpgrade}
-                        className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-                          isPremium 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                            : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-300'
-                        }`}
+                        onClick={() => handleCareerSelection(career)}
+                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                       >
-                        {isPremium ? 'View Full Career Plan →' : 'Unlock Full Plan'}
+                        Focus on This Career →
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
+                // No assessment taken yet
                 <div className="bg-white rounded-xl shadow-lg p-8 text-center">
                   <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -290,143 +466,74 @@ const UserDashboard = () => {
               )}
             </div>
 
-            {/* Learning Path Section */}
+            {/* Quick Actions */}
             {topMatches.length > 0 && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-6">Your Learning Path</h2>
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="space-y-6">
-                    {/* Step 1 - Always unlocked */}
-                    <div className="flex items-start space-x-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">Complete Skills Assessment</h3>
-                        <p className="text-sm text-gray-500">✓ Done! You've identified your career matches.</p>
-                      </div>
-                    </div>
-
-                    {/* Step 2 - Courses Preview */}
-                    <div className="flex items-start space-x-4">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 font-semibold text-sm">2</span>
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">Take Foundation Courses</h3>
-                        <div className={`${!isPremium ? 'relative' : ''}`}>
-                          {!isPremium && (
-                            <div className="absolute inset-0 bg-white bg-opacity-80 z-10 flex items-center">
-                              <span className="text-yellow-700 font-medium text-sm">🔒 Upgrade to see personalized courses</span>
-                            </div>
-                          )}
-                          <div className={`space-y-2 ${!isPremium ? 'filter blur-sm' : ''}`}>
-                            <div className="bg-gray-50 p-3 rounded-lg">
-                              <div className="text-sm font-medium">Electrical Fundamentals</div>
-                              <div className="text-xs text-gray-500">Coursera • 8-12 hours • Free audit</div>
-                            </div>
-                            <div className="bg-gray-50 p-3 rounded-lg">
-                              <div className="text-sm font-medium">OSHA Safety Training</div>
-                              <div className="text-xs text-gray-500">edX • 10 hours • Free</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Premium Steps */}
-                    {[3, 4, 5].map((stepNum) => (
-                      <div key={stepNum} className="flex items-start space-x-4">
-                        <div className="flex-shrink-0">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            isPremium ? 'bg-gray-100' : 'bg-gray-50 border-2 border-dashed border-gray-300'
-                          }`}>
-                            {!isPremium ? (
-                              <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                              </svg>
-                            ) : (
-                              <span className="text-gray-600 font-semibold text-sm">{stepNum}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className={`font-semibold ${isPremium ? 'text-gray-900' : 'text-gray-400'}`}>
-                            {stepNum === 3 && 'Get Certified'}
-                            {stepNum === 4 && 'Apply for Apprenticeships'}
-                            {stepNum === 5 && 'Network with Industry Pros'}
-                          </h3>
-                          <p className={`text-sm ${isPremium ? 'text-gray-500' : 'text-gray-400'}`}>
-                            {!isPremium && '🔒 '}
-                            {stepNum === 3 && 'Complete certification requirements for your chosen career'}
-                            {stepNum === 4 && 'Find and apply to local apprenticeship programs'}
-                            {stepNum === 5 && 'Connect with professionals in your target field'}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {!isPremium && (
-                    <div className="mt-6 pt-4 border-t">
-                      <button
-                        onClick={handleUpgrade}
-                        className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                      >
-                        Unlock Full Learning Path - $29
-                      </button>
-                    </div>
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <button
+                    onClick={() => navigate('/assessment')}
+                    className="bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 text-left transition-colors"
+                  >
+                    <div className="font-medium text-gray-900">Retake Assessment</div>
+                    <div className="text-sm text-gray-500">Update your career matches</div>
+                  </button>
+                  
+                  {userProfile?.selected_career ? (
+                    <button
+                      onClick={() => navigate('/results')}
+                      className="bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-4 text-left transition-colors"
+                    >
+                      <div className="font-medium text-blue-900">View Career Plan</div>
+                      <div className="text-sm text-blue-600">See your learning path and courses</div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowCareerSelection(true)}
+                      className="bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg p-4 text-left transition-colors"
+                    >
+                      <div className="font-medium text-green-900">Choose Career Focus</div>
+                      <div className="text-sm text-green-600">Pick your primary career path</div>
+                    </button>
                   )}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Right Column: Progress & Activity */}
+          {/* Right Column: Progress & Stats */}
           <div className="space-y-8">
             
-            {/* Skills Progress */}
-            {topMatches.length > 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Skills Match</h3>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-green-600">
-                      <span className="text-white font-bold text-xl">{topMatches[0]?.matchPercentage}%</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2">Match with {topMatches[0]?.title}</p>
-                  </div>
-                  
-                  {/* Progress Badges */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                      <div className="text-green-600 font-semibold text-sm">✓ Assessment Complete</div>
-                    </div>
-                    <div className={`border rounded-lg p-3 text-center ${
-                      isPremium ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
-                    }`}>
-                      <div className={`font-semibold text-sm ${
-                        isPremium ? 'text-green-600' : 'text-gray-400'
-                      }`}>
-                        {isPremium ? '✓' : '🔒'} Career Selected
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 border-gray-200 border rounded-lg p-3 text-center">
-                      <div className="text-gray-400 font-semibold text-sm">⭘ First Course</div>
-                    </div>
-                    <div className="bg-gray-50 border-gray-200 border rounded-lg p-3 text-center">
-                      <div className="text-gray-400 font-semibold text-sm">⭘ Certification</div>
-                    </div>
-                  </div>
+            {/* Progress Card */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Your Progress</h3>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-r from-blue-600 to-green-600">
+                  <span className="text-white font-bold text-xl">{getProgressPercentage()}%</span>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">Career Transition Progress</p>
+              </div>
+              
+              {/* Progress Steps */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Assessment Complete</span>
+                  <span className="text-green-600">✓</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Career Selected</span>
+                  <span className={userProfile?.selected_career ? "text-green-600" : "text-gray-400"}>
+                    {userProfile?.selected_career ? "✓" : "○"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">Premium Plan</span>
+                  <span className={isPremium ? "text-green-600" : "text-gray-400"}>
+                    {isPremium ? "✓" : "○"}
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Quick Stats */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -449,96 +556,31 @@ const UserDashboard = () => {
               </div>
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Recent Activity</h3>
-              {activityLog.length > 0 ? (
-                <div className="space-y-3">
-                  {activityLog.slice(0, 5).map((activity, index) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <div className="h-2 w-2 rounded-full bg-blue-600 mt-2"></div>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900">
-                          {activity.activity_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </p>
-                        <p className="text-xs text-gray-500">{formatDate(activity.created_at)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
-              )}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-3">
+            {/* Upgrade Card */}
+            {!isPremium && (
+              <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl text-white p-6">
+                <h3 className="text-lg font-bold mb-2">Unlock Your Full Potential</h3>
+                <p className="text-blue-100 text-sm mb-4">
+                  Get personalized courses, local opportunities, and step-by-step career plans.
+                </p>
                 <button
-                  onClick={() => navigate('/assessment')}
-                  className="w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-3 text-left transition-colors"
+                  onClick={handleUpgrade}
+                  className="w-full bg-white text-blue-600 py-2 px-4 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
                 >
-                  <div className="font-medium text-gray-900">Retake Assessment</div>
-                  <div className="text-xs text-gray-500">Update your career matches</div>
+                  Upgrade to Premium - $29
                 </button>
-                
-                {topMatches.length > 0 && (
-                  <button
-                    onClick={() => navigate('/results')}
-                    className="w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-3 text-left transition-colors"
-                  >
-                    <div className="font-medium text-blue-900">View Full Results</div>
-                    <div className="text-xs text-blue-600">See detailed career information</div>
-                  </button>
-                )}
-
-                {!isPremium && (
-                  <button
-                    onClick={handleUpgrade}
-                    className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg p-3 text-left hover:shadow-lg transition-all"
-                  >
-                    <div className="font-medium">Upgrade to Premium</div>
-                    <div className="text-xs text-blue-100">Unlock full career plans & courses</div>
-                  </button>
-                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* ✅ Fixed: Removed old upgrade modal, keeping only checkout modal */}
-      
-      {/* ✅ Added: CheckoutModal Component */}
+      {/* Checkout Modal */}
       <CheckoutModal 
         isOpen={showCheckoutModal}
         onClose={() => setShowCheckoutModal(false)}
         onSuccess={handlePaymentSuccess}
       />
-
-      {/* Bottom CTA for Free Users */}
-      {!isPremium && topMatches.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Ready for your full career plan?</div>
-                <div className="text-sm text-gray-500">Get courses, certifications, and local opportunities.</div>
-              </div>
-              {/* ✅ Fixed: Connected to checkout modal */}
-              <button 
-                onClick={() => setShowCheckoutModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
-              >
-                Upgrade - $29
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

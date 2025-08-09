@@ -13,16 +13,39 @@ const PaymentSuccess = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const sessionId = searchParams.get('session_id');
+    console.log('=== PaymentSuccess Debug ===');
+    console.log('Full URL:', window.location.href);
+    console.log('Search params string:', window.location.search);
+    console.log('All URL params:', Object.fromEntries(searchParams.entries()));
+    
+    // Try to get session ID from URL first, then fallback to sessionStorage
+    let sessionId = searchParams.get('session_id');
+    
+    if (!sessionId) {
+      console.log('No session_id in URL, trying sessionStorage...');
+      sessionId = sessionStorage.getItem('stripe_session_id');
+      console.log('Session ID from sessionStorage:', sessionId);
+      
+      // Clean up after use
+      if (sessionId) {
+        sessionStorage.removeItem('stripe_session_id');
+      }
+    }
+    
+    console.log('PaymentSuccess: Final session ID:', sessionId);
+    console.log('PaymentSuccess: User:', user?.id);
+    console.log('=== End Debug ===');
     
     if (!sessionId || !user) {
-      setError('Invalid payment session');
+      console.error('Missing data:', { sessionId: !!sessionId, user: !!user });
+      setError('Invalid payment session - no session ID found');
       setVerificationStatus('error');
       return;
     }
 
     const verifyAndActivate = async () => {
       try {
+        console.log('Starting payment verification for session:', sessionId);
         const success = await handlePaymentSuccess(sessionId, user.id);
         
         if (success) {
@@ -36,6 +59,7 @@ const PaymentSuccess = () => {
           setError('Failed to activate premium features');
         }
       } catch (err) {
+        console.error('Payment verification error:', err);
         setVerificationStatus('error');
         setError(err.message || 'Verification failed');
       }
@@ -77,6 +101,13 @@ const PaymentSuccess = () => {
             <p className="text-sm text-gray-500">
               If you continue to have issues, please contact support.
             </p>
+          </div>
+          
+          {/* Debug info for development */}
+          <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-left">
+            <strong>Debug Info:</strong><br />
+            URL: {window.location.href}<br />
+            Error: {error}
           </div>
         </div>
       </div>

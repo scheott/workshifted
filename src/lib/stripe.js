@@ -30,10 +30,15 @@ export const STRIPE_CONFIG = {
 // Create checkout session
 export const createCheckoutSession = async (userId, userEmail) => {
   try {
+    console.log('Creating checkout session for:', { userId, userEmail });
+    
     const response = await fetch('https://yckdevlhfhcnuktuzrcf.supabase.co/functions/v1/create-checkout-session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        'x-client-info': 'workshifted-web@1.0.0',
       },
       body: JSON.stringify({
         userId,
@@ -41,16 +46,22 @@ export const createCheckoutSession = async (userId, userEmail) => {
         productName: STRIPE_CONFIG.PREMIUM_PLAN.name,
         price: STRIPE_CONFIG.PREMIUM_PLAN.price,
         currency: STRIPE_CONFIG.PREMIUM_PLAN.currency,
-        successUrl: STRIPE_CONFIG.SUCCESS_URL,
+        successUrl: `${STRIPE_CONFIG.SUCCESS_URL}?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: STRIPE_CONFIG.CANCEL_URL,
       }),
     });
 
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error('Failed to create checkout session');
+      const errorText = await response.text();
+      console.error('Function response error:', errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to create checkout session'}`);
     }
 
     const session = await response.json();
+    console.log('Session created successfully:', session);
     return session;
   } catch (error) {
     console.error('Error creating checkout session:', error);
@@ -75,13 +86,33 @@ export const redirectToCheckout = async (sessionId) => {
 // Verify payment status
 export const verifyPayment = async (sessionId) => {
   try {
-    const response = await fetch(`/api/verify-payment?session_id=${sessionId}`);
+    console.log('Verifying payment for session:', sessionId);
+    
+    if (!sessionId) {
+      throw new Error('Session ID is required for verification');
+    }
+    
+    const response = await fetch('https://yckdevlhfhcnuktuzrcf.supabase.co/functions/v1/verify-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        'x-client-info': 'workshifted-web@1.0.0',
+      },
+      body: JSON.stringify({ sessionId: sessionId }),
+    });
+    
+    console.log('Verify payment response status:', response.status);
     
     if (!response.ok) {
-      throw new Error('Failed to verify payment');
+      const errorText = await response.text();
+      console.error('Verification response error:', errorText);
+      throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to verify payment'}`);
     }
 
     const result = await response.json();
+    console.log('Payment verification result:', result);
     return result;
   } catch (error) {
     console.error('Error verifying payment:', error);
