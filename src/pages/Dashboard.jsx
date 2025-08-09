@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CheckoutModal from '../components/CheckoutModal';
 import { usePayments } from '../hooks/usePayments';
+import Footer from '../components/Footer';
+
 
 const UserDashboard = () => {
   const { user } = useAuth();
@@ -621,6 +623,8 @@ const UserDashboard = () => {
         onClose={() => setShowCheckoutModal(false)}
         onSuccess={handlePaymentSuccess}
       />
+      {/* Footer at bottom */}
+      <Footer />
     </div>
   );
 };

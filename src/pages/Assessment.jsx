@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { assessmentQuestions, calculateCareerMatches, computeUserWeights } from '../data/assessmentQuestions';
+import Footer from '../components/Footer';
+
 
 const Assessment = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -210,6 +212,8 @@ const Assessment = () => {
       </div>
 
       <div className="h-16" />
+      {/* Footer at bottom */}
+      <Footer />
     </div>
   );
 };

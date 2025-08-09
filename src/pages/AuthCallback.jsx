@@ -2,6 +2,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import Footer from '../components/Footer';
+
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -111,6 +113,8 @@ export default function AuthCallback() {
         </div>
         <p className="text-sm text-gray-500">Setting up your account...</p>
       </div>
+      {/* Footer at bottom */}
+      <Footer />
     </div>
   );
 }

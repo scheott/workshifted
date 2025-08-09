@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePayments } from '../hooks/usePayments';
+import Footer from '../components/Footer';
+
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -131,10 +133,9 @@ const PaymentSuccess = () => {
           <h3 className="font-semibold text-gray-900 mb-2">What's now unlocked:</h3>
           <ul className="space-y-1 text-sm text-gray-700">
             <li>✅ Complete career transition plans</li>
-            <li>✅ Personalized course recommendations</li>
-            <li>✅ Local apprenticeship opportunities</li>
-            <li>✅ Progress tracking & achievements</li>
-            <li>✅ Downloadable career workbook</li>
+            <li>✅ Course recommendations</li>
+            <li>✅ Location based apprenticeship opportunities</li>
+            <li>✅ Progress tracking</li>
           </ul>
         </div>
 
@@ -197,6 +198,8 @@ const PaymentCancel = () => {
           Questions? Contact us for help with your career transition.
         </p>
       </div>
+      {/* Footer at bottom */}
+      <Footer />
     </div>
   );
 };

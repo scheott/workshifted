@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
+import Footer from '../components/Footer';
+
 
 const Landing = () => {
   const { user, loading: authLoading } = useAuth();
@@ -399,24 +401,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-2xl font-bold text-blue-600 mb-4 md:mb-0">WorkShifted</div>
-            <div className="flex space-x-6 text-sm">
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Terms of Service</a>
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Contact</a>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-100 text-center">
-            <p className="text-gray-500 text-sm">
-              © 2025 WorkShifted. All rights reserved. • Helping office workers discover fulfilling trade careers.
-            </p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer at bottom */}
+      <Footer />
     </div>
   );
 };

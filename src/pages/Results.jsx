@@ -5,6 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { fetchApprenticeships } from '../lib/apprenticeships';
 import CheckoutModal from '../components/CheckoutModal';
+import Footer from '../components/Footer';
+
 
 // ⬇️ NEW: manual location helpers + UI
 import { getUserLocation, getStateName } from '../lib/location';
@@ -187,108 +189,445 @@ const FixedSkillsDisplay = ({ userSkills, selectedCareer, skillsBreakdown }) => 
   );
 };
 
-// Learning Path Step Component
-const LearningStep = ({ step, isCompleted, onToggle, isPremium }) => {
-  const [expanded, setExpanded] = useState(false);
-  
-  const getStepIcon = (type) => {
-    switch (type) {
-      case 'education': return '📚';
+// Enhanced Learning Roadmap Components for Results.jsx
+
+// Compact Learning Step Component
+const LearningStep = ({ step, isCompleted, onToggle, isPremium, learningPath, isExpanded, onExpandToggle }) => {
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'fundamentals': return '📚';
+      case 'skills': return '🔧';
       case 'certification': return '🏆';
-      case 'experience': return '🔧';
-      case 'networking': return '🤝';
+      case 'experience': return '💼';
       default: return '📋';
     }
   };
 
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'education': return 'bg-blue-100 text-blue-800';
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'fundamentals': return 'bg-blue-100 text-blue-800';
+      case 'skills': return 'bg-green-100 text-green-800';
       case 'certification': return 'bg-yellow-100 text-yellow-800';
-      case 'experience': return 'bg-green-100 text-green-800';
-      case 'networking': return 'bg-purple-100 text-purple-800';
+      case 'experience': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  return (
-    <div className={`border rounded-lg p-4 transition-all ${isCompleted ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200'}`}>
-      <div className="flex items-start gap-4">
-        <button
-          onClick={() => isPremium && onToggle(step.id)}
-          disabled={!isPremium}
-          className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-            isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
-          } ${!isPremium ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          {isCompleted && '✓'}
-        </button>
-        
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">{getStepIcon(step.type)}</span>
-                <h4 className={`font-semibold ${isCompleted ? 'text-green-800' : 'text-gray-900'}`}>
-                  {step.title}
-                </h4>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(step.type)}`}>
-                  {step.type}
-                </span>
-                {step.required && (
-                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                    Required
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-600 text-sm mb-2">{step.description}</p>
-              <p className="text-xs text-gray-500">Estimated time: {step.estimatedTime}</p>
-            </div>
-            
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'essential': return 'border-l-red-500';
+      case 'recommended': return 'border-l-blue-500';
+      case 'optional': return 'border-l-gray-400';
+      default: return 'border-l-gray-400';
+    }
+  };
+
+  // Find relevant resources for this step
+  const getRelevantResources = () => {
+    if (!learningPath?.recommendedResources) return [];
+    return learningPath.recommendedResources.filter(resource => 
+      resource.relevantSteps?.includes(step.id)
+    );
+  };
+
+  const relevantResources = getRelevantResources();
+  const hasExpandableContent = relevantResources.length > 0 || step.category === 'certification';
+
+  // COMPACT VIEW (default)
+  if (!isExpanded) {
+    return (
+      <div 
+        className={`border-l-4 ${getPriorityColor(step.priority)} rounded-lg bg-white shadow-sm transition-all cursor-pointer hover:shadow-md ${
+          isCompleted ? 'bg-green-50' : ''
+        }`}
+        onClick={onExpandToggle}
+      >
+        <div className="p-3">
+          <div className="flex items-center gap-3">
+            {/* Completion checkbox */}
             <button
-              onClick={() => setExpanded(!expanded)}
-              className="text-gray-400 hover:text-gray-600 ml-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                isPremium && onToggle(step.id);
+              }}
+              disabled={!isPremium}
+              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
+              } ${!isPremium ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
             >
-              <svg className={`w-5 h-5 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              {isCompleted && (
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
             </button>
+
+            {/* Icon and title */}
+            <span className="text-lg">{getCategoryIcon(step.category)}</span>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 truncate">{step.title}</h4>
+            </div>
+
+            {/* Badges */}
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
+                {step.category}
+              </span>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                step.priority === 'essential' ? 'bg-red-100 text-red-800' :
+                step.priority === 'recommended' ? 'bg-blue-100 text-blue-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {step.priority}
+              </span>
+              <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+            </div>
+
+            {/* Expand indicator */}
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
-          
-          {expanded && step.resources && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <h5 className="font-medium text-gray-900 mb-3">Resources:</h5>
-              <div className="grid gap-3">
-                {step.resources.map((resource, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <h6 className="font-medium text-gray-900">{resource.title}</h6>
-                      <span className="text-sm text-gray-500">{resource.cost}</span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                    <div className="flex justify-between items-center">
-                      <div className="text-xs text-gray-500">
-                        {resource.provider} • {resource.duration}
-                      </div>
-                      {resource.url && (
-                        <a
-                          href={resource.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          View Resource →
-                        </a>
-                      )}
+        </div>
+      </div>
+    );
+  }
+
+  // EXPANDED VIEW
+  return (
+    <div className={`border-l-4 ${getPriorityColor(step.priority)} rounded-lg bg-white shadow-sm transition-all ${
+      isCompleted ? 'bg-green-50' : ''
+    }`}>
+      <div className="p-4">
+        <div className="flex items-start gap-4">
+          {/* Completion checkbox */}
+          <button
+            onClick={() => isPremium && onToggle(step.id)}
+            disabled={!isPremium}
+            className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+              isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400'
+            } ${!isPremium ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+          >
+            {isCompleted && (
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </button>
+
+          {/* Main content */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{getCategoryIcon(step.category)}</span>
+                <h4 className="font-semibold text-gray-900">{step.title}</h4>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
+                  {step.category}
+                </span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  step.priority === 'essential' ? 'bg-red-100 text-red-800' :
+                  step.priority === 'recommended' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {step.priority}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+                <button
+                  onClick={onExpandToggle}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <p className="text-gray-600 text-sm mb-3">{step.description}</p>
+
+            {/* Learning Objectives */}
+            {step.learningObjectives && step.learningObjectives.length > 0 && (
+              <div className="mb-3">
+                <h5 className="text-sm font-medium text-gray-900 mb-2">What you'll learn:</h5>
+                <ul className="space-y-1">
+                  {step.learningObjectives.map((objective, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                      <span>{objective}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Resources Section */}
+            {hasExpandableContent && (
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                
+                {/* Paid Resources */}
+                {relevantResources.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                      <span>💳</span>
+                      Recommended Paid Resources
+                    </h5>
+                    <div className="grid gap-3">
+                      {relevantResources.map((resource, index) => (
+                        <div key={index} className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <h6 className="font-medium text-gray-900">{resource.title}</h6>
+                            <span className="text-sm text-blue-600 font-medium">{resource.cost}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
+                          <div className="flex justify-between items-center">
+                            <div className="text-xs text-gray-500">{resource.provider}</div>
+                            {resource.url && (
+                              <a
+                                href={resource.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                              >
+                                View Course
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
+                )}
+
+                {/* For certification steps with no paid resources */}
+                {step.category === 'certification' && relevantResources.length === 0 && (
+                  <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                    <p className="text-sm text-yellow-800">
+                      💡 <strong>Certification Tip:</strong> This step typically requires official testing or licensing. 
+                      Check with your state board or certifying body for specific requirements and exam dates.
+                    </p>
+                  </div>
+                )}
+                
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Show free resource hint for steps without paid resources */}
+            {!hasExpandableContent && (
+              <div className="mt-3">
+                <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>Learning tip:</strong> You can learn this step using free resources. 
+                    See the "Free Resources" section at the bottom of this roadmap for specific suggestions.
+                  </p>
+                </div>
+              </div>
+            )}
+
+          </div>
         </div>
       </div>
     </div>
+  );
+};
+// Progress calculation function - Updated for new structure
+const getProgressPercentage = (userProgress, learningPath) => {
+  if (!learningPath?.steps || learningPath.steps.length === 0) return 0;
+  
+  // Calculate progress based on priority weights
+  const stepWeights = {
+    essential: 3,
+    recommended: 2, 
+    optional: 1
+  };
+  
+  let totalWeight = 0;
+  let completedWeight = 0;
+  
+  learningPath.steps.forEach(step => {
+    const weight = stepWeights[step.priority] || 1;
+    totalWeight += weight;
+    
+    const isCompleted = userProgress.some(p => 
+      p.milestone_data?.step_id === step.id
+    );
+    
+    if (isCompleted) {
+      completedWeight += weight;
+    }
+  });
+  
+  return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
+};
+
+const LearningRoadmapSection = ({ learningPath, userProgress, isPremium, toggleStepCompletion, selectedCareer }) => {
+  const [expandedStep, setExpandedStep] = useState(null);
+
+  if (!learningPath) return null;
+
+  const getProgressPercentage = () => {
+    if (!learningPath?.steps || learningPath.steps.length === 0) return 0;
+    
+    const stepWeights = {
+      essential: 3,
+      recommended: 2, 
+      optional: 1
+    };
+    
+    let totalWeight = 0;
+    let completedWeight = 0;
+    
+    learningPath.steps.forEach(step => {
+      const weight = stepWeights[step.priority] || 1;
+      totalWeight += weight;
+      
+      const isCompleted = userProgress.some(p => 
+        p.milestone_data?.step_id === step.id
+      );
+      
+      if (isCompleted) {
+        completedWeight += weight;
+      }
+    });
+    
+    return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
+  };
+  
+  const getStepsByPriority = () => {
+    const grouped = {
+      essential: [],
+      recommended: [],
+      optional: []
+    };
+    
+    learningPath.steps.forEach(step => {
+      grouped[step.priority]?.push(step);
+    });
+    
+    return grouped;
+  };
+
+  const stepsByPriority = getStepsByPriority();
+  const isStepCompleted = (stepId) => userProgress.some(p => p.milestone_data?.step_id === stepId);
+
+  return (
+    <>
+      {isPremium ? (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Your Learning Roadmap</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Estimated Duration: {learningPath.estimatedDuration} • Click to expand steps
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{getProgressPercentage()}%</div>
+              <div className="text-xs text-gray-500">Complete</div>
+            </div>
+          </div>
+
+          {/* Progress Overview */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+              <span className="text-sm text-gray-600">{getProgressPercentage()}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${getProgressPercentage()}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-2">
+              <span>Essential: {stepsByPriority.essential.filter(s => isStepCompleted(s.id)).length}/{stepsByPriority.essential.length}</span>
+              <span>Recommended: {stepsByPriority.recommended.filter(s => isStepCompleted(s.id)).length}/{stepsByPriority.recommended.length}</span>
+              <span>Optional: {stepsByPriority.optional.filter(s => isStepCompleted(s.id)).length}/{stepsByPriority.optional.length}</span>
+            </div>
+          </div>
+
+          {/* Learning Steps - COMPACT BY DEFAULT */}
+          <div className="space-y-3">
+            {learningPath.steps.map((step) => (
+              <LearningStep
+                key={step.id}
+                step={step}
+                isCompleted={isStepCompleted(step.id)}
+                onToggle={toggleStepCompletion}
+                isPremium={isPremium}
+                learningPath={learningPath}
+                isExpanded={expandedStep === step.id}
+                onExpandToggle={() => setExpandedStep(expandedStep === step.id ? null : step.id)}
+              />
+            ))}
+          </div>
+
+          {/* Free Resources Section - MOVED HERE */}
+          {learningPath?.freeResources && learningPath.freeResources.length > 0 && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h4 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <span>🆓</span>
+                Free Learning Resources for All Steps
+              </h4>
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <p className="text-sm text-green-800 mb-3">
+                  Use these free resources to learn any of the skills above:
+                </p>
+                <div className="grid gap-3">
+                  {learningPath.freeResources.map((resource, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <span className="text-green-700 font-medium text-sm">{resource.title}: </span>
+                        <span className="text-sm text-gray-700">{resource.description}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Learning Roadmap</h3>
+              <p className="text-gray-600 text-sm mb-3">
+                Get step-by-step guidance tailored for {selectedCareer.title} with progress tracking.
+              </p>
+              <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                <div className="text-sm text-blue-800 font-medium mb-1">
+                  {learningPath.steps.length} Learning Steps Available
+                </div>
+                <div className="text-xs text-blue-600">
+                  {stepsByPriority.essential.length} Essential • {stepsByPriority.recommended.length} Recommended • {stepsByPriority.optional.length} Optional
+                </div>
+              </div>
+              <CheckoutModal 
+                trigger={
+                  <button className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all">
+                    Unlock Full Roadmap - $29
+                  </button>
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -474,19 +813,119 @@ const Results = () => {
     }
   };
 
+// Updates needed in Results.jsx
+
+  // 1. Replace the getProgressPercentage function:
   const getProgressPercentage = () => {
-    if (!learningPath?.steps || !isPremium) return 0;
-    const requiredSteps = learningPath.steps.filter(s => s.required);
-    const completedRequired = requiredSteps.filter(s => 
-      userProgress.some(p => p.milestone_data?.step_id === s.id)
-    );
-    return Math.round((completedRequired.length / requiredSteps.length) * 100);
+    if (!learningPath?.steps || learningPath.steps.length === 0) return 0;
+    
+    // Calculate progress based on priority weights
+    const stepWeights = {
+      essential: 3,
+      recommended: 2, 
+      optional: 1
+    };
+    
+    let totalWeight = 0;
+    let completedWeight = 0;
+    
+    learningPath.steps.forEach(step => {
+      const weight = stepWeights[step.priority] || 1;
+      totalWeight += weight;
+      
+      const isCompleted = userProgress.some(p => 
+        p.milestone_data?.step_id === step.id && p.milestone_data?.career === selectedCareer.key
+      );
+      
+      if (isCompleted) {
+        completedWeight += weight;
+      }
+    });
+    
+    return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
   };
 
+  // 2. Replace the isStepCompleted function:
   const isStepCompleted = (stepId) => {
-    return userProgress.some(p => p.milestone_data?.step_id === stepId);
+    return userProgress.some(p => 
+      p.milestone_data?.step_id === stepId && p.milestone_data?.career === selectedCareer.key
+    );
   };
 
+  // 3. Replace the Learning Path section in the JSX:
+  {/* Learning Path - PREMIUM with Compact Paywall */}
+  <LearningRoadmapSection 
+    learningPath={learningPath}
+    userProgress={userProgress}
+    isPremium={isPremium}
+    toggleStepCompletion={toggleStepCompletion}
+    selectedCareer={selectedCareer}
+  />
+
+  // 4. Update the progress sidebar section:
+  {isPremium ? (
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">Your Progress</h3>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">Completed Steps</span>
+          <span className="font-semibold">
+            {userProgress.filter(p => p.milestone_data?.career === selectedCareer.key).length}/{learningPath?.steps?.length || 0}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">Essential Steps</span>
+          <span className="font-semibold">
+            {userProgress.filter(p => {
+              const step = learningPath?.steps?.find(s => s.id === p.milestone_data?.step_id);
+              return step?.priority === 'essential' && p.milestone_data?.career === selectedCareer.key;
+            }).length}/{learningPath?.steps?.filter(s => s.priority === 'essential')?.length || 0}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">Overall Progress</span>
+          <span className="font-semibold text-green-600">{getProgressPercentage()}%</span>
+        </div>
+        
+        {/* Progress bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${getProgressPercentage()}%` }}
+          />
+        </div>
+        
+        {/* Priority breakdown */}
+        <div className="text-xs text-gray-500 space-y-1">
+          <div className="flex justify-between">
+            <span>Essential:</span>
+            <span>{learningPath?.steps?.filter(s => s.priority === 'essential' && isStepCompleted(s.id)).length || 0}/{learningPath?.steps?.filter(s => s.priority === 'essential').length || 0}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Recommended:</span>
+            <span>{learningPath?.steps?.filter(s => s.priority === 'recommended' && isStepCompleted(s.id)).length || 0}/{learningPath?.steps?.filter(s => s.priority === 'recommended').length || 0}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Optional:</span>
+            <span>{learningPath?.steps?.filter(s => s.priority === 'optional' && isStepCompleted(s.id)).length || 0}/{learningPath?.steps?.filter(s => s.priority === 'optional').length || 0}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-xl text-white p-6">
+      <h3 className="text-lg font-bold mb-2">Track Your Progress</h3>
+      <p className="text-blue-100 text-sm mb-4">
+        Upgrade to premium to track your learning progress and check off completed steps.
+      </p>
+      <div className="bg-white bg-opacity-20 rounded-lg p-3">
+        <div className="text-center">
+          <div className="text-2xl font-bold mb-1">?</div>
+          <div className="text-xs">Progress Tracking</div>
+        </div>
+      </div>
+    </div>
+  )}
   // ⬇️ NEW: called when LocationInput saves a new state/city
   const handleLocationUpdate = async (loc) => {
     setUserLocation(loc);
@@ -632,53 +1071,13 @@ const Results = () => {
             />
 
             {/* Learning Path - PREMIUM with Compact Paywall */}
-            {isPremium ? (
-              learningPath && (
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">Your Learning Roadmap</h3>
-                    <div className="text-sm text-gray-500">
-                      Estimated Duration: {learningPath.estimatedDuration}
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    {learningPath.steps.map((step) => (
-                      <LearningStep
-                        key={step.id}
-                        step={step}
-                        isCompleted={isStepCompleted(step.id)}
-                        onToggle={toggleStepCompletion}
-                        isPremium={isPremium}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )
-            ) : (
-              <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">Learning Roadmap</h3>
-                    <p className="text-gray-600 text-sm mb-3">
-                      Get step-by-step guidance tailored for {selectedCareer.title} with progress tracking.
-                    </p>
-                    <button 
-                      onClick={handleUpgrade}
-                      className="text-blue-600 text-sm font-medium hover:text-blue-800 cursor-pointer"
-                    >
-                      Unlock Complete Roadmap →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+              <LearningRoadmapSection 
+                learningPath={learningPath}
+                userProgress={userProgress}
+                isPremium={isPremium}
+                toggleStepCompletion={toggleStepCompletion}
+                selectedCareer={selectedCareer}
+              />
 
             {/* Reality Check - PREMIUM with Compact Paywall */}
             {isPremium ? (
@@ -871,46 +1270,6 @@ const Results = () => {
               </div>
             )}
 
-            {/* Certification Requirements - FREE */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-6">Certification Requirements</h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">📜 Required Certifications</h4>
-                  <div className="space-y-3">
-                    {selectedCareer.certifications.map((cert, index) => (
-                      <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <div className="font-medium text-gray-900">{cert}</div>
-                        <div className="text-sm text-gray-600 mt-1">
-                          Required for {selectedCareer.title} licensing
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">📈 Career Progression</h4>
-                  <div className="space-y-2">
-                    {selectedCareer.growth_path.split('→').map((stage, index, array) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                          index === 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <div className={`font-medium ${index === 0 ? 'text-green-800' : 'text-gray-700'}`}>
-                            {stage.trim()}
-                          </div>
-                          {index === 0 && <div className="text-xs text-green-600">← You start here</div>}
-                        </div>
-                        {index < array.length - 1 && <div className="text-gray-400">→</div>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Sidebar */}
@@ -1049,6 +1408,8 @@ const Results = () => {
         onClose={() => setShowCheckoutModal(false)}
         onSuccess={handlePaymentSuccess}
       />
+      {/* Footer at bottom */}
+      <Footer />
     </div>
   );
 };
