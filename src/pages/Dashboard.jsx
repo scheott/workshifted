@@ -1,13 +1,12 @@
-// Update to src/pages/Dashboard.jsx - Streamlined dashboard with confirmation modals
+// Update to src/pages/Dashboard.jsx - Streamlined dashboard with confirmation modals and account deletion
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CheckoutModal from '../components/CheckoutModal';
 import { usePayments } from '../hooks/usePayments';
 import Footer from '../components/Footer';
-
 
 const UserDashboard = () => {
   const { user } = useAuth();
@@ -24,6 +23,14 @@ const UserDashboard = () => {
   const [showCareerSelection, setShowCareerSelection] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState(null);
+  
+  // Account deletion states
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  
+  const dropdownRef = useRef(null);
   const { checkPaymentStatus } = usePayments();
 
   useEffect(() => {
@@ -31,6 +38,20 @@ const UserDashboard = () => {
       fetchUserData();
     }
   }, [user]);
+
+  // Handle clicking outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Handle assessment results passed from Assessment page
   useEffect(() => {
@@ -61,10 +82,17 @@ const UserDashboard = () => {
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        if (profileError.code === 'PGRST116') {
+          // User profile doesn't exist - redirect to assessment
+          console.log('No user profile found, redirecting to assessment');
+          navigate('/assessment', { replace: true });
+          return;
+        } else {
+          console.error('Error fetching profile:', profileError);
+        }
       }
 
-      // Set the profile (remove the RPC call that's causing 404)
+      // Set the profile
       setUserProfile(profile);
 
       // Debug: Log the profile data to check selected_career
@@ -113,6 +141,8 @@ const UserDashboard = () => {
       
     } catch (error) {
       console.error('Error fetching user data:', error);
+      // If there's a major error, redirect to assessment
+      navigate('/assessment', { replace: true });
     } finally {
       setLoading(false);
     }
@@ -239,7 +269,76 @@ const UserDashboard = () => {
   };
 
   const handleSignOut = async () => {
+    setShowUserDropdown(false);
     await supabase.auth.signOut();
+  };
+
+  const handleDeleteAccount = () => {
+    setShowUserDropdown(false);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      return;
+    }
+
+    setIsDeletingAccount(true);
+
+    try {
+      // Call our Edge Function to delete the account
+      const { data, error } = await supabase.functions.invoke('delete-user-account', {
+        body: { user_id: user.id }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Sign out after successful deletion
+      await supabase.auth.signOut();
+      
+      // Redirect to home page
+      navigate('/', { 
+        replace: true,
+        state: { message: 'Account successfully deleted' }
+      });
+
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      
+      // If the edge function doesn't exist yet, fall back to data deletion + signout
+      if (error.message?.includes('Function not found') || error.message?.includes('404')) {
+        try {
+          const userId = user.id;
+
+          // Delete user data from all tables
+          await Promise.allSettled([
+            supabase.from('user_activity_log').delete().eq('user_id', userId),
+            supabase.from('assessment_results').delete().eq('user_id', userId),
+            supabase.from('user_profiles').delete().eq('user_id', userId)
+          ]);
+
+          // Sign out the user (this effectively "deletes" their session)
+          await supabase.auth.signOut();
+          
+          // Redirect with a message about partial deletion
+          navigate('/', { 
+            replace: true,
+            state: { 
+              message: 'Your data has been deleted and you have been signed out. Please contact support to fully delete your account.' 
+            }
+          });
+        } catch (fallbackError) {
+          console.error('Fallback deletion failed:', fallbackError);
+          alert('Failed to delete account. Please contact support for assistance.');
+        }
+      } else {
+        alert('Failed to delete account. Please try again or contact support.');
+      }
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   const handleUpgrade = () => {
@@ -279,20 +378,51 @@ const UserDashboard = () => {
                 <div className="text-lg text-gray-600">Choose Your Path</div>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {getDisplayName().charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-gray-700 font-medium">{getDisplayName()}</span>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg px-2 py-1"
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm">
+                        {getDisplayName().charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="font-medium">{getDisplayName()}</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown menu */}
+                  {showUserDropdown && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                      <div className="py-1">
+                        <button
+                          onClick={handleSignOut}
+                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          Sign Out
+                        </button>
+                        
+                        <div className="border-t border-gray-100 my-1"></div>
+                        
+                        <button
+                          onClick={handleDeleteAccount}
+                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete Account
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={handleSignOut}
-                  className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                >
-                  Sign Out
-                </button>
               </div>
             </div>
           </div>
@@ -372,22 +502,53 @@ const UserDashboard = () => {
               <div className="text-lg text-gray-600">Dashboard</div>
             </div>
 
-            {/* Right: User menu */}
+            {/* Right: User menu with dropdown */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-sm">
-                    {getDisplayName().charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <span className="text-gray-700 font-medium">{getDisplayName()}</span>
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg px-2 py-1"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">
+                      {getDisplayName().charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="font-medium">{getDisplayName()}</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown menu */}
+                {showUserDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={handleSignOut}
+                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Sign Out
+                      </button>
+                      
+                      <div className="border-t border-gray-100 my-1"></div>
+                      
+                      <button
+                        onClick={handleDeleteAccount}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Account
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleSignOut}
-                className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-              >
-                Sign Out
-              </button>
             </div>
           </div>
         </div>
@@ -586,6 +747,70 @@ const UserDashboard = () => {
         </div>
       </div>
 
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6">
+            <div className="text-center mb-6">
+              <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Delete Account
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                This action cannot be undone. This will permanently delete your account, all assessment results, career progress, and remove all of your data from our servers.
+              </p>
+              
+              <div className="text-left">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  To confirm, type <span className="font-bold text-red-600">DELETE</span> in the box below:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  placeholder="DELETE"
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmation('');
+                }}
+                disabled={isDeletingAccount}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteAccount}
+                disabled={deleteConfirmation !== 'DELETE' || isDeletingAccount}
+                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeletingAccount ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </div>
+                ) : (
+                  'Delete Account'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation Modal */}
       {showConfirmationModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -623,10 +848,11 @@ const UserDashboard = () => {
         onClose={() => setShowCheckoutModal(false)}
         onSuccess={handlePaymentSuccess}
       />
-      {/* Footer at bottom */}
+      
       <Footer />
     </div>
   );
 };
 
 export default UserDashboard;
+                  

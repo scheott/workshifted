@@ -12,6 +12,8 @@ import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 import Contact from './pages/Contact';
 import RefundPolicy from './pages/legal/RefundPolicy';
+import PasswordReset from './pages/PasswordReset';
+import GoogleAnalytics from './components/GoogleAnalytics';
 
 
 
@@ -21,12 +23,15 @@ function App() {
   return (
     <Router>
       <div className="App">
+        {/* Google Analytics - will track all page views automatically */}
+        <GoogleAnalytics />
         <Routes>
           <Route path="/" element={<RedirectIfAuthed><Landing /></RedirectIfAuthed>} />
           <Route path="/auth" element={<RedirectIfAuthed><Auth /></RedirectIfAuthed>} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />
+          <Route path="/auth/reset-password" element={<PasswordReset />} />
 
           <Route path="/assessment" element={<PrivateRoute><Assessment /></PrivateRoute>} />
           <Route path="/results" element={<PrivateRoute><Results /></PrivateRoute>} />
