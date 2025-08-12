@@ -202,6 +202,7 @@ const LearningStep = ({ step, isCompleted, onToggle, isPremium, learningPath, is
       default: return '📋';
     }
   };
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const getCategoryColor = (category) => {
     switch (category) {
@@ -464,7 +465,7 @@ const getProgressPercentage = (userProgress, learningPath) => {
   return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
 };
 
-const LearningRoadmapSection = ({ learningPath, userProgress, isPremium, toggleStepCompletion, selectedCareer }) => {
+const LearningRoadmapSection = ({ learningPath, userProgress, isPremium, toggleStepCompletion, selectedCareer, onUpgrade }) => {
   const [expandedStep, setExpandedStep] = useState(null);
 
   if (!learningPath) return null;
@@ -497,6 +498,10 @@ const LearningRoadmapSection = ({ learningPath, userProgress, isPremium, toggleS
     return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
   };
   
+  const handleUpgrade = () => {
+    setShowCheckoutModal(true);
+  };
+
   const getStepsByPriority = () => {
     const grouped = {
       essential: [],
@@ -618,7 +623,10 @@ const LearningRoadmapSection = ({ learningPath, userProgress, isPremium, toggleS
               </div>
               <CheckoutModal 
                 trigger={
-                  <button className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all">
+                  <button 
+                  onClick={onUpgrade}
+                  className="bg-gradient-to-r from-blue-600 to-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all"
+                  >
                     Unlock Full Roadmap - $29
                   </button>
                 }
@@ -860,6 +868,7 @@ const Results = () => {
     isPremium={isPremium}
     toggleStepCompletion={toggleStepCompletion}
     selectedCareer={selectedCareer}
+    onUpgrade={() => setShowCheckoutModal(true)}
   />
 
   // 4. Update the progress sidebar section:
@@ -1077,6 +1086,7 @@ const Results = () => {
                 isPremium={isPremium}
                 toggleStepCompletion={toggleStepCompletion}
                 selectedCareer={selectedCareer}
+                onUpgrade={() => setShowCheckoutModal(true)}
               />
 
             {/* Reality Check - PREMIUM with Compact Paywall */}
