@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 import { fetchApprenticeships } from '../lib/apprenticeships';
 import CheckoutModal from '../components/CheckoutModal';
 import Footer from '../components/Footer';
-
+// Add this import with your other imports
+import DashboardHeader from '../components/DashboardHeader';
 
 // ⬇️ NEW: manual location helpers + UI
 import { getUserLocation, getStateName } from '../lib/location';

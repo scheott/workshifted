@@ -1,12 +1,13 @@
-// Update to src/pages/Dashboard.jsx - Streamlined dashboard with confirmation modals and account deletion
+// Update to src/pages/Dashboard.jsx - Clean version with DashboardHeader
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import CheckoutModal from '../components/CheckoutModal';
 import { usePayments } from '../hooks/usePayments';
 import Footer from '../components/Footer';
+import DashboardHeader from '../components/DashboardHeader';
 
 const UserDashboard = () => {
   const { user } = useAuth();
@@ -24,13 +25,11 @@ const UserDashboard = () => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [confirmationAction, setConfirmationAction] = useState(null);
   
-  // Account deletion states
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  // Account deletion states (for the modal triggered by DashboardHeader)
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   
-  const dropdownRef = useRef(null);
   const { checkPaymentStatus } = usePayments();
 
   useEffect(() => {
@@ -38,20 +37,6 @@ const UserDashboard = () => {
       fetchUserData();
     }
   }, [user]);
-
-  // Handle clicking outside dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowUserDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   // Handle assessment results passed from Assessment page
   useEffect(() => {
@@ -253,11 +238,6 @@ const UserDashboard = () => {
     setConfirmationAction(null);
   };
 
-  // Add function to refresh user data after changes
-  const refreshUserData = async () => {
-    await fetchUserData();
-  };
-
   const getDisplayName = () => {
     if (userProfile?.first_name) {
       return userProfile.first_name + (userProfile.last_name ? ` ${userProfile.last_name}` : '');
@@ -268,14 +248,17 @@ const UserDashboard = () => {
     return user?.email?.split('@')[0] || 'User';
   };
 
+  // Clean handlers for DashboardHeader
   const handleSignOut = async () => {
-    setShowUserDropdown(false);
     await supabase.auth.signOut();
   };
 
   const handleDeleteAccount = () => {
-    setShowUserDropdown(false);
     setShowDeleteModal(true);
+  };
+
+  const handleExploreCareers = () => {
+    navigate('/results'); // Update this route as needed
   };
 
   const confirmDeleteAccount = async () => {
@@ -363,70 +346,19 @@ const UserDashboard = () => {
         </div>
       </div>
     );
-  };
+  }
 
   // Show career selection modal if user just completed assessment
   if (showCareerSelection && topMatches.length > 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center space-x-4">
-                <div className="text-2xl font-bold text-blue-600">WorkShifted</div>
-                <div className="text-lg text-gray-600">Choose Your Path</div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg px-2 py-1"
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">
-                        {getDisplayName().charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="font-medium">{getDisplayName()}</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  {/* Dropdown menu */}
-                  {showUserDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                      <div className="py-1">
-                        <button
-                          onClick={handleSignOut}
-                          className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        >
-                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          Sign Out
-                        </button>
-                        
-                        <div className="border-t border-gray-100 my-1"></div>
-                        
-                        <button
-                          onClick={handleDeleteAccount}
-                          className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Delete Account
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        <DashboardHeader 
+          user={user}
+          onSignOut={handleSignOut}
+          onDeleteAccount={handleDeleteAccount}
+          onExploreCareers={handleExploreCareers}
+          currentPage="dashboard"
+        />
 
         {/* Career Selection */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -492,67 +424,13 @@ const UserDashboard = () => {
   // Regular dashboard view
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            {/* Left: Logo + Dashboard */}
-            <div className="flex items-center space-x-4">
-              <div className="text-2xl font-bold text-blue-600">WorkShifted</div>
-              <div className="text-lg text-gray-600">Dashboard</div>
-            </div>
-
-            {/* Right: User menu with dropdown */}
-            <div className="flex items-center space-x-4">
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg px-2 py-1"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">
-                      {getDisplayName().charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="font-medium">{getDisplayName()}</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Dropdown menu */}
-                {showUserDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                    <div className="py-1">
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      >
-                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        Sign Out
-                      </button>
-                      
-                      <div className="border-t border-gray-100 my-1"></div>
-                      
-                      <button
-                        onClick={handleDeleteAccount}
-                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                      >
-                        <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Delete Account
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user}
+        onSignOut={handleSignOut}
+        onDeleteAccount={handleDeleteAccount}
+        onExploreCareers={handleExploreCareers}
+        currentPage="dashboard"
+      />
 
       {/* Welcome Banner */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
@@ -855,4 +733,3 @@ const UserDashboard = () => {
 };
 
 export default UserDashboard;
-                  
