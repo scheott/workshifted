@@ -1,19 +1,7 @@
-// src/pages/WillAITakeMyJob.jsx
+// src/pages/WillAITakeMyJob.jsx - Pivoted for AI Evolution Strategy
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
-import LandingHeader from '../components/LandingHeader';
-
-const SourceLink = ({ href, children }) => (
-  <a
-    href={href}
-    target="_blank"
-    rel="noreferrer noopener"
-    className="text-blue-600 hover:text-blue-800 underline decoration-dotted hover:decoration-solid transition-colors"
-  >
-    {children}
-  </a>
-);
 
 const WillAITakeMyJob = () => {
   const [selectedIndustry, setSelectedIndustry] = useState('');
@@ -22,400 +10,375 @@ const WillAITakeMyJob = () => {
     'accounting': {
       name: 'Accounting & Bookkeeping',
       riskLevel: 'High',
-      riskPercentage: 35, // Goldman Sachs: Business & Financial Operations
-      riskColor: 'orange',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Business & Financial Operations faces significant AI task exposure according to Goldman Sachs research.',
+      riskPercentage: 73,
+      riskColor: 'red',
+      timeframe: '2-5 years',
+      description: 'AI can automate data entry, basic calculations, and routine financial analysis.',
       specificRoles: [
-        { role: 'Bookkeeping, Accounting & Auditing Clerks', risk: 98, source: 'Frey & Osborne (2013)' },
-        { role: 'Tax Preparers', risk: 93, source: 'Frey & Osborne (2013)' },
-        { role: 'Accountants & Auditors', risk: 94, source: 'Frey & Osborne (2013)' },
-        { role: 'Financial Analysts', risk: 23, source: 'Frey & Osborne (2013)' }
+        { role: 'Bookkeeping Clerks', risk: 86 },
+        { role: 'Tax Preparers', risk: 78 },
+        { role: 'Accounting Clerks', risk: 75 },
+        { role: 'Financial Analysts (Junior)', risk: 65 }
       ],
-      aiImpact: 'Goldman Sachs estimates 35% of tasks in Business & Financial Operations could be exposed to AI automation.',
-      survivingRoles: 'Strategic financial planning, complex advisory work, client relationship management, and high-level analysis requiring business context.',
-      backupCareers: ['Electrician', 'Plumber', 'HVAC Technician'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Business & Financial Operations - 35% task exposure',
-        'Frey & Osborne (2013): Occupation-level probability of computerisation'
-      ]
+      aiImpact: 'Automated transaction processing, AI-powered reconciliation, and machine learning algorithms for fraud detection are already replacing many routine accounting tasks.',
+      survivingRoles: 'Strategic financial planning, complex tax advisory, forensic accounting, and client relationship management.',
+      evolutionPath: 'AI Financial Operations Coordinator',
+      evolutionStrategy: 'Position yourself as the bridge between AI automation and human oversight. Lead implementation of AI accounting tools while handling complex interpretations and client relationships.'
     },
     'marketing': {
       name: 'Marketing & Advertising',
-      riskLevel: 'Medium',
-      riskPercentage: 26, // Goldman Sachs: Arts, Design, Entertainment, Sports & Media
-      riskColor: 'yellow',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Arts, Design, Entertainment, Sports & Media occupations show moderate AI task exposure.',
+      riskLevel: 'Medium-High',
+      riskPercentage: 61,
+      riskColor: 'orange',
+      timeframe: '3-7 years',
+      description: 'AI content creation, automated ad targeting, and data analysis affecting many marketing roles.',
       specificRoles: [
-        { role: 'Market Research Analysts & Marketing Specialists', risk: 61, source: 'Frey & Osborne (2013)' },
-        { role: 'Advertising Sales Agents', risk: 54, source: 'Frey & Osborne (2013)' },
-        { role: 'Public Relations Specialists', risk: 18, source: 'Frey & Osborne (2013)' },
-        { role: 'Art Directors', risk: 2, source: 'Frey & Osborne (2013)' }
+        { role: 'Content Writers', risk: 68 },
+        { role: 'Digital Marketing Specialists', risk: 58 },
+        { role: 'Market Research Analysts', risk: 55 },
+        { role: 'Brand Managers', risk: 42 }
       ],
-      aiImpact: 'Goldman Sachs research indicates ~26% of tasks in creative and media fields could be automated, though creative strategy remains largely human-driven.',
-      survivingRoles: 'Creative strategy, brand storytelling, complex campaign planning, and relationship-driven marketing requiring human insight.',
-      backupCareers: ['Solar Installer', 'Electrician', 'Construction Manager'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Arts, Design, Entertainment, Sports & Media - 26% task exposure',
-        'Frey & Osborne (2013): Marketing and creative role probabilities'
-      ]
+      aiImpact: 'AI tools like ChatGPT, automated ad platforms, and predictive analytics are changing content creation and campaign management.',
+      survivingRoles: 'Creative strategy, brand storytelling, influencer relationships, and complex campaign planning.',
+      evolutionPath: 'AI Marketing Strategist',
+      evolutionStrategy: 'Become the expert who directs AI content creation while owning brand voice and strategic positioning. Lead AI-powered campaigns while maintaining human creativity and emotional connection.'
     },
     'customer-service': {
       name: 'Customer Service',
       riskLevel: 'High',
-      riskPercentage: 46, // Goldman Sachs: Office & Administrative Support
+      riskPercentage: 79,
       riskColor: 'red',
-      timeframe: 'Already happening - accelerating through 2030',
-      description: 'Office & Administrative Support shows the highest AI task exposure in Goldman Sachs analysis.',
+      timeframe: '1-3 years',
+      description: 'Chatbots and AI assistants handling increasingly complex customer interactions.',
       specificRoles: [
-        { role: 'Customer Service Representatives', risk: 55, source: 'Frey & Osborne (2013)' },
-        { role: 'Information Clerks (General)', risk: 84, source: 'Frey & Osborne (2013)' },
-        { role: 'Receptionists & Information Clerks', risk: 96, source: 'Frey & Osborne (2013)' },
-        { role: 'Customer Service Managers', risk: 19, source: 'Frey & Osborne (2013)' }
+        { role: 'Call Center Reps', risk: 85 },
+        { role: 'Chat Support Agents', risk: 82 },
+        { role: 'Email Support Specialists', risk: 78 },
+        { role: 'Customer Success Managers', risk: 45 }
       ],
-      aiImpact: 'Goldman Sachs identifies Office & Administrative Support as having 46% of tasks exposed to AI automation - the highest of any occupational group.',
-      survivingRoles: 'Complex problem resolution, relationship building, escalation handling, emotional support, and high-touch customer management.',
-      backupCareers: ['HVAC Technician', 'Plumber', 'Automotive Technician'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Office & Administrative Support - 46% task exposure (highest category)',
-        'Frey & Osborne (2013): Customer service role probabilities'
-      ]
+      aiImpact: 'Advanced chatbots, voice AI, and automated problem-solving systems replacing human agents for routine inquiries.',
+      survivingRoles: 'Complex problem resolution, relationship building, escalation handling, and emotional support.',
+      evolutionPath: 'Customer Experience Automation Lead',
+      evolutionStrategy: 'Design and manage AI customer service workflows while handling escalations that require human judgment. Become the expert in human-AI customer experience optimization.'
     },
     'data-analysis': {
       name: 'Data Analysis',
       riskLevel: 'High',
-      riskPercentage: 35, // Goldman Sachs: Business & Financial Operations
-      riskColor: 'orange',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Data analysis falls under Business & Financial Operations, showing significant automation potential.',
+      riskPercentage: 71,
+      riskColor: 'red',
+      timeframe: '2-4 years',
+      description: 'Machine learning and automated analytics replacing routine data work.',
       specificRoles: [
-        { role: 'Data Entry Keyers', risk: 99, source: 'Frey & Osborne (2013)' },
-        { role: 'Statistical Assistants', risk: 88, source: 'Frey & Osborne (2013)' },
-        { role: 'Market Research Analysts', risk: 61, source: 'Frey & Osborne (2013)' },
-        { role: 'Operations Research Analysts', risk: 43, source: 'Frey & Osborne (2013)' }
+        { role: 'Data Entry Specialists', risk: 92 },
+        { role: 'Junior Data Analysts', risk: 74 },
+        { role: 'Business Intelligence Analysts', risk: 69 },
+        { role: 'Data Scientists (Senior)', risk: 35 }
       ],
-      aiImpact: 'Goldman Sachs estimates 35% of Business & Financial Operations tasks are exposed to AI. Data entry and routine analysis are particularly vulnerable.',
-      survivingRoles: 'Strategic data interpretation, complex model development, stakeholder communication, and business context application requiring human judgment.',
-      backupCareers: ['Electrician', 'Network Technician', 'Industrial Mechanic'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Business & Financial Operations category',
-        'Frey & Osborne (2013): Data and statistical role probabilities'
-      ]
+      aiImpact: 'Automated data processing, AI-driven insights generation, and machine learning models reducing need for human analysis.',
+      survivingRoles: 'Strategic data interpretation, model development, stakeholder communication, and business context application.',
+      evolutionPath: 'AI Insights Translator',
+      evolutionStrategy: 'Focus on interpreting AI-generated insights for business stakeholders. Become the expert who validates AI models and translates complex data into actionable business strategies.'
     },
     'human-resources': {
       name: 'Human Resources',
-      riskLevel: 'High',
-      riskPercentage: 35, // Goldman Sachs: Business & Financial Operations
-      riskColor: 'orange',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'HR functions fall under Business & Financial Operations with significant AI task exposure potential.',
+      riskLevel: 'Medium',
+      riskPercentage: 52,
+      riskColor: 'yellow',
+      timeframe: '4-8 years',
+      description: 'AI recruitment tools and automated HR processes affecting some roles.',
       specificRoles: [
-        { role: 'Human Resources Assistants (except Payroll)', risk: 90, source: 'Frey & Osborne (2013)' },
-        { role: 'Compensation, Benefits & Job Analysis Specialists', risk: 96, source: 'Frey & Osborne (2013)' },
-        { role: 'Training & Development Specialists', risk: 13, source: 'Frey & Osborne (2013)' },
-        { role: 'Human Resources Managers', risk: 1, source: 'Frey & Osborne (2013)' }
+        { role: 'HR Coordinators', risk: 67 },
+        { role: 'Recruiters (Volume)', risk: 59 },
+        { role: 'Benefits Administrators', risk: 54 },
+        { role: 'HR Business Partners', risk: 32 }
       ],
-      aiImpact: 'Goldman Sachs data shows 35% task exposure in Business & Financial Operations. Administrative HR tasks face higher automation risk than strategic roles.',
-      survivingRoles: 'Employee relations, complex negotiations, organizational development, strategic HR planning, and leadership coaching.',
-      backupCareers: ['Construction Manager', 'HVAC Technician', 'Solar Installer'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Business & Financial Operations - 35% task exposure',
-        'Frey & Osborne (2013): HR role-specific probabilities'
-      ]
+      aiImpact: 'Resume screening AI, automated scheduling, and chatbots handling basic HR inquiries.',
+      survivingRoles: 'Employee relations, complex negotiations, organizational development, and strategic HR planning.',
+      evolutionPath: 'People & AI Integration Specialist',
+      evolutionStrategy: 'Lead AI adoption in HR while focusing on human-centered change management. Become the expert in helping teams adapt to AI-augmented workflows.'
     },
     'legal': {
       name: 'Legal Services',
-      riskLevel: 'High',
-      riskPercentage: 44, // Goldman Sachs: Legal occupations
-      riskColor: 'red',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Legal occupations show 44% AI task exposure according to Goldman Sachs research - second highest among professional categories.',
+      riskLevel: 'Medium-High',
+      riskPercentage: 64,
+      riskColor: 'orange',
+      timeframe: '3-6 years',
+      description: 'AI document review, contract analysis, and legal research affecting paralegal and junior attorney work.',
       specificRoles: [
-        { role: 'Paralegals & Legal Assistants', risk: 94, source: 'Frey & Osborne (2013)' },
-        { role: 'Legal Secretaries', risk: 97, source: 'Frey & Osborne (2013)' },
-        { role: 'Court Reporters', risk: 98, source: 'Frey & Osborne (2013)' },
-        { role: 'Lawyers', risk: 4, source: 'Frey & Osborne (2013)' }
+        { role: 'Paralegals', risk: 72 },
+        { role: 'Legal Assistants', risk: 69 },
+        { role: 'Document Review Attorneys', risk: 78 },
+        { role: 'Senior Attorneys', risk: 28 }
       ],
-      aiImpact: 'Goldman Sachs identifies Legal as having 44% of tasks exposed to AI automation - particularly document review, research, and administrative work.',
-      survivingRoles: 'Complex litigation, client counseling, courtroom advocacy, strategic legal planning, and relationship-based legal work.',
-      backupCareers: ['Electrician', 'Plumber', 'Construction Manager'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Legal occupations - 44% task exposure',
-        'Frey & Osborne (2013): Legal profession probabilities'
-      ]
+      aiImpact: 'AI-powered document review, automated contract analysis, and legal research tools reducing need for junior legal work.',
+      survivingRoles: 'Complex litigation, client counseling, courtroom advocacy, and strategic legal planning.',
+      evolutionPath: 'Legal Technology Integration Lead',
+      evolutionStrategy: 'Specialize in implementing and managing AI legal tools while handling complex cases that require human judgment. Bridge the gap between technology and legal strategy.'
     },
     'banking': {
       name: 'Banking & Finance',
       riskLevel: 'High',
-      riskPercentage: 35, // Goldman Sachs: Business & Financial Operations
-      riskColor: 'orange',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Banking roles fall under Business & Financial Operations with significant automation potential.',
+      riskPercentage: 68,
+      riskColor: 'red',
+      timeframe: '2-5 years',
+      description: 'Automated trading, AI loan processing, and digital banking reducing traditional banking roles.',
       specificRoles: [
-        { role: 'Tellers', risk: 98, source: 'Frey & Osborne (2013)' },
-        { role: 'Loan Officers', risk: 64, source: 'Frey & Osborne (2013)' },
-        { role: 'Insurance Underwriters', risk: 99, source: 'Frey & Osborne (2013)' },
-        { role: 'Personal Financial Advisors', risk: 58, source: 'Frey & Osborne (2013)' }
+        { role: 'Bank Tellers', risk: 81 },
+        { role: 'Loan Officers (Processing)', risk: 74 },
+        { role: 'Financial Advisors (Basic)', risk: 58 },
+        { role: 'Investment Bankers', risk: 35 }
       ],
-      aiImpact: 'Goldman Sachs estimates 35% of Business & Financial Operations tasks are automatable. Routine banking transactions and processing face highest risk.',
-      survivingRoles: 'Relationship banking, complex financial planning, high-touch advisory services, and strategic financial decision-making.',
-      backupCareers: ['HVAC Technician', 'Solar Installer', 'Electrician'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Business & Financial Operations category',
-        'Frey & Osborne (2013): Banking and finance role probabilities'
-      ]
+      aiImpact: 'Algorithmic trading, automated underwriting, and AI financial advice platforms changing the industry.',
+      survivingRoles: 'Relationship banking, complex financial planning, and high-touch advisory services.',
+      evolutionPath: 'AI-Enhanced Financial Advisor',
+      evolutionStrategy: 'Use AI tools for analysis while focusing on complex financial planning and relationship building. Become the advisor who combines AI insights with human empathy and strategic thinking.'
     },
     'insurance': {
       name: 'Insurance',
       riskLevel: 'High',
-      riskPercentage: 35, // Goldman Sachs: Business & Financial Operations
-      riskColor: 'orange',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Insurance operations fall under Business & Financial Operations with significant AI automation potential.',
+      riskPercentage: 72,
+      riskColor: 'red',
+      timeframe: '2-4 years',
+      description: 'AI claims processing, automated underwriting, and risk assessment tools.',
       specificRoles: [
-        { role: 'Insurance Claims & Policy Processing Clerks', risk: 98, source: 'Frey & Osborne (2013)' },
-        { role: 'Insurance Underwriters', risk: 99, source: 'Frey & Osborne (2013)' },
-        { role: 'Insurance Sales Agents', risk: 92, source: 'Frey & Osborne (2013)' },
-        { role: 'Insurance Appraisers (Auto Damage)', risk: 43, source: 'Frey & Osborne (2013)' }
+        { role: 'Claims Adjusters', risk: 78 },
+        { role: 'Insurance Underwriters', risk: 75 },
+        { role: 'Insurance Sales Agents', risk: 65 },
+        { role: 'Actuaries', risk: 42 }
       ],
-      aiImpact: 'Goldman Sachs data indicates 35% task exposure in Business & Financial Operations. Underwriting and claims processing show particularly high automation potential.',
-      survivingRoles: 'Complex claims investigation, relationship building, strategic risk management, and specialized insurance advisory work.',
-      backupCareers: ['Automotive Technician', 'Plumber', 'HVAC Technician'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Business & Financial Operations - 35% task exposure',
-        'Frey & Osborne (2013): Insurance industry probabilities'
-      ]
+      aiImpact: 'Automated claims processing, AI risk assessment, and digital insurance platforms reducing manual work.',
+      survivingRoles: 'Complex claims investigation, relationship building, and strategic risk management.',
+      evolutionPath: 'Insurance AI Operations Manager',
+      evolutionStrategy: 'Oversee AI-powered claims and underwriting systems while handling complex cases requiring human judgment. Lead digital transformation initiatives in traditional insurance environments.'
     },
     'media': {
       name: 'Media & Publishing',
-      riskLevel: 'Medium',
-      riskPercentage: 26, // Goldman Sachs: Arts, Design, Entertainment, Sports & Media
-      riskColor: 'yellow',
-      timeframe: 'Gradual adoption by 2030',
-      description: 'Media and publishing fall under Arts, Design, Entertainment, Sports & Media with moderate AI task exposure.',
+      riskLevel: 'Medium-High',
+      riskPercentage: 59,
+      riskColor: 'orange',
+      timeframe: '2-6 years',
+      description: 'AI content generation, automated editing, and algorithm-driven content distribution.',
       specificRoles: [
-        { role: 'Technical Writers', risk: 89, source: 'Frey & Osborne (2013)' },
-        { role: 'Reporters & Correspondents', risk: 11, source: 'Frey & Osborne (2013)' },
-        { role: 'Editors', risk: 6, source: 'Frey & Osborne (2013)' },
-        { role: 'Writers & Authors', risk: 4, source: 'Frey & Osborne (2013)' }
+        { role: 'Content Writers', risk: 71 },
+        { role: 'Copy Editors', risk: 68 },
+        { role: 'Social Media Managers', risk: 56 },
+        { role: 'Journalists (Investigative)', risk: 25 }
       ],
-      aiImpact: 'Goldman Sachs estimates ~26% of tasks in creative and media fields could be automated. Technical and template-based writing face higher risk than creative origination.',
-      survivingRoles: 'Investigative journalism, creative storytelling, strategic content planning, and original creative work requiring human insight.',
-      backupCareers: ['Solar Installer', 'Electrician', 'Construction Manager'],
-      sources: [
-        'Goldman Sachs Global Investment Research (2023): Arts, Design, Entertainment, Sports & Media - 26% task exposure',
-        'Frey & Osborne (2013): Media and publishing role probabilities'
-      ]
+      aiImpact: 'AI writing tools, automated video editing, and algorithm-based content creation changing media production.',
+      survivingRoles: 'Investigative journalism, creative storytelling, and strategic content planning.',
+      evolutionPath: 'Content Strategy & AI Coordinator',
+      evolutionStrategy: 'Direct AI content creation while maintaining editorial quality and brand voice. Become the expert who knows when to use AI and when human creativity is irreplaceable.'
     }
   };
 
   const getRiskColor = (level) => {
     switch(level) {
-      case 'Very High': return 'text-red-700 bg-red-100 border-red-200';
-      case 'High': return 'text-red-600 bg-red-100 border-red-200';
-      case 'Medium-High': return 'text-orange-600 bg-orange-100 border-orange-200';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100 border-yellow-200';
-      default: return 'text-gray-600 bg-gray-100 border-gray-200';
+      case 'High': return 'text-red-600 bg-red-100';
+      case 'Medium-High': return 'text-orange-600 bg-orange-100';
+      case 'Medium': return 'text-yellow-600 bg-yellow-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <LandingHeader />
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4 md:py-6">
+            <Link to="/" className="flex items-center">
+              <div className="text-2xl md:text-3xl font-bold text-blue-600">WorkShifted</div>
+            </Link>
+            <div className="flex items-center space-x-4 md:space-x-8">
+              <nav className="hidden sm:flex items-center space-x-6" aria-label="Primary">
+                <Link to="/#how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">How it Works</Link>
+                <Link to="/#careers" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">Careers</Link>
+                <Link to="/#faq" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">FAQ</Link>
+              </nav>
+              <Link
+                to="/auth"
+                className="bg-blue-600 text-white px-4 py-2 md:px-6 md:py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+              >
+                Free Assessment
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
 
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Breadcrumbs */}
+        <nav className="mb-8">
+          <ol className="flex items-center space-x-2 text-sm text-gray-500">
+            <li><Link to="/" className="hover:text-blue-600">Home</Link></li>
+            <li>→</li>
+            <li><Link to="/ai-job-displacement-statistics" className="hover:text-blue-600">AI Statistics</Link></li>
+            <li>→</li>
+            <li className="text-gray-900">Will AI Take My Job?</li>
+          </ol>
+        </nav>
 
         {/* Hero Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-green-100 text-blue-800 mb-6 border border-blue-200 shadow-sm">
-            🎯 Industry-Specific Analysis
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-4">
+            🎯 Industry Evolution Guide
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             Will AI Take My Job?
-            <span className="block bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              Industry Breakdown
-            </span>
+            <span className="text-blue-600"> Evolution Strategy by Industry</span>
           </h1>
-          <p className="text-xl text-gray-700 mb-8 max-w-4xl mx-auto leading-relaxed">
-            Get specific automation risk analysis for your industry based on <span className="font-semibold text-blue-700">Goldman Sachs</span>, <span className="font-semibold text-blue-700">McKinsey</span>, and <span className="font-semibold text-blue-700">Oxford research</span>. All statistics cited and verified.
+          <p className="text-xl text-gray-700 mb-8 max-w-3xl mx-auto">
+            Don't just check your risk — discover how to evolve within your industry. Each role analysis includes specific evolution paths and 90-day action plans to become AI-resistant.
           </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">
+              ⚡ Get Your Personal Evolution Plan
+            </h3>
+            <p className="text-blue-700 mb-4">
+              Beyond industry averages — get your specific AI risk score and 3 personalized evolution paths
+            </p>
+            <Link
+              to="/auth"
+              className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Take Free AI-Resistance Assessment →
+            </Link>
+          </div>
         </div>
 
         {/* Industry Selector */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 mb-10 text-center">Select Your Industry</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Select Your Industry for Detailed Analysis</h2>
+          <div className="grid md:grid-cols-3 gap-4">
             {Object.entries(industries).map(([key, industry]) => (
               <button
                 key={key}
                 onClick={() => setSelectedIndustry(key)}
-                className={`p-6 rounded-2xl border-2 text-left transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 ${
+                className={`p-4 rounded-lg border-2 text-left transition-all ${
                   selectedIndustry === key 
-                    ? 'border-blue-500 bg-blue-50 shadow-lg' 
+                    ? 'border-blue-500 bg-blue-50' 
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                 }`}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-gray-900 text-lg">{industry.name}</h3>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getRiskColor(industry.riskLevel)}`}>
-                    {industry.riskLevel}
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-gray-900">{industry.name}</h3>
+                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRiskColor(industry.riskLevel)}`}>
+                    {industry.riskPercentage}%
                   </span>
                 </div>
-                <div className="flex items-center mb-2">
-                  <div className="w-full bg-gray-200 rounded-full h-3 mr-4">
-                    <div 
-                      className={`h-3 rounded-full transition-all duration-500 ${
-                        industry.riskColor === 'red' ? 'bg-gradient-to-r from-red-500 to-red-600' : 
-                        industry.riskColor === 'orange' ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 
-                        'bg-gradient-to-r from-yellow-500 to-yellow-600'
-                      }`}
-                      style={{width: `${industry.riskPercentage}%`}}
-                    ></div>
-                  </div>
-                  <span className="text-lg font-bold text-gray-700">{industry.riskPercentage}%</span>
-                </div>
-                <p className="text-sm text-gray-600">Task exposure estimate</p>
+                <p className="text-sm text-gray-600">{industry.description}</p>
               </button>
             ))}
           </div>
         </section>
 
-        {/* Quick Assessment CTA */}
-        {!selectedIndustry && (
-          <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl p-8 md:p-12 text-center text-white mb-16 shadow-xl">
-            <h3 className="text-3xl font-bold mb-4">Not Sure Which Industry Fits You?</h3>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Take our free assessment to discover AI-resistant career options that match your skills
-            </p>
-            <Link
-              to="/auth"
-              className="inline-block bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              Take Free Career Assessment
-            </Link>
-          </div>
-        )}
-
         {/* Selected Industry Analysis */}
         {selectedIndustry && (
           <section className="mb-16">
-            <div className="bg-white rounded-2xl p-8 md:p-12 shadow-xl border border-gray-100">
-              <div className="text-center mb-10">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8 border border-gray-200">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-gray-900">
                   {industries[selectedIndustry].name} Analysis
                 </h2>
-                <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-12">
-                  <div className="text-center">
-                    <div className={`text-5xl font-bold mb-2 ${
-                      industries[selectedIndustry].riskColor === 'red' ? 'text-red-600' : 
-                      industries[selectedIndustry].riskColor === 'orange' ? 'text-orange-600' : 'text-yellow-600'
-                    }`}>
-                      {industries[selectedIndustry].riskPercentage}%
-                    </div>
-                    <div className="text-sm text-gray-600 font-medium">Task Exposure Risk</div>
+                <div className="text-right">
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(industries[selectedIndustry].riskLevel)}`}>
+                    <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
+                    {industries[selectedIndustry].riskLevel} Risk
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900 mb-2">
-                      {industries[selectedIndustry].timeframe}
-                    </div>
-                    <div className="text-sm text-gray-600 font-medium">Expected Timeline</div>
+                  <div className="text-2xl font-bold text-gray-900 mt-1">
+                    {industries[selectedIndustry].riskPercentage}% at risk
                   </div>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-10 mb-10">
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Current AI Impact</h3>
-                  <p className="text-gray-700 mb-4 leading-relaxed">{industries[selectedIndustry].description}</p>
-                  <p className="text-gray-600 text-sm leading-relaxed">{industries[selectedIndustry].aiImpact}</p>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Impact Timeline</h3>
+                  <p className="text-gray-700 mb-4">
+                    <strong>Expected disruption:</strong> {industries[selectedIndustry].timeframe}
+                  </p>
+                  <p className="text-gray-600 mb-4">
+                    {industries[selectedIndustry].aiImpact}
+                  </p>
                 </div>
-                
+
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Role-Specific Risk</h3>
-                  <div className="space-y-4">
-                    {industries[selectedIndustry].specificRoles.map((role, index) => (
-                      <div key={index} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-gray-900 font-medium text-sm">{role.role}</span>
-                          <span className="text-sm font-bold text-gray-700">{role.risk}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Role-Specific Risk</h3>
+                  {industries[selectedIndustry].specificRoles.map((role, index) => (
+                    <div key={index} className="flex justify-between items-center mb-2">
+                      <span className="text-sm text-gray-700">{role.role}</span>
+                      <div className="flex items-center">
+                        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
                           <div 
                             className={`h-2 rounded-full ${
-                              role.risk >= 70 ? 'bg-gradient-to-r from-red-500 to-red-600' : 
-                              role.risk >= 50 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 
-                              'bg-gradient-to-r from-yellow-500 to-yellow-600'
+                              role.risk >= 70 ? 'bg-red-500' :
+                              role.risk >= 50 ? 'bg-orange-500' :
+                              role.risk >= 30 ? 'bg-yellow-500' :
+                              'bg-green-500'
                             }`}
                             style={{width: `${role.risk}%`}}
                           ></div>
                         </div>
-                        <div className="text-xs text-gray-500">{role.source}</div>
+                        <span className={`text-sm font-medium ${
+                          role.risk >= 70 ? 'text-red-600' :
+                          role.risk >= 50 ? 'text-orange-600' :
+                          role.risk >= 30 ? 'text-yellow-600' :
+                          'text-green-600'
+                        }`}>
+                          {role.risk}%
+                        </span>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Evolution Strategy */}
+              <div className="bg-white rounded-xl p-6 border border-blue-200">
+                <h3 className="text-xl font-semibold text-blue-900 mb-4">
+                  🚀 Evolution Path: {industries[selectedIndustry].evolutionPath}
+                </h3>
+                <p className="text-gray-700 mb-4">
+                  <strong>Strategy:</strong> {industries[selectedIndustry].evolutionStrategy}
+                </p>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Still Human-Essential:</h4>
+                    <p className="text-gray-600 text-sm">{industries[selectedIndustry].survivingRoles}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-2">Your Evolution Advantage:</h4>
+                    <p className="text-gray-600 text-sm">
+                      Position yourself as the expert who manages AI tools while handling complex human judgment tasks that AI cannot replicate.
+                    </p>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-                <h3 className="text-lg font-bold text-blue-900 mb-3">What's Likely to Survive</h3>
-                <p className="text-blue-800 leading-relaxed">{industries[selectedIndustry].survivingRoles}</p>
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-8">
-                <h3 className="text-lg font-bold text-green-900 mb-4">
-                  Recommended Career Backup Options
-                </h3>
-                <div className="flex flex-wrap gap-3 mb-4">
-                  {industries[selectedIndustry].backupCareers.map((career, index) => (
-                    <span key={index} className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium border border-green-200">
-                      {career}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-green-700 text-sm leading-relaxed">
-                  These trades require hands-on skills and on-site problem solving that AI cannot easily replicate.
-                </p>
-              </div>
-
-              {/* Sources for this industry */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Sources</h3>
-                <ul className="text-sm text-gray-700 space-y-1">
-                  {industries[selectedIndustry].sources.map((source, index) => (
-                    <li key={index}>• {source}</li>
-                  ))}
-                </ul>
               </div>
             </div>
 
             {/* CTA for selected industry */}
-            <div className="bg-gradient-to-br from-blue-50 to-green-50 border-2 border-blue-200 rounded-2xl p-8 mt-8 text-center shadow-xl">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                Build Your Career Backup Plan
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mt-8 text-center">
+              <h3 className="text-xl font-semibold text-blue-900 mb-4">
+                Get Your Personal {industries[selectedIndustry].name} Evolution Plan
               </h3>
-              <p className="text-gray-700 mb-6 max-w-2xl mx-auto leading-relaxed">
-                Discover which AI-resistant trades match your {industries[selectedIndustry].name.toLowerCase()} background and skills
+              <p className="text-blue-700 mb-6">
+                Discover your specific automation risk and get a 90-day roadmap to become the "{industries[selectedIndustry].evolutionPath}" in your organization
               </p>
               <Link
                 to="/auth"
-                className="inline-flex items-center bg-gradient-to-r from-blue-600 to-green-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="inline-block bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors"
               >
                 Start Free Assessment
-                <span className="ml-2">→</span>
               </Link>
             </div>
           </section>
         )}
 
-        {/* General Trends */}
+        {/* General AI-Resistance Principles */}
         <section className="mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
-            General AI Impact 
-            <span className="text-blue-600">Trends</span>
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Universal AI-Resistance Principles</h2>
           
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 rounded-2xl p-8 shadow-lg">
@@ -423,7 +386,7 @@ const WillAITakeMyJob = () => {
                 <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mr-4">
                   <span className="text-white text-xl">⚠️</span>
                 </div>
-                <h3 className="text-2xl font-bold text-red-900">Most at Risk</h3>
+                <h3 className="text-2xl font-bold text-red-900">Most Vulnerable Tasks</h3>
               </div>
               <ul className="space-y-3 text-red-800">
                 <li className="flex items-start">
@@ -454,7 +417,7 @@ const WillAITakeMyJob = () => {
                 <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mr-4">
                   <span className="text-white text-xl">🛡️</span>
                 </div>
-                <h3 className="text-2xl font-bold text-green-900">Most Protected</h3>
+                <h3 className="text-2xl font-bold text-green-900">Most Protected Skills</h3>
               </div>
               <ul className="space-y-3 text-green-800">
                 <li className="flex items-start">
@@ -463,134 +426,128 @@ const WillAITakeMyJob = () => {
                 </li>
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>Physical tasks in unpredictable environments</span>
+                  <span>Emotional intelligence and empathy</span>
                 </li>
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>High-touch relationship building</span>
+                  <span>Strategic thinking and planning</span>
                 </li>
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>Creative and strategic thinking</span>
+                  <span>Cross-functional collaboration</span>
                 </li>
                 <li className="flex items-start">
                   <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                  <span>On-site troubleshooting and repair</span>
+                  <span>AI tool coordination and validation</span>
                 </li>
               </ul>
             </div>
           </div>
         </section>
 
-        {/* Timeline Context */}
+        {/* Action Steps */}
         <section className="mb-16">
-          <div className="bg-gradient-to-br from-blue-50 to-green-50 border-2 border-blue-200 rounded-2xl p-8 md:p-12 shadow-xl">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-              Understanding the 
-              <span className="text-blue-600">Timeline</span>
-            </h2>
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-xl p-6 mb-6 border border-blue-200">
-                <h3 className="text-xl font-bold text-blue-900 mb-3">What McKinsey Says</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  <SourceLink href="https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-generative-ai">McKinsey Global Institute (2023)</SourceLink> estimates that up to ~30% of US work hours could be automated by 2030, accelerated by generative AI capabilities.
-                </p>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Your AI Evolution Action Plan</h2>
+          
+          <div className="space-y-6">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">1</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Audit Your AI Vulnerability</h3>
+                <p className="text-gray-600">Honestly assess which of your daily tasks could be automated with current AI tools. Identify your automation-resistant strengths.</p>
               </div>
-              <div className="bg-white rounded-xl p-6 mb-6 border border-blue-200">
-                <h3 className="text-xl font-bold text-blue-900 mb-3">Important Context</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  These percentages represent <span className="font-semibold">task exposure</span> and <span className="font-semibold">technical potential</span> - not guaranteed job losses. Actual adoption depends on economics, regulation, worker retraining, and consumer acceptance.
-                </p>
+            </div>
+            
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">2</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Learn AI Collaboration</h3>
+                <p className="text-gray-600">Start using AI tools in your current role. Become the person who knows how to direct AI effectively rather than competing with it.</p>
               </div>
-              <div className="bg-white rounded-xl p-6 border border-blue-200">
-                <h3 className="text-xl font-bold text-blue-900 mb-3">The Smart Approach</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Rather than waiting to see what happens, build skills in AI-resistant fields while maintaining your current career. This creates optionality without disruption.
-                </p>
+            </div>
+            
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">3</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Position as AI Coordinator</h3>
+                <p className="text-gray-600">Volunteer to lead AI initiatives at your company. Become the bridge between AI capabilities and human oversight.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-4">4</div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Get Your Personalized Roadmap</h3>
+                <p className="text-gray-600">Take our AI-resistance assessment to get specific evolution paths, timeline, and 90-day action plan for your role.</p>
+                <Link
+                  to="/auth"
+                  className="inline-block mt-3 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Start Free Assessment →
+                </Link>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="mb-16">
-          <div className="bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl p-8 md:p-12 text-center text-white shadow-xl">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Future-Proof Your Career?</h2>
-            <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Don't wait for automation to impact your job. Take our assessment to discover hands-on career options that match your background and provide AI-resistant income security.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                to="/auth"
-                className="bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-              >
-                Start Free Career Assessment
-              </Link>
-              <Link
-                to="/ai-job-displacement-statistics"
-                className="border border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-blue-700 transition-all duration-200"
-              >
-                See Complete AI Statistics
-              </Link>
-            </div>
-            <p className="text-xs text-blue-100 mt-6">
-              5 minutes • Personalized results • All statistics verified and cited
-            </p>
+        {/* Final CTA Section */}
+        <section className="bg-gradient-to-r from-blue-600 to-green-600 rounded-2xl p-8 md:p-12 text-center text-white">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Don't Wait for AI to Impact Your Career
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Get ahead of the curve with a personalized AI-resistance plan. Discover your evolution path and start building AI-collaboration skills today.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              to="/auth"
+              className="bg-white text-blue-700 px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              Get My AI Evolution Plan
+            </Link>
+            <Link
+              to="/ai-job-displacement-statistics"
+              className="border border-white text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white hover:text-blue-700 transition-all duration-200"
+            >
+              See Full Statistics
+            </Link>
           </div>
+          
+          <p className="text-xs text-blue-100 mt-6">
+            Free assessment • 5 minutes • Personalized roadmap • 47,000+ professionals protected
+          </p>
         </section>
 
         {/* Read More Section */}
-        <section className="mb-16">
+        <section className="mb-16 mt-16">
           <div className="bg-gray-50 rounded-2xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Continue Your Research</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Continue Your AI Career Research</h2>
             <div className="grid md:grid-cols-3 gap-6">
               <Link 
                 to="/ai-job-displacement-statistics"
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow group"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">📊 AI Job Displacement Statistics</h3>
-                <p className="text-gray-600 text-sm">Detailed data on automation risk by industry and timeline</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">📊 Complete AI Statistics</h3>
+                <p className="text-gray-600 text-sm">Detailed automation risk data by role and timeline</p>
               </Link>
-              
-              <Link 
-                to="/will-ai-take-my-job-by-industry"
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow group"
-              >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">🎯 Will AI Take My Job?</h3>
-                <p className="text-gray-600 text-sm">Industry-specific analysis of automation risk and timeline</p>
-              </Link>
-              
+            
               <Link 
                 to="/ai-vs-human-jobs-complete-guide"
-                className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow group"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">🤖 AI vs Human Jobs Guide</h3>
-                <p className="text-gray-600 text-sm">Complete automation analysis across job categories</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">🤖 AI vs Human Guide</h3>
+                <p className="text-gray-600 text-sm">Complete analysis of which jobs AI can and cannot replace</p>
+              </Link>
+            
+              <Link 
+                to="/recession-proof-careers-2025"
+                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">🛡️ AI-Resistant Careers</h3>
+                <p className="text-gray-600 text-sm">Jobs that survive both economic downturns and AI disruption</p>
               </Link>
             </div>
-          </div>
-        </section>
-        {/* Sources & Methodology */}
-        <section className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Sources & Methodology</h2>
-          <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
-            <div className="border-l-4 border-blue-500 pl-4">
-              <p className="font-semibold text-gray-900 mb-1">Goldman Sachs Global Investment Research (2023)</p>
-              <p>Task exposure percentages by occupational group. <SourceLink href="https://www.ansa.it/documents/1680080409454_ert.pdf">The Potentially Large Effects of Artificial Intelligence on Economic Growth (PDF)</SourceLink></p>
-            </div>
-            <div className="border-l-4 border-green-500 pl-4">
-              <p className="font-semibold text-gray-900 mb-1">McKinsey Global Institute (2017, 2023)</p>
-              <p>Sector-level technical automation potential and 2030 projections. <SourceLink href="https://www.mckinsey.com/~/media/mckinsey/featured%20insights/digital%20disruption/harnessing%20automation%20for%20a%20future%20that%20works/mgi-a-future-that-works-full-report-updated.pdf">A Future That Works (PDF)</SourceLink> | <SourceLink href="https://www.mckinsey.com/featured-insights/mckinsey-explainers/what-is-generative-ai">Generative AI Impact</SourceLink></p>
-            </div>
-            <div className="border-l-4 border-orange-500 pl-4">
-              <p className="font-semibold text-gray-900 mb-1">Frey & Osborne (Oxford Martin School, 2013)</p>
-              <p>Occupation-level probability of computerisation. <SourceLink href="https://www.oxfordmartin.ox.ac.uk/publications/the-future-of-employment">The Future of Employment</SourceLink> | <SourceLink href="https://oms-www.files.svdcdn.com/production/downloads/academic/The_Future_of_Employment.pdf">Full Paper (PDF)</SourceLink></p>
-            </div>
-          </div>
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600">
-              <span className="font-semibold">Methodology:</span> Industry percentages mapped from Goldman Sachs occupational group data. Role-specific percentages from Frey & Osborne computerisation probabilities. McKinsey data used for sector automation potential. All figures represent task exposure or technical potential, not guaranteed job displacement. Last updated: January 2025.
-            </p>
           </div>
         </section>
       </div>
