@@ -124,9 +124,9 @@ const EnhancedAuthForm = ({ onSuccess }) => {
           
           // Check if they have assessment results
           const { count, error } = await supabase
-            .from('assessment_results')
+            .from('ai_risk_assessments')
             .select('id', { count: 'exact', head: true })
-            .eq('user_id', data.user.id)
+            .eq('user_id', user.id)
             .limit(1);
 
           if (error) {

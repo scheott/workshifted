@@ -15,8 +15,9 @@ const Landing = () => {
     const checkUserStatus = async () => {
       if (authLoading) return;
       if (!user) { setChecking(false); return; }
+      // To this:
       const { count, error } = await supabase
-        .from('assessment_results')
+        .from('ai_risk_assessments')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .limit(1);

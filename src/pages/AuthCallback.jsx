@@ -48,11 +48,12 @@ export default function AuthCallback() {
         }
         
         // FIXED: Check for both assessment results AND selected career
-        const { data: assessmentData, error: assessmentError } = await supabase
-          .from('assessment_results')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1);
+        // To this:
+        const { count, error } = await supabase
+        .from('ai_risk_assessments')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .limit(1);
 
         if (!active) return;
         

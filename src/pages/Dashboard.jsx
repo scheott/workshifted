@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Shield, TrendingUp, Clock, Star, BookOpen, Briefcase, Users, Target, ChevronRight, Download } from 'lucide-react';
 
-const supabase = createClient(process.env.REACT_APP_SUPABASE_URL, process.env.REACT_APP_SUPABASE_ANON_KEY);
+const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 // AI Risk Gauge Component
 const AIRiskGauge = ({ score, role }) => {

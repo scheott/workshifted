@@ -16,11 +16,12 @@ export default function RedirectIfAuthed({ children }) {
       setChecking(true);
       try {
         // Check for assessment results
-        const { data: assessmentData } = await supabase
-          .from('assessment_results')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1);
+        // To this:
+        const { count, error } = await supabase
+        .from('ai_risk_assessments')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .limit(1);
 
         // If no assessment, go to assessment
         if (!assessmentData || assessmentData.length === 0) {

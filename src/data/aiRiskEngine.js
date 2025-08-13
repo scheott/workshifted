@@ -7,7 +7,7 @@ import {
   getIndustryThreatTimeline,
 } from "./industryRiskPriors";
 import { ROLE_PATHS, ROLE_TASK_TAGS } from "./evolutionPaths";
-import { generateNinetyDayPlan } from "./premiumContent/ninetyDayPlans";
+import { buildHybridPlan } from "./premiumContent/hybridPlanGenerator";
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const round = (x, n = 0) => Number(x.toFixed(n));
@@ -148,5 +148,5 @@ export function buildFreeBlurb(answers={}, risk=computeRiskScore(answers)){
   };
 }
 
-export { getIndustryThreatTimeline, generateNinetyDayPlan };
-export default { computeRiskScore, suggestEvolutionPaths, buildFreeBlurb, getIndustryThreatTimeline, generateNinetyDayPlan };
+export { getIndustryThreatTimeline, buildHybridPlan };
+export default { computeRiskScore, suggestEvolutionPaths, buildFreeBlurb, getIndustryThreatTimeline, buildHybridPlan };

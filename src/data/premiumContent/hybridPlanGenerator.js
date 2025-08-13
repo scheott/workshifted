@@ -9,7 +9,7 @@
 //   import { buildHybridPlan } from "@/data/premiumContent/hybridPlanGenerator";
 //   const plan = buildHybridPlan({ answers, risk, selectedPath, catalog: HYBRID_PLAN_CATALOG, aiToolsDb: AITOOLS_DB });
 
-import HYBRID_PLAN_CATALOG from "../premiumContent/hybridPlanCatalog";
+import { HYBRID_PLAN_CATALOG } from "./ninetyDayPlans";
 import { ROLE_TASK_TAGS } from "../evolutionPaths";
 import { AITOOLS_DB } from "./aiToolsDatabase";
 
