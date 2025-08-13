@@ -72,7 +72,6 @@ function App() {
           {/* SEO Pages - Tier 3: Existing Industry/Research */}
           <Route path="/ai-vs-human-jobs-complete-guide" element={<AIvsHumanJobs />} />
           <Route path="/will-ai-take-my-job-by-industry" element={<WillAITakeMyJob />} />
-          <Route path="/recession-proof-careers-2025" element={<RecessionProofCareers />} />
           <Route path="/ai-job-displacement-statistics" element={<AIJobDisplacementStats />} />
           
           {/* Future SEO Pages - Add routes as you create them */}

@@ -1,8 +1,10 @@
-// src/components/LandingHeader.jsx - Updated with new SEO page navigation
+// src/components/LandingHeader.jsx - FIXED MISSING IMPORT
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth'; // ADDED THIS IMPORT
 
 const LandingHeader = () => {
+  const { user } = useAuth(); // Now this will work
   const [isResourcesOpen, setIsResourcesOpen] = useState(false);
   const [isRoleSpecificOpen, setIsRoleSpecificOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -57,17 +59,17 @@ const LandingHeader = () => {
                 >
                   By Role
                   <svg 
-                    className={`ml-1 h-4 w-4 transition-transform ${isRoleSpecificOpen ? 'rotate-180' : ''}`} 
+                    className={`ml-1 h-4 w-4 transition-transform ${isRoleSpecificOpen ? 'rotate-180' : ''}`}
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {isRoleSpecificOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
                     <Link
                       to="/ai-proof-marketing-careers"
                       className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-4 hover:bg-blue-50 transition-colors"
@@ -80,27 +82,27 @@ const LandingHeader = () => {
                       className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-4 hover:bg-blue-50 transition-colors"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
-                      Finance & Banking Jobs
+                      Finance & Banking
                     </Link>
                     <Link
                       to="/ai-proof-hr-careers"
                       className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-4 hover:bg-blue-50 transition-colors"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
-                      HR & People Operations
+                      HR & People Ops
                     </Link>
                     <Link
                       to="/ai-proof-sales-careers"
                       className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-4 hover:bg-blue-50 transition-colors"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
-                      Sales & Business Development
+                      Sales & Business Dev
                     </Link>
                   </div>
                 )}
               </div>
-              
-              {/* Research & Resources Dropdown */}
+
+              {/* Resources Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setIsResourcesOpen(!isResourcesOpen)}
@@ -108,17 +110,17 @@ const LandingHeader = () => {
                 >
                   Research
                   <svg 
-                    className={`ml-1 h-4 w-4 transition-transform ${isResourcesOpen ? 'rotate-180' : ''}`} 
+                    className={`ml-1 h-4 w-4 transition-transform ${isResourcesOpen ? 'rotate-180' : ''}`}
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
                 {isResourcesOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Industry Analysis</p>
                     </div>
@@ -127,14 +129,14 @@ const LandingHeader = () => {
                       className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-4 hover:bg-blue-50 transition-colors"
                       onClick={() => setIsResourcesOpen(false)}
                     >
-                      Jobs AI Can't Replace (By Industry)
+                      Jobs AI Can't Replace
                     </Link>
                     <Link
                       to="/ai-vs-human-jobs-complete-guide"
                       className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-4 hover:bg-blue-50 transition-colors"
                       onClick={() => setIsResourcesOpen(false)}
                     >
-                      AI vs Human Jobs Complete Guide
+                      AI vs Human Jobs Guide
                     </Link>
                     <Link
                       to="/will-ai-take-my-job-by-industry"
@@ -173,13 +175,13 @@ const LandingHeader = () => {
               </a>
             </nav>
 
-            {/* CTA Button */}
+            {/* CTA Button - Auth-aware */}
             <Link
-              to="/auth"
+              to={user ? "/dashboard" : "/auth"}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm hover:shadow-md"
-              aria-label="Start your free AI career assessment"
+              aria-label={user ? "Go to your dashboard" : "Start your free AI career assessment"}
             >
-              Free Assessment
+              {user ? "Dashboard" : "Free Assessment"}
             </Link>
           </div>
 
@@ -258,7 +260,7 @@ const LandingHeader = () => {
             {/* Research Section */}
             <div className="pt-4">
               <div className="px-4 py-2">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Research & Analysis</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Research</p>
               </div>
               <div className="space-y-1 ml-4">
                 <Link
@@ -280,7 +282,7 @@ const LandingHeader = () => {
                   className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-white rounded-md transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  Will AI Take My Job?
+                  Will AI Take My Job? (By Industry)
                 </Link>
                 <Link
                   to="/recession-proof-careers-2025"
@@ -310,12 +312,12 @@ const LandingHeader = () => {
             {/* Mobile CTA Button */}
             <div className="pt-4 px-2">
               <Link
-                to="/auth"
+                to={user ? "/dashboard" : "/auth"}
                 className="block w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center shadow-sm hover:shadow-md"
                 onClick={() => setIsMobileMenuOpen(false)}
-                aria-label="Start your free career assessment"
+                aria-label={user ? "Go to your dashboard" : "Start your free career assessment"}
               >
-                Free Assessment
+                {user ? "Dashboard" : "Free Assessment"}
               </Link>
             </div>
           </div>
@@ -326,117 +328,3 @@ const LandingHeader = () => {
 };
 
 export default LandingHeader;
-
-// ===================================================================
-// INTERNAL LINKING STRATEGY DOCUMENTATION
-// ===================================================================
-
-/*
-LINKING HIERARCHY & FLOW:
-
-1. **Homepage** → Core assessment pages
-   - Primary CTA: AI Career Risk Assessment
-   - Secondary: AI-Proof Your Career Guide
-
-2. **Assessment Pages** → Role-specific pages
-   - AI Career Risk Assessment → All role pages
-   - AI-Proof Your Career → All role pages
-   - Jobs AI Can't Replace → All role pages
-
-3. **Role-Specific Pages** → Related content
-   - Marketing → Finance, HR, Sales (cross-promotion)
-   - Each role page → Assessment (conversion)
-   - Each role page → Industry analysis pages
-
-4. **Industry Pages** → Assessment conversion
-   - All industry pages → AI Career Risk Assessment
-   - Industry pages → Relevant role pages
-
-LINKING RULES FOR EACH PAGE TYPE:
-
-**Homepage (Landing.jsx):**
-- Hero CTA → AI Career Risk Assessment
-- Career examples → Role-specific pages
-- FAQ → Supporting pages
-- Footer → All major pages
-
-**AI Career Risk Assessment:**
-- Role examples → Role-specific pages
-- "Get personalized plan" → Assessment signup
-- Related content → Jobs AI Can't Replace
-- Cross-links → All role pages
-
-**AI-Proof Your Career:**
-- Strategy examples → Role-specific pages
-- Implementation plan → Assessment signup
-- Skill categories → Role pages
-- Related → Jobs AI Can't Replace
-
-**Jobs AI Can't Replace:**
-- Industry filters → Role-specific pages
-- Human advantage examples → Role pages
-- Strategy section → Assessment signup
-- Related → AI vs Human Jobs Guide
-
-**Role-Specific Pages (Marketing, Finance, HR, Sales):**
-- Evolution paths → Assessment signup
-- Related roles → Other role pages
-- Industry insights → Jobs AI Can't Replace
-- Skills → AI-Proof Your Career guide
-- Footer → All assessment pages
-
-**Supporting Pages:**
-- AI vs Human Jobs → Role pages + Assessment
-- Will AI Take My Job → Jobs AI Can't Replace
-- Recession-Proof Careers → Assessment + Role pages
-- Statistics → All core pages
-
-CONTEXTUAL LINKING EXAMPLES:
-
-In Marketing page content:
-"While marketing automation is growing, finance professionals face even higher risks. Learn about [AI-proof finance careers](/ai-proof-finance-careers) or discover [which jobs AI can't replace](/jobs-ai-cannot-replace) across all industries."
-
-In Assessment page content:
-"Ready to dive deeper? Explore specific strategies for [marketing professionals](/ai-proof-marketing-careers), [finance workers](/ai-proof-finance-careers), or [HR specialists](/ai-proof-hr-careers)."
-
-In Jobs AI Can't Replace:
-"For detailed evolution strategies in your field, see our guides for [marketing careers](/ai-proof-marketing-careers) or take our [AI career risk assessment](/ai-career-risk-assessment) for personalized recommendations."
-
-CONVERSION FUNNEL LINKING:
-
-AWARENESS (High-traffic pages):
-- Jobs AI Can't Replace
-- AI vs Human Jobs Guide  
-- Will AI Take My Job
-
-CONSIDERATION (Problem-focused):
-- AI Career Risk Assessment
-- AI-Proof Your Career Guide
-
-DECISION (Solution-focused):
-- Role-specific pages
-- Assessment signup
-
-Each page should have 3-5 strategic internal links:
-1. One "up" link (broader topic)
-2. One "down" link (more specific)
-3. One "lateral" link (related topic)
-4. One conversion link (assessment)
-5. One cross-promotion (other role/industry)
-
-ANCHOR TEXT VARIETY:
-- "AI career risk assessment"
-- "personalized career roadmap"  
-- "discover your evolution path"
-- "AI-proof [role] careers"
-- "get your risk score"
-- "[industry] automation trends"
-- "career evolution strategy"
-
-SEO BENEFIT:
-- Distributes link equity across all pages
-- Keeps users engaged longer (lower bounce rate)
-- Creates topic clusters for better rankings
-- Provides multiple conversion paths
-- Improves crawlability for search engines
-*/

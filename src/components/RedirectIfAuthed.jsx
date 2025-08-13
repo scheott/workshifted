@@ -1,4 +1,4 @@
-// src/components/RedirectIfAuthed.jsx - FIXED SMART ROUTING
+// src/components/RedirectIfAuthed.jsx - FIXED VARIABLE NAMES
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -16,25 +16,37 @@ export default function RedirectIfAuthed({ children }) {
       setChecking(true);
       try {
         // Check for assessment results
-        // To this:
         const { count, error } = await supabase
-        .from('ai_risk_assessments')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .limit(1);
+          .from('assessment_results')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .limit(1);
+
+        if (error) {
+          console.error('Error checking assessment results:', error);
+          setRedirectPath('/assessment');
+          return;
+        }
 
         // If no assessment, go to assessment
-        if (!assessmentData || assessmentData.length === 0) {
+        if (!count || count === 0) {
           setRedirectPath('/assessment');
           return;
         }
 
         // Check if user has selected a career
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('selected_career, selected_career_data')
           .eq('user_id', user.id)
           .single();
+
+        if (profileError) {
+          console.error('Error checking user profile:', profileError);
+          // Fallback to dashboard
+          setRedirectPath('/dashboard');
+          return;
+        }
 
         // Route based on user status
         if (profileData?.selected_career && profileData?.selected_career_data) {
