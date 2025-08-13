@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { assessmentQuestions, calculateCareerMatches, computeUserWeights } from '../data/assessmentQuestions';
+import { assessmentQuestions } from '../data/aiAssessmentQuestions';
+import { calculateCareerMatches, computeUserWeights } from '../data/aiRiskEngine';
 import Footer from '../components/Footer';
 
 const Assessment = () => {

@@ -16,7 +16,6 @@ import PasswordReset from './pages/PasswordReset';
 import GoogleAnalytics from './components/GoogleAnalytics';
 import AIJobDisplacementStats from './pages/AIJobDisplacementStats';
 import WillAITakeMyJob from './pages/WillAITakeMyJob';
-import RecessionProofCareers from './pages/RecessionProofCareers';
 import AIvsHumanJobs from './pages/AIvsHumanJobs';
 
 
@@ -38,7 +37,6 @@ function App() {
           <Route path="/auth/reset-password" element={<PasswordReset />} />
           <Route path="/ai-job-displacement-statistics" element={<AIJobDisplacementStats />} />
           <Route path="/will-ai-take-my-job-by-industry" element={<WillAITakeMyJob />} />
-          <Route path="/recession-proof-careers-2025" element={<RecessionProofCareers />} />
           <Route path="/ai-vs-human-jobs-complete-guide" element={<AIvsHumanJobs />} />
           <Route path="/assessment" element={<PrivateRoute><Assessment /></PrivateRoute>} />
           <Route path="/results" element={<PrivateRoute><Results /></PrivateRoute>} />
