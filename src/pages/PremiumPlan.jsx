@@ -1,42 +1,63 @@
-// src/pages/PremiumPlan.jsx - Full 90-Day AI-Proofing Plan
+// src/pages/PremiumPlan.jsx - Optimized 90-Day AI-Proofing Plan
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { CheckCircle, Clock, Target, BookOpen, ArrowRight, Trophy, Lock } from 'lucide-react';
+import { 
+  CheckCircle, 
+  Clock, 
+  Target, 
+  BookOpen, 
+  ArrowRight, 
+  Trophy, 
+  Lock,
+  Zap,
+  TrendingUp,
+  Users,
+  Lightbulb
+} from 'lucide-react';
 import DashboardHeader from '../components/DashboardHeader';
 import Footer from '../components/Footer';
-import { buildHybridPlan } from '../data/premiumContent/hybridPlanGenerator';
 
 const PremiumPlan = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [userProfile, setUserProfile] = useState(null);
   const [latestAssessment, setLatestAssessment] = useState(null);
-  const [generatedPlan, setGeneratedPlan] = useState(null);
-  const [userProgress, setUserProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
+  const [completedSteps, setCompletedSteps] = useState(new Set());
 
   useEffect(() => {
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/auth');
       return;
     }
+    
     fetchData();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      setLoadingStep('Loading your profile...');
 
       // Fetch user profile
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('user_id', user.id)
         .single();
+
+      if (profileError) {
+        console.error('Profile error:', profileError);
+        navigate('/dashboard');
+        return;
+      }
 
       setUserProfile(profile);
       setIsPremium(profile?.subscription_status === 'premium');
@@ -47,8 +68,10 @@ const PremiumPlan = () => {
         return;
       }
 
+      setLoadingStep('Loading your assessment...');
+
       // Fetch latest assessment
-      const { data: assessment } = await supabase
+      const { data: assessment, error: assessmentError } = await supabase
         .from('ai_risk_assessments')
         .select('*')
         .eq('user_id', user.id)
@@ -56,95 +79,184 @@ const PremiumPlan = () => {
         .limit(1)
         .single();
 
+      if (assessmentError) {
+        console.error('Assessment error:', assessmentError);
+        // Still show the page even without assessment data
+      }
+
       setLatestAssessment(assessment);
 
-      // Generate personalized plan
-      if (assessment) {
-        const plan = buildHybridPlan({
-          answers: assessment.answers,
-          risk: assessment.risk_result,
-          selectedPath: assessment.evolution_paths?.[0]
-        });
-        setGeneratedPlan(plan);
-      }
-
-      // Load progress from user profile
-      const progress = profile?.ai_plan_progress || {};
-      setUserProgress(progress);
-
     } catch (error) {
-      console.error('Error fetching premium plan data:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
+      setLoadingStep('');
     }
   };
 
-  const toggleActionComplete = async (actionId) => {
-    const newProgress = {
-      ...userProgress,
-      [actionId]: !userProgress[actionId]
+  const toggleStepCompletion = (stepId) => {
+    const newCompleted = new Set(completedSteps);
+    if (newCompleted.has(stepId)) {
+      newCompleted.delete(stepId);
+    } else {
+      newCompleted.add(stepId);
+    }
+    setCompletedSteps(newCompleted);
+  };
+
+  // Generate personalized plan based on assessment data
+  const generatePlan = () => {
+    const userRole = latestAssessment?.answers?.profile_role_family || 'analyst';
+    const riskScore = latestAssessment?.risk_result?.score || 50;
+    const industry = latestAssessment?.answers?.profile_industry || 'tech';
+    
+    return {
+      week1to2: [
+        {
+          id: 'setup-ai-tools',
+          title: 'Set up your AI toolkit',
+          description: `Install and configure ChatGPT, Claude, or other AI tools for your ${userRole} role`,
+          category: 'Tools',
+          estimatedTime: '2 hours',
+          priority: 'high'
+        },
+        {
+          id: 'identify-tasks',
+          title: 'Identify automatable tasks',
+          description: 'List 10 repetitive tasks you do weekly that could be automated',
+          category: 'Planning',
+          estimatedTime: '1 hour',
+          priority: 'high'
+        },
+        {
+          id: 'first-automation',
+          title: 'Create your first automation',
+          description: 'Automate one simple task using AI or no-code tools',
+          category: 'Implementation',
+          estimatedTime: '3 hours',
+          priority: 'medium'
+        }
+      ],
+      week3to4: [
+        {
+          id: 'ai-workflow',
+          title: 'Build an AI-enhanced workflow',
+          description: 'Create a workflow that combines AI tools with your existing processes',
+          category: 'Implementation',
+          estimatedTime: '4 hours',
+          priority: 'high'
+        },
+        {
+          id: 'upskill-learning',
+          title: 'Complete AI skills course',
+          description: 'Finish a relevant online course about AI in your field',
+          category: 'Learning',
+          estimatedTime: '6 hours',
+          priority: 'medium'
+        },
+        {
+          id: 'document-wins',
+          title: 'Document your AI wins',
+          description: 'Create a portfolio of how AI has improved your work',
+          category: 'Portfolio',
+          estimatedTime: '2 hours',
+          priority: 'medium'
+        }
+      ],
+      week5to8: [
+        {
+          id: 'team-training',
+          title: 'Train your team on AI tools',
+          description: 'Share your AI knowledge with colleagues and become the go-to person',
+          category: 'Leadership',
+          estimatedTime: '3 hours',
+          priority: 'high'
+        },
+        {
+          id: 'process-optimization',
+          title: 'Optimize a team process',
+          description: 'Use AI to improve a process that affects your whole team',
+          category: 'Implementation',
+          estimatedTime: '5 hours',
+          priority: 'high'
+        },
+        {
+          id: 'industry-expertise',
+          title: 'Develop industry AI expertise',
+          description: `Research AI trends and tools specific to ${industry} industry`,
+          category: 'Learning',
+          estimatedTime: '4 hours',
+          priority: 'medium'
+        }
+      ],
+      week9to12: [
+        {
+          id: 'ai-initiative',
+          title: 'Propose an AI initiative',
+          description: 'Present a formal AI improvement proposal to leadership',
+          category: 'Leadership',
+          estimatedTime: '6 hours',
+          priority: 'high'
+        },
+        {
+          id: 'external-presence',
+          title: 'Build external AI presence',
+          description: 'Share your AI expertise through LinkedIn, blogs, or speaking',
+          category: 'Positioning',
+          estimatedTime: '4 hours',
+          priority: 'medium'
+        },
+        {
+          id: 'mentor-others',
+          title: 'Mentor others in AI adoption',
+          description: 'Help other professionals in your network adopt AI tools',
+          category: 'Leadership',
+          estimatedTime: '3 hours',
+          priority: 'medium'
+        }
+      ]
     };
+  };
 
-    setUserProgress(newProgress);
+  const plan = generatePlan();
+  const allSteps = [...plan.week1to2, ...plan.week3to4, ...plan.week5to8, ...plan.week9to12];
+  const completedCount = allSteps.filter(step => completedSteps.has(step.id)).length;
+  const progressPercentage = Math.round((completedCount / allSteps.length) * 100);
 
-    // Save to database
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ ai_plan_progress: newProgress })
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error saving progress:', error);
-      }
-    } catch (error) {
-      console.error('Error updating progress:', error);
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'Tools': return <Zap className="w-5 h-5" />;
+      case 'Planning': return <Target className="w-5 h-5" />;
+      case 'Implementation': return <CheckCircle className="w-5 h-5" />;
+      case 'Learning': return <BookOpen className="w-5 h-5" />;
+      case 'Portfolio': return <Trophy className="w-5 h-5" />;
+      case 'Leadership': return <Users className="w-5 h-5" />;
+      case 'Positioning': return <TrendingUp className="w-5 h-5" />;
+      default: return <Lightbulb className="w-5 h-5" />;
     }
   };
 
-  const calculatePhaseProgress = (actions) => {
-    if (!actions.length) return 0;
-    const completed = actions.filter(action => userProgress[action.id]).length;
-    return Math.round((completed / actions.length) * 100);
-  };
-
-  const calculateOverallProgress = () => {
-    if (!generatedPlan) return 0;
-    const allActions = [
-      ...(generatedPlan.fast_start || []),
-      ...(generatedPlan.momentum || []),
-      ...(generatedPlan.positioning || [])
-    ];
-    return calculatePhaseProgress(allActions);
-  };
-
-  // Handle other dashboard functions
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('Error signing out:', error);
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'Tools': return 'bg-blue-100 text-blue-800';
+      case 'Planning': return 'bg-purple-100 text-purple-800';
+      case 'Implementation': return 'bg-green-100 text-green-800';
+      case 'Learning': return 'bg-orange-100 text-orange-800';
+      case 'Portfolio': return 'bg-yellow-100 text-yellow-800';
+      case 'Leadership': return 'bg-red-100 text-red-800';
+      case 'Positioning': return 'bg-indigo-100 text-indigo-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleDeleteAccount = () => {
-    // Implement delete account logic
-  };
-
-  const handleExploreCareers = () => {
-    navigate('/assessment');
-  };
-
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span className="text-lg text-gray-700">Loading your AI-proofing plan...</span>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">
+            {loadingStep || 'Loading your AI-proofing plan...'}
+          </p>
         </div>
       </div>
     );
@@ -169,285 +281,246 @@ const PremiumPlan = () => {
   }
 
   const userRole = latestAssessment?.answers?.profile_role_family || 'Professional';
-  const pathTitle = latestAssessment?.evolution_paths?.[0]?.title || 'AI Career Evolution';
-  const overallProgress = calculateOverallProgress();
+  const riskScore = latestAssessment?.risk_result?.score || 50;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       <DashboardHeader 
         user={user}
-        onSignOut={handleSignOut}
-        onDeleteAccount={handleDeleteAccount}
-        onExploreCareers={handleExploreCareers}
+        userProfile={userProfile}
+        onSignOut={async () => {
+          await supabase.auth.signOut();
+          navigate('/', { replace: true });
+        }}
+        onDeleteAccount={() => {}}
+        onExploreCareers={() => navigate('/assessment')}
         currentPage="plan"
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Your 90-Day AI-Proofing Plan
-              </h1>
-              <p className="text-gray-600">
-                Personalized roadmap: {userRole} → {pathTitle}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-4xl font-bold text-blue-600">{overallProgress}%</div>
-              <div className="text-sm text-gray-500">Complete</div>
-            </div>
-          </div>
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Your 90-Day AI-Proofing Plan
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Transform from AI-vulnerable to AI-empowered in 12 weeks. Your personalized roadmap based on your {userRole} role and {riskScore}/100 risk score.
+          </p>
+        </div>
 
-          {/* Overall Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
+        {/* Progress Overview */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Your Progress</h2>
+            <div className="text-3xl font-bold text-green-600">{progressPercentage}%</div>
+          </div>
+          
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
             <div 
-              className="bg-gradient-to-r from-blue-600 to-green-600 h-4 rounded-full transition-all duration-300"
-              style={{ width: `${overallProgress}%` }}
-            />
+              className="bg-gradient-to-r from-blue-600 to-green-600 h-3 rounded-full transition-all duration-300"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
           </div>
-
-          {/* Plan Introduction */}
-          {generatedPlan?.intro && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-blue-800">{generatedPlan.intro}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Phase 1: Fast Start (Days 1-7) */}
-        <div className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              1
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{completedCount}</div>
+              <div className="text-sm text-gray-600">Completed</div>
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Fast Start</h2>
-              <p className="text-gray-600">Days 1-7 • Quick wins and foundation</p>
+              <div className="text-2xl font-bold text-gray-900">{allSteps.length - completedCount}</div>
+              <div className="text-sm text-gray-600">Remaining</div>
             </div>
-            <div className="ml-auto">
-              <div className="text-lg font-semibold text-green-600">
-                {calculatePhaseProgress(generatedPlan?.fast_start || [])}% Complete
-              </div>
+            <div>
+              <div className="text-2xl font-bold text-blue-600">12</div>
+              <div className="text-sm text-gray-600">Weeks Total</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-green-600">{Math.ceil((allSteps.length - completedCount) / 3)}</div>
+              <div className="text-sm text-gray-600">Weeks Left</div>
             </div>
           </div>
+        </div>
 
+        {/* Phase 1: Quick Wins (Weeks 1-2) */}
+        <div className="mb-8">
+          <div className="flex items-center mb-6">
+            <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</div>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 1: Quick Wins</h2>
+            <span className="ml-3 text-gray-500">Weeks 1-2</span>
+          </div>
+          
           <div className="grid gap-4">
-            {generatedPlan?.fast_start?.map((action, index) => (
-              <ActionCard
-                key={action.id}
-                action={action}
-                isCompleted={userProgress[action.id]}
-                onToggle={() => toggleActionComplete(action.id)}
-                phase="fast_start"
-                index={index + 1}
-              />
+            {plan.week1to2.map((step) => (
+              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-4">
+                  <button
+                    onClick={() => toggleStepCompletion(step.id)}
+                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      completedSteps.has(step.id) 
+                        ? 'bg-green-500 border-green-500 text-white' 
+                        : 'border-gray-300 hover:border-green-400'
+                    }`}
+                  >
+                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
+                  </button>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getCategoryIcon(step.category)}
+                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
+                        {step.category}
+                      </span>
+                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+                    </div>
+                    <p className="text-gray-600">{step.description}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Phase 2: Momentum (Days 8-30) */}
-        <div className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              2
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Momentum</h2>
-              <p className="text-gray-600">Days 8-30 • Skill building and workflow optimization</p>
-            </div>
-            <div className="ml-auto">
-              <div className="text-lg font-semibold text-blue-600">
-                {calculatePhaseProgress(generatedPlan?.momentum || [])}% Complete
-              </div>
-            </div>
+        {/* Phase 2: Building Momentum (Weeks 3-4) */}
+        <div className="mb-8">
+          <div className="flex items-center mb-6">
+            <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</div>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 2: Building Momentum</h2>
+            <span className="ml-3 text-gray-500">Weeks 3-4</span>
           </div>
-
+          
           <div className="grid gap-4">
-            {generatedPlan?.momentum?.map((action, index) => (
-              <ActionCard
-                key={action.id}
-                action={action}
-                isCompleted={userProgress[action.id]}
-                onToggle={() => toggleActionComplete(action.id)}
-                phase="momentum"
-                index={index + 1}
-              />
+            {plan.week3to4.map((step) => (
+              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-4">
+                  <button
+                    onClick={() => toggleStepCompletion(step.id)}
+                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      completedSteps.has(step.id) 
+                        ? 'bg-green-500 border-green-500 text-white' 
+                        : 'border-gray-300 hover:border-green-400'
+                    }`}
+                  >
+                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
+                  </button>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getCategoryIcon(step.category)}
+                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
+                        {step.category}
+                      </span>
+                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+                    </div>
+                    <p className="text-gray-600">{step.description}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Phase 3: Positioning (Days 31-90) */}
-        <div className="mb-12">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              3
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Positioning</h2>
-              <p className="text-gray-600">Days 31-90 • Leadership and career advancement</p>
-            </div>
-            <div className="ml-auto">
-              <div className="text-lg font-semibold text-purple-600">
-                {calculatePhaseProgress(generatedPlan?.positioning || [])}% Complete
-              </div>
-            </div>
+        {/* Phase 3: Scaling Impact (Weeks 5-8) */}
+        <div className="mb-8">
+          <div className="flex items-center mb-6">
+            <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">3</div>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 3: Scaling Impact</h2>
+            <span className="ml-3 text-gray-500">Weeks 5-8</span>
           </div>
-
+          
           <div className="grid gap-4">
-            {generatedPlan?.positioning?.map((action, index) => (
-              <ActionCard
-                key={action.id}
-                action={action}
-                isCompleted={userProgress[action.id]}
-                onToggle={() => toggleActionComplete(action.id)}
-                phase="positioning"
-                index={index + 1}
-              />
+            {plan.week5to8.map((step) => (
+              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-4">
+                  <button
+                    onClick={() => toggleStepCompletion(step.id)}
+                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      completedSteps.has(step.id) 
+                        ? 'bg-green-500 border-green-500 text-white' 
+                        : 'border-gray-300 hover:border-green-400'
+                    }`}
+                  >
+                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
+                  </button>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getCategoryIcon(step.category)}
+                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
+                        {step.category}
+                      </span>
+                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+                    </div>
+                    <p className="text-gray-600">{step.description}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Completion Celebration */}
-        {overallProgress === 100 && (
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl p-8 text-center">
-            <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Congratulations! You're AI-Proofed! 🎉
-            </h3>
-            <p className="text-gray-600 mb-6">
-              You've completed your 90-day AI career protection plan. You're now positioned as an AI leader in your field.
-            </p>
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-              >
-                View Dashboard
-              </button>
-              <button
-                onClick={() => navigate('/templates')}
-                className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-50 transition-colors"
-              >
-                Get More Templates
-              </button>
-            </div>
+        {/* Phase 4: Leadership & Positioning (Weeks 9-12) */}
+        <div className="mb-8">
+          <div className="flex items-center mb-6">
+            <div className="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">4</div>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 4: Leadership & Positioning</h2>
+            <span className="ml-3 text-gray-500">Weeks 9-12</span>
           </div>
-        )}
+          
+          <div className="grid gap-4">
+            {plan.week9to12.map((step) => (
+              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-4">
+                  <button
+                    onClick={() => toggleStepCompletion(step.id)}
+                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      completedSteps.has(step.id) 
+                        ? 'bg-green-500 border-green-500 text-white' 
+                        : 'border-gray-300 hover:border-green-400'
+                    }`}
+                  >
+                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
+                  </button>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      {getCategoryIcon(step.category)}
+                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
+                        {step.category}
+                      </span>
+                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+                    </div>
+                    <p className="text-gray-600">{step.description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
+        {/* Success Message */}
+        <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl p-8 text-center">
+          <Trophy className="w-16 h-16 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold mb-4">
+            Congratulations on Starting Your AI Journey!
+          </h2>
+          <p className="text-xl mb-6">
+            In 90 days, you'll transform from AI-vulnerable to AI-empowered. Stay consistent, track your progress, and celebrate each milestone.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+          >
+            Back to Dashboard
+          </button>
+        </div>
       </div>
 
       <Footer />
-    </div>
-  );
-};
-
-// Action Card Component
-const ActionCard = ({ action, isCompleted, onToggle, phase, index }) => {
-  const getPhaseColor = (phase) => {
-    switch (phase) {
-      case 'fast_start': return 'border-green-200 bg-green-50';
-      case 'momentum': return 'border-blue-200 bg-blue-50';
-      case 'positioning': return 'border-purple-200 bg-purple-50';
-      default: return 'border-gray-200 bg-gray-50';
-    }
-  };
-
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'task': return <Target className="w-5 h-5" />;
-      case 'meeting': return <Clock className="w-5 h-5" />;
-      case 'artifact': return <BookOpen className="w-5 h-5" />;
-      default: return <CheckCircle className="w-5 h-5" />;
-    }
-  };
-
-  return (
-    <div className={`border-2 rounded-lg p-6 transition-all ${
-      isCompleted 
-        ? 'border-green-300 bg-green-50' 
-        : getPhaseColor(phase)
-    }`}>
-      <div className="flex items-start gap-4">
-        
-        {/* Completion Checkbox */}
-        <button
-          onClick={onToggle}
-          className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${
-            isCompleted 
-              ? 'bg-green-500 border-green-500 text-white' 
-              : 'border-gray-300 hover:border-green-400'
-          }`}
-        >
-          {isCompleted && <CheckCircle className="w-5 h-5" />}
-        </button>
-
-        {/* Action Content */}
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex items-center gap-2">
-              {getTypeIcon(action.type)}
-              <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">
-                {action.type}
-              </span>
-            </div>
-            {action.est_minutes && (
-              <span className="text-sm text-gray-500">
-                ~{action.est_minutes} min
-              </span>
-            )}
-          </div>
-          
-          <h3 className={`text-lg font-semibold mb-2 ${
-            isCompleted ? 'text-green-800 line-through' : 'text-gray-900'
-          }`}>
-            {action.title}
-          </h3>
-          
-          <p className={`mb-4 ${
-            isCompleted ? 'text-green-700' : 'text-gray-600'
-          }`}>
-            {action.details}
-          </p>
-
-          {/* Tool References */}
-          {action.tool_refs && action.tool_refs.length > 0 && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm text-gray-500">Tools:</span>
-              {action.tool_refs.map((tool, i) => (
-                <span key={i} className="bg-white border border-gray-200 px-2 py-1 rounded text-xs">
-                  {tool}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Priority Indicator */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Priority:</span>
-              <div className={`px-2 py-1 rounded text-xs font-medium ${
-                action.priority === 1 
-                  ? 'bg-red-100 text-red-700' 
-                  : action.priority === 2 
-                  ? 'bg-yellow-100 text-yellow-700'
-                  : 'bg-gray-100 text-gray-700'
-              }`}>
-                {action.priority === 1 ? 'High' : action.priority === 2 ? 'Medium' : 'Low'}
-              </div>
-            </div>
-            
-            {isCompleted && (
-              <div className="flex items-center gap-1 text-green-600 text-sm font-medium">
-                <CheckCircle className="w-4 h-4" />
-                Completed
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

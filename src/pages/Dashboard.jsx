@@ -55,6 +55,8 @@ const UserDashboard = () => {
       }
       setUserProfile(profile);
       setIsPremium(profile?.subscription_status === 'premium');
+      // Add this after setUserProfile(profile);
+
 
       // Fetch latest assessment
       const { data: latestAssessmentData, error: latestError } = await supabase
@@ -187,6 +189,7 @@ const UserDashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <DashboardHeader 
           user={user}
+          userProfile={userProfile}
           onSignOut={handleSignOut}
           onDeleteAccount={handleDeleteAccount}
           onExploreCareers={handleExploreCareers}
@@ -251,7 +254,7 @@ const UserDashboard = () => {
             assessmentHistory={assessmentHistory}
             daysSinceAssessment={daysSinceAssessment}
             onRetakeAssessment={() => navigate('/assessment')}
-            onViewResults={() => navigate('/results')}
+            onViewResults={() => navigate('/plan')}
           />
         </div>
 
@@ -285,7 +288,7 @@ const UserDashboard = () => {
               isPremium={isPremium}
               daysSinceAssessment={daysSinceAssessment}
               onRetakeAssessment={() => navigate('/assessment')}
-              onViewResults={() => navigate('/results')}
+              onViewResults={() => navigate('/plan')}
               onUpgrade={handleUpgrade}
             />
 

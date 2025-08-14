@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 const DashboardHeader = ({ 
   user, 
+  userProfile,
   onSignOut, 
   onDeleteAccount, 
   onExploreCareers,
@@ -14,10 +15,7 @@ const DashboardHeader = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  console.log('🔍 DashboardHeader Debug:');
-  console.log('User object:', user);
-  console.log('User subscription_status:', user?.subscription_status);
-  console.log('User metadata:', user?.user_metadata);
+
 
 
   // Handle clicking outside dropdown
@@ -101,9 +99,6 @@ const DashboardHeader = ({
               </button>
               <button
                 onClick={() => {
-                  console.log('🎯 Plan button clicked!');
-                  console.log('Navigate function exists:', !!navigate);
-                  alert('Button works!'); // Test alert
                   navigate('/plan');
                 }}
                 className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white"

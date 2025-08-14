@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Auth from './Auth';
 import Assessment from './pages/Assessment';
-//import Results from './pages/Results';
 import UserDashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AuthCallback from './pages/AuthCallback';
@@ -45,7 +44,7 @@ function App() {
           <Route path="/" element={<RedirectIfAuthed><Landing /></RedirectIfAuthed>} />
           <Route path="/auth" element={<RedirectIfAuthed><Auth /></RedirectIfAuthed>} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} /> 
           <Route path="/payment/cancel" element={<PaymentCancel />} />
           <Route path="/auth/reset-password" element={<PasswordReset />} />
           
