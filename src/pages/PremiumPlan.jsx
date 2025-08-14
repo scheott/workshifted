@@ -1,4 +1,4 @@
-// src/pages/PremiumPlan.jsx - Optimized 90-Day AI-Proofing Plan
+// src/pages/PremiumPlan.jsx - PERSONALIZED using buildHybridPlan
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -14,10 +14,15 @@ import {
   Zap,
   TrendingUp,
   Users,
-  Lightbulb
+  Lightbulb,
+  AlertCircle,
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import DashboardHeader from '../components/DashboardHeader';
 import Footer from '../components/Footer';
+import { buildHybridPlan } from '../data/premiumContent/hybridPlanGenerator';
+import { AITOOLS_DB } from '../data/premiumContent/aiToolsDatabase';
 
 const PremiumPlan = () => {
   const { user, loading: authLoading } = useAuth();
@@ -29,6 +34,7 @@ const PremiumPlan = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
   const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [personalizedPlan, setPersonalizedPlan] = useState(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -68,7 +74,7 @@ const PremiumPlan = () => {
         return;
       }
 
-      setLoadingStep('Loading your assessment...');
+      setLoadingStep('Generating your personalized plan...');
 
       // Fetch latest assessment
       const { data: assessment, error: assessmentError } = await supabase
@@ -79,12 +85,20 @@ const PremiumPlan = () => {
         .limit(1)
         .single();
 
-      if (assessmentError) {
-        console.error('Assessment error:', assessmentError);
-        // Still show the page even without assessment data
+      if (assessment) {
+        setLatestAssessment(assessment);
+        
+        setLoadingStep('Customizing for your role and industry...');
+        
+        // Generate personalized plan using your buildHybridPlan system
+        const hybridPlan = buildHybridPlan({
+          answers: assessment.answers,
+          risk: assessment.risk_result,
+          selectedPath: assessment.evolution_paths?.[0] // Top evolution path
+        });
+        
+        setPersonalizedPlan(hybridPlan);
       }
-
-      setLatestAssessment(assessment);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -104,124 +118,66 @@ const PremiumPlan = () => {
     setCompletedSteps(newCompleted);
   };
 
-  // Generate personalized plan based on assessment data
-  const generatePlan = () => {
-    const userRole = latestAssessment?.answers?.profile_role_family || 'analyst';
-    const riskScore = latestAssessment?.risk_result?.score || 50;
-    const industry = latestAssessment?.answers?.profile_industry || 'tech';
-    
+  // Convert your hybridPlan structure to the UI structure
+  const convertToUIStructure = (hybridPlan) => {
+    if (!hybridPlan) return { week1to2: [], week3to6: [], week7to10: [], week11to12: [] };
+
     return {
-      week1to2: [
-        {
-          id: 'setup-ai-tools',
-          title: 'Set up your AI toolkit',
-          description: `Install and configure ChatGPT, Claude, or other AI tools for your ${userRole} role`,
-          category: 'Tools',
-          estimatedTime: '2 hours',
-          priority: 'high'
-        },
-        {
-          id: 'identify-tasks',
-          title: 'Identify automatable tasks',
-          description: 'List 10 repetitive tasks you do weekly that could be automated',
-          category: 'Planning',
-          estimatedTime: '1 hour',
-          priority: 'high'
-        },
-        {
-          id: 'first-automation',
-          title: 'Create your first automation',
-          description: 'Automate one simple task using AI or no-code tools',
-          category: 'Implementation',
-          estimatedTime: '3 hours',
-          priority: 'medium'
-        }
-      ],
-      week3to4: [
-        {
-          id: 'ai-workflow',
-          title: 'Build an AI-enhanced workflow',
-          description: 'Create a workflow that combines AI tools with your existing processes',
-          category: 'Implementation',
-          estimatedTime: '4 hours',
-          priority: 'high'
-        },
-        {
-          id: 'upskill-learning',
-          title: 'Complete AI skills course',
-          description: 'Finish a relevant online course about AI in your field',
-          category: 'Learning',
-          estimatedTime: '6 hours',
-          priority: 'medium'
-        },
-        {
-          id: 'document-wins',
-          title: 'Document your AI wins',
-          description: 'Create a portfolio of how AI has improved your work',
-          category: 'Portfolio',
-          estimatedTime: '2 hours',
-          priority: 'medium'
-        }
-      ],
-      week5to8: [
-        {
-          id: 'team-training',
-          title: 'Train your team on AI tools',
-          description: 'Share your AI knowledge with colleagues and become the go-to person',
-          category: 'Leadership',
-          estimatedTime: '3 hours',
-          priority: 'high'
-        },
-        {
-          id: 'process-optimization',
-          title: 'Optimize a team process',
-          description: 'Use AI to improve a process that affects your whole team',
-          category: 'Implementation',
-          estimatedTime: '5 hours',
-          priority: 'high'
-        },
-        {
-          id: 'industry-expertise',
-          title: 'Develop industry AI expertise',
-          description: `Research AI trends and tools specific to ${industry} industry`,
-          category: 'Learning',
-          estimatedTime: '4 hours',
-          priority: 'medium'
-        }
-      ],
-      week9to12: [
-        {
-          id: 'ai-initiative',
-          title: 'Propose an AI initiative',
-          description: 'Present a formal AI improvement proposal to leadership',
-          category: 'Leadership',
-          estimatedTime: '6 hours',
-          priority: 'high'
-        },
-        {
-          id: 'external-presence',
-          title: 'Build external AI presence',
-          description: 'Share your AI expertise through LinkedIn, blogs, or speaking',
-          category: 'Positioning',
-          estimatedTime: '4 hours',
-          priority: 'medium'
-        },
-        {
-          id: 'mentor-others',
-          title: 'Mentor others in AI adoption',
-          description: 'Help other professionals in your network adopt AI tools',
-          category: 'Leadership',
-          estimatedTime: '3 hours',
-          priority: 'medium'
-        }
-      ]
+      week1to2: hybridPlan.fast_start_actions?.map(action => ({
+        id: action.id,
+        title: action.title,
+        description: action.details,
+        category: action.type === 'task' ? 'Implementation' : action.type === 'artifact' ? 'Planning' : 'Tools',
+        estimatedTime: action.est_minutes ? `${action.est_minutes} min` : 'Variable',
+        priority: action.priority === 1 ? 'high' : action.priority === 2 ? 'medium' : 'low',
+        type: action.type
+      })) || [],
+
+      week3to6: hybridPlan.momentum_actions?.map(action => ({
+        id: action.id,
+        title: action.title,
+        description: action.details,
+        category: action.type === 'task' ? 'Implementation' : action.type === 'artifact' ? 'Portfolio' : 'Learning',
+        estimatedTime: action.est_minutes ? `${action.est_minutes} min` : 'Variable',
+        priority: action.priority === 1 ? 'high' : action.priority === 2 ? 'medium' : 'low',
+        type: action.type
+      })) || [],
+
+      week7to10: hybridPlan.positioning_assets?.slice(0, Math.ceil(hybridPlan.positioning_assets.length / 2))?.map(action => ({
+        id: action.id,
+        title: action.title,
+        description: action.details,
+        category: action.type === 'meeting' ? 'Leadership' : action.type === 'artifact' ? 'Positioning' : 'Implementation',
+        estimatedTime: action.est_minutes ? `${action.est_minutes} min` : 'Variable',
+        priority: action.priority === 1 ? 'high' : action.priority === 2 ? 'medium' : 'low',
+        type: action.type
+      })) || [],
+
+      week11to12: hybridPlan.positioning_assets?.slice(Math.ceil(hibridPlan.positioning_assets?.length / 2))?.map(action => ({
+        id: `final-${action.id}`,
+        title: `Advanced: ${action.title}`,
+        description: `Scale up: ${action.details}`,
+        category: 'Leadership',
+        estimatedTime: action.est_minutes ? `${Math.ceil(action.est_minutes * 1.5)} min` : 'Extended',
+        priority: 'high',
+        type: action.type
+      })) || []
     };
   };
 
-  const plan = generatePlan();
-  const allSteps = [...plan.week1to2, ...plan.week3to4, ...plan.week5to8, ...plan.week9to12];
+  const plan = personalizedPlan ? convertToUIStructure(personalizedPlan) : { week1to2: [], week3to6: [], week7to10: [], week11to12: [] };
+  const allSteps = [...plan.week1to2, ...plan.week3to6, ...plan.week7to10, ...plan.week11to12];
   const completedCount = allSteps.filter(step => completedSteps.has(step.id)).length;
-  const progressPercentage = Math.round((completedCount / allSteps.length) * 100);
+  const progressPercentage = allSteps.length > 0 ? Math.round((completedCount / allSteps.length) * 100) : 0;
+
+  const getActionTypeIcon = (type) => {
+    switch (type) {
+      case 'task': return <Target className="w-5 h-5 text-blue-600" />;
+      case 'artifact': return <FileText className="w-5 h-5 text-green-600" />;
+      case 'meeting': return <MessageSquare className="w-5 h-5 text-purple-600" />;
+      default: return <Lightbulb className="w-5 h-5 text-gray-600" />;
+    }
+  };
 
   const getCategoryIcon = (category) => {
     switch (category) {
@@ -281,6 +237,7 @@ const PremiumPlan = () => {
   }
 
   const userRole = latestAssessment?.answers?.profile_role_family || 'Professional';
+  const industry = latestAssessment?.answers?.profile_industry || 'Technology';
   const riskScore = latestAssessment?.risk_result?.score || 50;
 
   return (
@@ -298,15 +255,34 @@ const PremiumPlan = () => {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
+        {/* Personalized Header Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Your 90-Day AI-Proofing Plan
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Transform from AI-vulnerable to AI-empowered in 12 weeks. Your personalized roadmap based on your {userRole} role and {riskScore}/100 risk score.
+            Personalized roadmap for {userRole} professionals in {industry}. 
+            Risk Score: {riskScore}/100 • Focus: {riskScore >= 70 ? 'Urgent Action' : riskScore >= 40 ? 'Proactive Evolution' : 'Strategic Advantage'}
           </p>
         </div>
+
+        {/* Personalized Context from buildHybridPlan */}
+        {personalizedPlan && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-blue-600 mt-1" />
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Your Situation</h3>
+                {personalizedPlan.intro && (
+                  <p className="text-gray-700 mb-2">{personalizedPlan.intro}</p>
+                )}
+                {personalizedPlan.risk_explainer && (
+                  <p className="text-sm text-blue-700 font-medium">{personalizedPlan.risk_explainer}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Progress Overview */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
@@ -336,17 +312,34 @@ const PremiumPlan = () => {
               <div className="text-sm text-gray-600">Weeks Total</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">{Math.ceil((allSteps.length - completedCount) / 3)}</div>
+              <div className="text-2xl font-bold text-green-600">{Math.ceil((allSteps.length - completedCount) / 3) || 12}</div>
               <div className="text-sm text-gray-600">Weeks Left</div>
             </div>
           </div>
         </div>
 
-        {/* Phase 1: Quick Wins (Weeks 1-2) */}
+        {/* AI Tool Recommendations */}
+        {personalizedPlan?.recommended_tools && personalizedPlan.recommended_tools.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm border p-8 mb-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
+              Recommended Tools for {userRole}s
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {personalizedPlan.recommended_tools.map((tool, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                  <h4 className="font-medium text-gray-900 text-sm">{tool.label}</h4>
+                  <p className="text-xs text-gray-500 mt-1">Priority {index + 1}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Phase 1: Fast Start (Weeks 1-2) */}
         <div className="mb-8">
           <div className="flex items-center mb-6">
             <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 1: Quick Wins</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 1: Fast Start</h2>
             <span className="ml-3 text-gray-500">Weeks 1-2</span>
           </div>
           
@@ -367,7 +360,7 @@ const PremiumPlan = () => {
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      {getCategoryIcon(step.category)}
+                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
                       <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
                         {step.category}
@@ -375,23 +368,36 @@ const PremiumPlan = () => {
                       <span className="text-sm text-gray-500">{step.estimatedTime}</span>
                     </div>
                     <p className="text-gray-600">{step.description}</p>
+                    {step.priority === 'high' && (
+                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                        <AlertCircle className="w-3 h-3" />
+                        High Priority
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
+            
+            {plan.week1to2.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Target className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>Complete your assessment to see personalized actions</p>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Phase 2: Building Momentum (Weeks 3-4) */}
+        {/* Phase 2: Build Momentum (Weeks 3-6) */}
         <div className="mb-8">
           <div className="flex items-center mb-6">
             <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 2: Building Momentum</h2>
-            <span className="ml-3 text-gray-500">Weeks 3-4</span>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 2: Build Momentum</h2>
+            <span className="ml-3 text-gray-500">Weeks 3-6</span>
           </div>
           
           <div className="grid gap-4">
-            {plan.week3to4.map((step) => (
+            {plan.week3to6.map((step) => (
               <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-4">
                   <button
@@ -407,7 +413,7 @@ const PremiumPlan = () => {
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      {getCategoryIcon(step.category)}
+                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
                       <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
                         {step.category}
@@ -415,6 +421,12 @@ const PremiumPlan = () => {
                       <span className="text-sm text-gray-500">{step.estimatedTime}</span>
                     </div>
                     <p className="text-gray-600">{step.description}</p>
+                    {step.priority === 'high' && (
+                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                        <AlertCircle className="w-3 h-3" />
+                        High Priority
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -422,16 +434,16 @@ const PremiumPlan = () => {
           </div>
         </div>
 
-        {/* Phase 3: Scaling Impact (Weeks 5-8) */}
+        {/* Phase 3: Strategic Positioning (Weeks 7-10) */}
         <div className="mb-8">
           <div className="flex items-center mb-6">
             <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">3</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 3: Scaling Impact</h2>
-            <span className="ml-3 text-gray-500">Weeks 5-8</span>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 3: Strategic Positioning</h2>
+            <span className="ml-3 text-gray-500">Weeks 7-10</span>
           </div>
           
           <div className="grid gap-4">
-            {plan.week5to8.map((step) => (
+            {plan.week7to10.map((step) => (
               <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-4">
                   <button
@@ -447,7 +459,7 @@ const PremiumPlan = () => {
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      {getCategoryIcon(step.category)}
+                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
                       <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
                         {step.category}
@@ -455,6 +467,12 @@ const PremiumPlan = () => {
                       <span className="text-sm text-gray-500">{step.estimatedTime}</span>
                     </div>
                     <p className="text-gray-600">{step.description}</p>
+                    {step.priority === 'high' && (
+                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                        <AlertCircle className="w-3 h-3" />
+                        High Priority
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -462,16 +480,16 @@ const PremiumPlan = () => {
           </div>
         </div>
 
-        {/* Phase 4: Leadership & Positioning (Weeks 9-12) */}
+        {/* Phase 4: Leadership & Scale (Weeks 11-12) */}
         <div className="mb-8">
           <div className="flex items-center mb-6">
             <div className="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">4</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 4: Leadership & Positioning</h2>
-            <span className="ml-3 text-gray-500">Weeks 9-12</span>
+            <h2 className="text-2xl font-bold text-gray-900">Phase 4: Leadership & Scale</h2>
+            <span className="ml-3 text-gray-500">Weeks 11-12</span>
           </div>
           
           <div className="grid gap-4">
-            {plan.week9to12.map((step) => (
+            {plan.week11to12.map((step) => (
               <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start gap-4">
                   <button
@@ -487,7 +505,7 @@ const PremiumPlan = () => {
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      {getCategoryIcon(step.category)}
+                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
                       <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
                         {step.category}
@@ -495,6 +513,12 @@ const PremiumPlan = () => {
                       <span className="text-sm text-gray-500">{step.estimatedTime}</span>
                     </div>
                     <p className="text-gray-600">{step.description}</p>
+                    {step.priority === 'high' && (
+                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                        <AlertCircle className="w-3 h-3" />
+                        High Priority
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -502,21 +526,26 @@ const PremiumPlan = () => {
           </div>
         </div>
 
-        {/* Success Message */}
-        <div className="bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl p-8 text-center">
-          <Trophy className="w-16 h-16 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold mb-4">
-            Congratulations on Starting Your AI Journey!
-          </h2>
-          <p className="text-xl mb-6">
-            In 90 days, you'll transform from AI-vulnerable to AI-empowered. Stay consistent, track your progress, and celebrate each milestone.
+        {/* Next Steps CTA */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 text-center">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Ready to Start?</h3>
+          <p className="text-gray-600 mb-6">
+            Begin with your high-priority Phase 1 actions. These are specifically designed for your {userRole} role in {industry}.
           </p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-          >
-            Back to Dashboard
-          </button>
+          <div className="flex justify-center gap-4">
+            <button 
+              onClick={() => navigate('/templates')}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Get Templates
+            </button>
+            <button 
+              onClick={() => navigate('/ai-leadership-guide')}
+              className="bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+            >
+              Leadership Guide
+            </button>
+          </div>
         </div>
       </div>
 

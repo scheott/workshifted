@@ -66,23 +66,29 @@ const QuickActions = ({
 
         {/* Premium Actions */}
         {isPremium ? (
-          <>
-            <button className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left">
-              <Download className="w-5 h-5 text-purple-600" />
-              <div className="flex-1">
+        <>
+            <button 
+            onClick={() => navigate('/templates')}
+            className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left"
+            >
+            <Download className="w-5 h-5 text-purple-600" />
+            <div className="flex-1">
                 <div className="font-medium text-gray-900">Download Templates</div>
                 <div className="text-sm text-gray-600">LinkedIn scripts, boss proposals</div>
-              </div>
+            </div>
             </button>
             
-            <button className="w-full flex items-center gap-3 p-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left">
-              <Crown className="w-5 h-5 text-indigo-600" />
-              <div className="flex-1">
+            <button 
+            onClick={() => navigate('/ai-leadership-guide')}
+            className="w-full flex items-center gap-3 p-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left"
+            >
+            <Crown className="w-5 h-5 text-indigo-600" />
+            <div className="flex-1">
                 <div className="font-medium text-gray-900">AI Leadership Guide</div>
                 <div className="text-sm text-gray-600">Become your team's AI coordinator</div>
-              </div>
+            </div>
             </button>
-          </>
+        </>
         ) : (
           <button
             onClick={onUpgrade}

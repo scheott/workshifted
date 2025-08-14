@@ -3,7 +3,17 @@ import React from 'react';
 import { Lock, CheckCircle, Download, FileText, Users, TrendingUp, Calendar, Star } from 'lucide-react';
 
 const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
-  
+  const handleAccessNow = (featureId) => {
+    const routes = {
+        'ninety_day_plan': '/plan',
+        'career_templates': '/templates',
+        'skills_roadmap': '/skills-roadmap',
+        'ai_updates': '/ai-updates'
+    };
+    
+    const route = routes[featureId] || '/plan';
+    navigate(route);
+  };
   const premiumFeatures = [
     {
       icon: Calendar,
@@ -49,21 +59,24 @@ const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {premiumFeatures.map((feature, index) => (
+            {premiumFeatures.map((feature, index) => (
             <div key={index} className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3">
                 <feature.icon className="w-5 h-5 text-green-600 mt-1" />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 mb-1">{feature.title}</h4>
-                  <p className="text-sm text-gray-600 mb-2">{feature.description}</p>
-                  <button className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center gap-1">
+                    <h4 className="font-medium text-gray-900 mb-1">{feature.title}</h4>
+                    <p className="text-sm text-gray-600 mb-2">{feature.description}</p>
+                    <button 
+                    onClick={() => handleAccessNow(feature.id)}
+                    className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center gap-1"
+                    >
                     Access Now
                     <Download className="w-3 h-3" />
-                  </button>
+                    </button>
                 </div>
-              </div>
+                </div>
             </div>
-          ))}
+            ))}
         </div>
 
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">

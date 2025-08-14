@@ -158,7 +158,37 @@ const UserDashboard = () => {
     if (user?.user_metadata?.first_name) return user.user_metadata.first_name;
     return user?.email?.split('@')[0] || 'User';
   };
+  const handleDownloadTemplates = () => {
+    if (isPremium) {
+      navigate('/templates');
+    } else {
+      handleUpgrade();
+    }
+  };
 
+  const handleAILeadershipGuide = () => {
+    if (isPremium) {
+      navigate('/ai-leadership-guide');
+    } else {
+      handleUpgrade();
+    }
+  };
+
+  const handleViewSkillsRoadmap = () => {
+    if (isPremium) {
+      navigate('/skills-roadmap');
+    } else {
+      handleUpgrade();
+    }
+  };
+
+  const handleViewAIUpdates = () => {
+    if (isPremium) {
+      navigate('/ai-updates');
+    } else {
+      handleUpgrade();
+    }
+  };
   // Handle upgrade
   const handleUpgrade = () => {
     setShowCheckoutModal(true);
