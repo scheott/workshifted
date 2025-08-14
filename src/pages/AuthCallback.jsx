@@ -83,14 +83,8 @@ export default function AuthCallback() {
           return;
         }
 
-        // FIXED: Route based on whether they have selected a career
-        if (profileData?.selected_career && profileData?.selected_career_data) {
-          // User has completed assessment AND selected a career -> go to results
-          navigate('/results', { replace: true });
-        } else {
-          // User has assessment but hasn't selected career -> go to dashboard for career selection
-          navigate('/dashboard', { replace: true });
-        }
+        navigate('/dashboard', { replace: true });
+
         
       } catch (err) {
         console.error('Auth callback error:', err);

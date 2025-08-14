@@ -134,6 +134,7 @@ const EnhancedAuthForm = ({ onSuccess }) => {
             window.location.href = '/assessment';
           } else {
             window.location.href = count > 0 ? '/dashboard' : '/assessment';
+
           }
         }
 

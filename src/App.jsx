@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Auth from './Auth';
 import Assessment from './pages/Assessment';
-import Results from './pages/Results';
+//import Results from './pages/Results';
 import UserDashboard from './pages/Dashboard';
 import PrivateRoute from './components/PrivateRoute';
 import AuthCallback from './pages/AuthCallback';
@@ -51,7 +51,6 @@ function App() {
           
           {/* Protected Routes */}
           <Route path="/assessment" element={<PrivateRoute><Assessment /></PrivateRoute>} />
-          <Route path="/results" element={<PrivateRoute><Results /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
           <Route path="/plan" element={<PrivateRoute><PremiumPlan /></PrivateRoute>} />
 

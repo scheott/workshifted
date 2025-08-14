@@ -17,7 +17,7 @@ export default function RedirectIfAuthed({ children }) {
       try {
         // Check for assessment results
         const { count, error } = await supabase
-          .from('assessment_results')
+          .from('ai_risk_assessments')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .limit(1);
@@ -48,14 +48,7 @@ export default function RedirectIfAuthed({ children }) {
           return;
         }
 
-        // Route based on user status
-        if (profileData?.selected_career && profileData?.selected_career_data) {
-          // Has assessment AND selected career -> results
-          setRedirectPath('/results');
-        } else {
-          // Has assessment but no selected career -> dashboard
-          setRedirectPath('/dashboard');
-        }
+        setRedirectPath('/dashboard');
 
       } catch (error) {
         console.error('Error checking user status:', error);

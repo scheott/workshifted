@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+
 
 const DashboardHeader = ({ 
   user, 
@@ -10,6 +13,12 @@ const DashboardHeader = ({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  console.log('🔍 DashboardHeader Debug:');
+  console.log('User object:', user);
+  console.log('User subscription_status:', user?.subscription_status);
+  console.log('User metadata:', user?.user_metadata);
+
 
   // Handle clicking outside dropdown
   useEffect(() => {
@@ -54,11 +63,12 @@ const DashboardHeader = ({
   const handleDashboard = () => {
     setShowUserDropdown(false);
     setIsMobileMenuOpen(false);
-    // Navigate to dashboard - you can pass this as a prop or handle in parent
-    window.location.href = '/dashboard';
+    navigate('/dashboard'); // Change from window.location.href = '/dashboard'
   };
 
   const handleViewPlan = () => {
+    setShowUserDropdown(false);
+    setIsMobileMenuOpen(false);
     navigate('/plan');
   };
 
@@ -90,17 +100,15 @@ const DashboardHeader = ({
                 Dashboard
               </button>
               <button
-                onClick={handleViewPlan}
-                className={`flex items-center w-full px-4 py-3 text-base font-medium transition-colors rounded-md mx-2 ${
-                  currentPage === 'plan' 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                }`}
+                onClick={() => {
+                  console.log('🎯 Plan button clicked!');
+                  console.log('Navigate function exists:', !!navigate);
+                  alert('Button works!'); // Test alert
+                  navigate('/plan');
+                }}
+                className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white"
               >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                My 90-Day Plan
+                My 90-Day Plan (TEST)
               </button>
             </nav>
 

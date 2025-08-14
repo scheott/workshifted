@@ -97,7 +97,7 @@ const Assessment = () => {
       if (error) throw error;
 
       // 3) Navigate to results page
-      navigate('/results', { 
+      navigate('/dashboard', { 
         state: { 
           riskResult,
           evolutionPaths,
