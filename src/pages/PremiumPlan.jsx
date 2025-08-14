@@ -1,4 +1,4 @@
-// src/pages/PremiumPlan.jsx - PERSONALIZED using buildHybridPlan
+// src/pages/PremiumPlan.jsx - FIXED for correct data structure
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +33,6 @@ const PremiumPlan = () => {
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
   const [loadingStep, setLoadingStep] = useState('');
-  const [completedSteps, setCompletedSteps] = useState(new Set());
   const [personalizedPlan, setPersonalizedPlan] = useState(null);
 
   useEffect(() => {
@@ -90,14 +89,25 @@ const PremiumPlan = () => {
         
         setLoadingStep('Customizing for your role and industry...');
         
-        // Generate personalized plan using your buildHybridPlan system
-        const hybridPlan = buildHybridPlan({
-          answers: assessment.answers,
-          risk: assessment.risk_result,
-          selectedPath: assessment.evolution_paths?.[0] // Top evolution path
-        });
-        
-        setPersonalizedPlan(hybridPlan);
+        try {
+          // Generate personalized plan using buildHybridPlan
+          const hybridPlan = buildHybridPlan({
+            answers: assessment.answers,
+            risk: assessment.risk_result,
+            selectedPath: assessment.evolution_paths?.[0] // Use top evolution path
+
+          });
+          console.log('🔍 TOOLS SPECIFIC DEBUG:');
+            console.log('hybridPlan.tools exists:', !!hybridPlan.tools);
+            console.log('hybridPlan.tools:', hybridPlan.tools);
+            console.log('hybridPlan.tools type:', typeof hybridPlan.tools);
+            console.log('hybridPlan.tools length:', hybridPlan.tools?.length);
+          
+          console.log('✅ Generated plan successfully:', hybridPlan);
+          setPersonalizedPlan(hybridPlan);
+        } catch (error) {
+          console.error('Error generating plan:', error);
+        }
       }
 
     } catch (error) {
@@ -105,103 +115,6 @@ const PremiumPlan = () => {
     } finally {
       setLoading(false);
       setLoadingStep('');
-    }
-  };
-
-  const toggleStepCompletion = (stepId) => {
-    const newCompleted = new Set(completedSteps);
-    if (newCompleted.has(stepId)) {
-      newCompleted.delete(stepId);
-    } else {
-      newCompleted.add(stepId);
-    }
-    setCompletedSteps(newCompleted);
-  };
-
-  // Convert your hybridPlan structure to the UI structure
-  const convertToUIStructure = (hybridPlan) => {
-    if (!hybridPlan) return { week1to2: [], week3to6: [], week7to10: [], week11to12: [] };
-
-    return {
-      week1to2: hybridPlan.fast_start_actions?.map(action => ({
-        id: action.id,
-        title: action.title,
-        description: action.details,
-        category: action.type === 'task' ? 'Implementation' : action.type === 'artifact' ? 'Planning' : 'Tools',
-        estimatedTime: action.est_minutes ? `${action.est_minutes} min` : 'Variable',
-        priority: action.priority === 1 ? 'high' : action.priority === 2 ? 'medium' : 'low',
-        type: action.type
-      })) || [],
-
-      week3to6: hybridPlan.momentum_actions?.map(action => ({
-        id: action.id,
-        title: action.title,
-        description: action.details,
-        category: action.type === 'task' ? 'Implementation' : action.type === 'artifact' ? 'Portfolio' : 'Learning',
-        estimatedTime: action.est_minutes ? `${action.est_minutes} min` : 'Variable',
-        priority: action.priority === 1 ? 'high' : action.priority === 2 ? 'medium' : 'low',
-        type: action.type
-      })) || [],
-
-      week7to10: hybridPlan.positioning_assets?.slice(0, Math.ceil(hybridPlan.positioning_assets.length / 2))?.map(action => ({
-        id: action.id,
-        title: action.title,
-        description: action.details,
-        category: action.type === 'meeting' ? 'Leadership' : action.type === 'artifact' ? 'Positioning' : 'Implementation',
-        estimatedTime: action.est_minutes ? `${action.est_minutes} min` : 'Variable',
-        priority: action.priority === 1 ? 'high' : action.priority === 2 ? 'medium' : 'low',
-        type: action.type
-      })) || [],
-
-      week11to12: hybridPlan.positioning_assets?.slice(Math.ceil(hibridPlan.positioning_assets?.length / 2))?.map(action => ({
-        id: `final-${action.id}`,
-        title: `Advanced: ${action.title}`,
-        description: `Scale up: ${action.details}`,
-        category: 'Leadership',
-        estimatedTime: action.est_minutes ? `${Math.ceil(action.est_minutes * 1.5)} min` : 'Extended',
-        priority: 'high',
-        type: action.type
-      })) || []
-    };
-  };
-
-  const plan = personalizedPlan ? convertToUIStructure(personalizedPlan) : { week1to2: [], week3to6: [], week7to10: [], week11to12: [] };
-  const allSteps = [...plan.week1to2, ...plan.week3to6, ...plan.week7to10, ...plan.week11to12];
-  const completedCount = allSteps.filter(step => completedSteps.has(step.id)).length;
-  const progressPercentage = allSteps.length > 0 ? Math.round((completedCount / allSteps.length) * 100) : 0;
-
-  const getActionTypeIcon = (type) => {
-    switch (type) {
-      case 'task': return <Target className="w-5 h-5 text-blue-600" />;
-      case 'artifact': return <FileText className="w-5 h-5 text-green-600" />;
-      case 'meeting': return <MessageSquare className="w-5 h-5 text-purple-600" />;
-      default: return <Lightbulb className="w-5 h-5 text-gray-600" />;
-    }
-  };
-
-  const getCategoryIcon = (category) => {
-    switch (category) {
-      case 'Tools': return <Zap className="w-5 h-5" />;
-      case 'Planning': return <Target className="w-5 h-5" />;
-      case 'Implementation': return <CheckCircle className="w-5 h-5" />;
-      case 'Learning': return <BookOpen className="w-5 h-5" />;
-      case 'Portfolio': return <Trophy className="w-5 h-5" />;
-      case 'Leadership': return <Users className="w-5 h-5" />;
-      case 'Positioning': return <TrendingUp className="w-5 h-5" />;
-      default: return <Lightbulb className="w-5 h-5" />;
-    }
-  };
-
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'Tools': return 'bg-blue-100 text-blue-800';
-      case 'Planning': return 'bg-purple-100 text-purple-800';
-      case 'Implementation': return 'bg-green-100 text-green-800';
-      case 'Learning': return 'bg-orange-100 text-orange-800';
-      case 'Portfolio': return 'bg-yellow-100 text-yellow-800';
-      case 'Leadership': return 'bg-red-100 text-red-800';
-      case 'Positioning': return 'bg-indigo-100 text-indigo-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -262,291 +175,326 @@ const PremiumPlan = () => {
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Personalized roadmap for {userRole} professionals in {industry}. 
-            Risk Score: {riskScore}/100 • Focus: {riskScore >= 70 ? 'Urgent Action' : riskScore >= 40 ? 'Proactive Evolution' : 'Strategic Advantage'}
+            Risk Score: {riskScore}/100 • Focus: {riskScore >= 70 ? 'Urgent Action' : riskScore >= 40 ? 'Strategic Positioning' : 'Proactive Enhancement'}
           </p>
         </div>
 
-        {/* Personalized Context from buildHybridPlan */}
-        {personalizedPlan && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-blue-600 mt-1" />
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Your Situation</h3>
-                {personalizedPlan.intro && (
-                  <p className="text-gray-700 mb-2">{personalizedPlan.intro}</p>
-                )}
-                {personalizedPlan.risk_explainer && (
-                  <p className="text-sm text-blue-700 font-medium">{personalizedPlan.risk_explainer}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Progress Overview */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Your Progress</h2>
-            <div className="text-3xl font-bold text-green-600">{progressPercentage}%</div>
-          </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
-            <div 
-              className="bg-gradient-to-r from-blue-600 to-green-600 h-3 rounded-full transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
-            ></div>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{completedCount}</div>
-              <div className="text-sm text-gray-600">Completed</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{allSteps.length - completedCount}</div>
-              <div className="text-sm text-gray-600">Remaining</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-blue-600">12</div>
-              <div className="text-sm text-gray-600">Weeks Total</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-green-600">{Math.ceil((allSteps.length - completedCount) / 3) || 12}</div>
-              <div className="text-sm text-gray-600">Weeks Left</div>
-            </div>
-          </div>
-        </div>
-
-        {/* AI Tool Recommendations */}
-        {personalizedPlan?.recommended_tools && personalizedPlan.recommended_tools.length > 0 && (
-          <div className="bg-white rounded-xl shadow-sm border p-8 mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Recommended Tools for {userRole}s
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {personalizedPlan.recommended_tools.map((tool, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                  <h4 className="font-medium text-gray-900 text-sm">{tool.label}</h4>
-                  <p className="text-xs text-gray-500 mt-1">Priority {index + 1}</p>
+        {/* Plan Content */}
+        {personalizedPlan ? (
+          <>
+            {/* Plan Header */}
+            {personalizedPlan.header && (
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6 mb-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{personalizedPlan.header.pathTitle}</h2>
+                <p className="text-gray-700 mb-3">{personalizedPlan.header.intro}</p>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium">
+                    Timeline: {personalizedPlan.header.timeline}
+                  </span>
+                  <span className="text-gray-600">{personalizedPlan.header.riskNote}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Phase 1: Fast Start (Weeks 1-2) */}
-        <div className="mb-8">
-          <div className="flex items-center mb-6">
-            <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">1</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 1: Fast Start</h2>
-            <span className="ml-3 text-gray-500">Weeks 1-2</span>
-          </div>
-          
-          <div className="grid gap-4">
-            {plan.week1to2.map((step) => (
-              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <button
-                    onClick={() => toggleStepCompletion(step.id)}
-                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      completedSteps.has(step.id) 
-                        ? 'bg-green-500 border-green-500 text-white' 
-                        : 'border-gray-300 hover:border-green-400'
-                    }`}
-                  >
-                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
-                  </button>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
-                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
-                        {step.category}
-                      </span>
-                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
-                    </div>
-                    <p className="text-gray-600">{step.description}</p>
-                    {step.priority === 'high' && (
-                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                        <AlertCircle className="w-3 h-3" />
-                        High Priority
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {plan.week1to2.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Target className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                <p>Complete your assessment to see personalized actions</p>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Phase 2: Build Momentum (Weeks 3-6) */}
-        <div className="mb-8">
-          <div className="flex items-center mb-6">
-            <div className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 2: Build Momentum</h2>
-            <span className="ml-3 text-gray-500">Weeks 3-6</span>
-          </div>
-          
-          <div className="grid gap-4">
-            {plan.week3to6.map((step) => (
-              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <button
-                    onClick={() => toggleStepCompletion(step.id)}
-                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      completedSteps.has(step.id) 
-                        ? 'bg-green-500 border-green-500 text-white' 
-                        : 'border-gray-300 hover:border-green-400'
-                    }`}
-                  >
-                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
-                  </button>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
-                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
-                        {step.category}
-                      </span>
-                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
-                    </div>
-                    <p className="text-gray-600">{step.description}</p>
-                    {step.priority === 'high' && (
-                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                        <AlertCircle className="w-3 h-3" />
-                        High Priority
-                      </span>
-                    )}
+            {/* Fast Start Actions */}
+            {personalizedPlan.fast_start && personalizedPlan.fast_start.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-900">Fast Start</h3>
+                    <p className="text-gray-600">Days 1-30 • Build momentum with quick wins</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Phase 3: Strategic Positioning (Weeks 7-10) */}
-        <div className="mb-8">
-          <div className="flex items-center mb-6">
-            <div className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">3</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 3: Strategic Positioning</h2>
-            <span className="ml-3 text-gray-500">Weeks 7-10</span>
-          </div>
-          
-          <div className="grid gap-4">
-            {plan.week7to10.map((step) => (
-              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <button
-                    onClick={() => toggleStepCompletion(step.id)}
-                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      completedSteps.has(step.id) 
-                        ? 'bg-green-500 border-green-500 text-white' 
-                        : 'border-gray-300 hover:border-green-400'
-                    }`}
-                  >
-                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
-                  </button>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
-                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
-                        {step.category}
-                      </span>
-                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
+                <div className="grid gap-4">
+                  {personalizedPlan.fast_start.map((action, index) => (
+                    <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">{action.title}</h4>
+                          <p className="text-gray-600 mb-3">{action.details}</p>
+                          <div className="flex items-center gap-4">
+                            {action.est_minutes && (
+                              <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                                ~{action.est_minutes} minutes
+                              </span>
+                            )}
+                            {action.priority === 1 && (
+                              <span className="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full font-medium">
+                                High Priority
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-600">{step.description}</p>
-                    {step.priority === 'high' && (
-                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                        <AlertCircle className="w-3 h-3" />
-                        High Priority
-                      </span>
-                    )}
-                  </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
 
-        {/* Phase 4: Leadership & Scale (Weeks 11-12) */}
-        <div className="mb-8">
-          <div className="flex items-center mb-6">
-            <div className="bg-yellow-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">4</div>
-            <h2 className="text-2xl font-bold text-gray-900">Phase 4: Leadership & Scale</h2>
-            <span className="ml-3 text-gray-500">Weeks 11-12</span>
-          </div>
-          
-          <div className="grid gap-4">
-            {plan.week11to12.map((step) => (
-              <div key={step.id} className="bg-white rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <button
-                    onClick={() => toggleStepCompletion(step.id)}
-                    className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      completedSteps.has(step.id) 
-                        ? 'bg-green-500 border-green-500 text-white' 
-                        : 'border-gray-300 hover:border-green-400'
-                    }`}
-                  >
-                    {completedSteps.has(step.id) && <CheckCircle className="w-4 h-4" />}
-                  </button>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      {step.type ? getActionTypeIcon(step.type) : getCategoryIcon(step.category)}
-                      <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(step.category)}`}>
-                        {step.category}
-                      </span>
-                      <span className="text-sm text-gray-500">{step.estimatedTime}</span>
-                    </div>
-                    <p className="text-gray-600">{step.description}</p>
-                    {step.priority === 'high' && (
-                      <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                        <AlertCircle className="w-3 h-3" />
-                        High Priority
-                      </span>
-                    )}
+            {/* Momentum Actions */}
+            {personalizedPlan.momentum && personalizedPlan.momentum.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-900">Build Momentum</h3>
+                    <p className="text-gray-600">Days 31-60 • Establish systems and workflows</p>
                   </div>
                 </div>
+                <div className="grid gap-4">
+                  {personalizedPlan.momentum.map((action, index) => (
+                    <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">{action.title}</h4>
+                          <p className="text-gray-600 mb-3">{action.details}</p>
+                          <div className="flex items-center gap-4">
+                            {action.est_minutes && (
+                              <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                                ~{action.est_minutes} minutes
+                              </span>
+                            )}
+                            {action.priority === 1 && (
+                              <span className="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full font-medium">
+                                High Priority
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
 
-        {/* Next Steps CTA */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 text-center">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Ready to Start?</h3>
-          <p className="text-gray-600 mb-6">
-            Begin with your high-priority Phase 1 actions. These are specifically designed for your {userRole} role in {industry}.
-          </p>
-          <div className="flex justify-center gap-4">
+            {/* Positioning Actions */}
+            {personalizedPlan.positioning && personalizedPlan.positioning.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Target className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-semibold text-gray-900">Strategic Positioning</h3>
+                    <p className="text-gray-600">Days 61-90 • Establish leadership and expertise</p>
+                  </div>
+                </div>
+                <div className="grid gap-4">
+                  {personalizedPlan.positioning.map((action, index) => (
+                    <div key={index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-semibold text-sm">
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">{action.title}</h4>
+                          <p className="text-gray-600 mb-3">{action.details}</p>
+                          <div className="flex items-center gap-4">
+                            {action.est_minutes && (
+                              <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
+                                ~{action.est_minutes} minutes
+                              </span>
+                            )}
+                            {action.priority === 1 && (
+                              <span className="text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full font-medium">
+                                High Priority
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tools Section - Enhanced with full database */}
+            {personalizedPlan.tools && personalizedPlan.tools.length > 0 && (() => {
+            // Import the enhanced tools database at the top of your file
+            // import { AITOOLS_DB } from '../data/premiumContent/aiToolsDatabase';
+            
+            return (
+                <div className="mb-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <div>
+                    <h3 className="text-2xl font-semibold text-gray-900">Recommended AI Tools</h3>
+                    <p className="text-gray-600">Curated tools for your {userRole} role in {industry}</p>
+                    </div>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                    {personalizedPlan.tools.map((tool, index) => {
+                    // Get enhanced tool data from database
+                    const enhancedTool = AITOOLS_DB[tool.key];
+                    
+                    if (!enhancedTool) {
+                        // Fallback for tools not in enhanced database
+                        return (
+                        <div key={tool.key || index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-2">{tool.label}</h4>
+                            <span className="text-sm bg-orange-100 text-orange-800 px-3 py-1 rounded-full font-medium">
+                            Recommended
+                            </span>
+                        </div>
+                        );
+                    }
+                    
+                    // Use role-specific use case if available
+                    const roleSpecificUseCase = enhancedTool.useCase[userRole.toLowerCase()] || enhancedTool.useCase.default;
+                    
+                    return (
+                        <div key={tool.key || index} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                        {/* Tool Header */}
+                        <div className="flex items-start justify-between mb-3">
+                            <div>
+                            <h4 className="text-lg font-semibold text-gray-900 mb-1">{enhancedTool.name}</h4>
+                            <span className="text-sm bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
+                                {enhancedTool.category}
+                            </span>
+                            </div>
+                            <div className="text-right">
+                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                {enhancedTool.difficulty}
+                            </span>
+                            </div>
+                        </div>
+
+                        {/* Tool Description */}
+                        <p className="text-gray-600 text-sm mb-3">{enhancedTool.purpose}</p>
+                        
+                        {/* Role-Specific Use Case */}
+                        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                            <h5 className="text-sm font-semibold text-blue-900 mb-1">For {userRole}s:</h5>
+                            <p className="text-sm text-blue-800">{roleSpecificUseCase}</p>
+                        </div>
+
+                        {/* Tool Details */}
+                        <div className="space-y-2 mb-4">
+                            <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Pricing:</span>
+                            <span className="text-gray-700 font-medium">{enhancedTool.pricing}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Time to Value:</span>
+                            <span className="text-gray-700 font-medium">{enhancedTool.timeToValue}</span>
+                            </div>
+                        </div>
+
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1 mb-4">
+                            {enhancedTool.tags?.slice(0, 3).map((tag, tagIndex) => (
+                            <span key={tagIndex} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                {tag}
+                            </span>
+                            ))}
+                        </div>
+
+                        {/* Action Button */}
+                        <div className="flex items-center justify-between">
+                            {enhancedTool.url && (
+                            <a 
+                                href={enhancedTool.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                            >
+                                Get Started →
+                            </a>
+                            )}
+                            <span className="text-xs text-gray-500">
+                            {enhancedTool.integrations?.length || 0} integrations
+                            </span>
+                        </div>
+                        </div>
+                    );
+                    })}
+                </div>
+
+                {/* Tools Learning Section */}
+                <div className="mt-8 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-xl p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">🎯 Quick Start Strategy</h4>
+                    <div className="grid md:grid-cols-3 gap-4 text-sm">
+                    <div className="text-center">
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-green-600 font-bold">1</span>
+                        </div>
+                        <p className="font-medium text-gray-900">Start with Basics</p>
+                        <p className="text-gray-600">Begin with beginner-friendly tools like ChatGPT and Canva</p>
+                    </div>
+                    <div className="text-center">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-blue-600 font-bold">2</span>
+                        </div>
+                        <p className="font-medium text-gray-900">Build Workflows</p>
+                        <p className="text-gray-600">Connect tools with Zapier to automate repetitive tasks</p>
+                    </div>
+                    <div className="text-center">
+                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span className="text-purple-600 font-bold">3</span>
+                        </div>
+                        <p className="font-medium text-gray-900">Scale & Optimize</p>
+                        <p className="text-gray-600">Add advanced analytics and specialized tools</p>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            );
+            })()}
+
+            {/* Next Steps CTA */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 text-center">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Ready to Start Your Transformation?</h3>
+              <p className="text-gray-600 mb-6">
+                Begin with your Fast Start actions. These are specifically designed for {userRole} professionals in {industry}.
+              </p>
+              <div className="flex justify-center gap-4">
+                <button 
+                  onClick={() => navigate('/templates')}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Get Templates
+                </button>
+                <button 
+                  onClick={() => navigate('/ai-leadership-guide')}
+                  className="bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                >
+                  Leadership Guide
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Unable to Generate Plan</h2>
+            <p className="text-gray-600 mb-6">
+              We couldn't generate your personalized plan. Please try refreshing the page or contact support.
+            </p>
             <button 
-              onClick={() => navigate('/templates')}
+              onClick={() => window.location.reload()}
               className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-              Get Templates
-            </button>
-            <button 
-              onClick={() => navigate('/ai-leadership-guide')}
-              className="bg-white text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-            >
-              Leadership Guide
+              Refresh Page
             </button>
           </div>
-        </div>
+        )}
       </div>
 
       <Footer />

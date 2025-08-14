@@ -1,8 +1,11 @@
 // src/components/dashboard/PremiumFeatures.jsx
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Lock, CheckCircle, Download, FileText, Users, TrendingUp, Calendar, Star } from 'lucide-react';
 
 const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
+  const navigate = useNavigate();
+
   const handleAccessNow = (featureId) => {
     const routes = {
         'ninety_day_plan': '/plan',
@@ -14,8 +17,10 @@ const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
     const route = routes[featureId] || '/plan';
     navigate(route);
   };
+
   const premiumFeatures = [
     {
+      id: 'ninety_day_plan',
       icon: Calendar,
       title: '90-Day AI-Proofing Plan',
       description: 'Step-by-step weekly actions to become AI-resistant',
@@ -23,6 +28,7 @@ const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
       locked: !isPremium
     },
     {
+      id: 'career_templates',
       icon: FileText,
       title: 'Career Positioning Templates',
       description: 'LinkedIn scripts, boss proposals, and positioning guides',
@@ -30,6 +36,7 @@ const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
       locked: !isPremium
     },
     {
+      id: 'skills_roadmap',
       icon: TrendingUp,
       title: 'Skills Development Roadmap',
       description: 'Personalized learning path for AI-resistant skills',
@@ -37,6 +44,7 @@ const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
       locked: !isPremium
     },
     {
+      id: 'ai_updates',
       icon: Users,
       title: 'Industry AI Threat Updates',
       description: 'Monthly reports on AI developments affecting your role',
@@ -115,61 +123,25 @@ const PremiumFeatures = ({ isPremium, onUpgrade, userRole }) => {
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-900 mb-1">{feature.title}</h4>
                   <p className="text-sm text-gray-600 mb-2">{feature.description}</p>
-                  <div className="text-xs text-gray-500 font-mono bg-white p-2 rounded border">
+                  <div className="text-xs text-gray-500 whitespace-pre-line">
                     {feature.preview}
                   </div>
                 </div>
-                <Lock className="w-4 h-4 text-gray-400" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 rounded-lg">
+                <Lock className="w-6 h-6 text-gray-400" />
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="space-y-4">
-        <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-          <h4 className="font-semibold text-gray-900 mb-2">What You Get:</h4>
-          <div className="grid grid-cols-2 gap-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-gray-700">Complete 90-day plan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-gray-700">LinkedIn AI scripts</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-gray-700">Boss proposal templates</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-gray-700">Monthly AI updates</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-gray-700">Skills roadmap</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <span className="text-gray-700">AI tools guide</span>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={onUpgrade}
-          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-colors shadow-lg"
-        >
-          Get AI Career Insurance - $29
-        </button>
-
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            One-time payment • Instant access • Used by professionals at top companies
-          </p>
-        </div>
-      </div>
+      <button
+        onClick={onUpgrade}
+        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:shadow-lg transition-all"
+      >
+        Unlock All Features - $29
+      </button>
     </div>
   );
 };

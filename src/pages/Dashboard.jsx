@@ -1,3 +1,4 @@
+
 // src/pages/Dashboard.jsx - AI Career Insurance Command Center
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -67,6 +68,11 @@ const UserDashboard = () => {
         .limit(1)
         .single();
 
+      console.log('🔍 DASHBOARD DEBUG:');
+      console.log('Latest Assessment Data:', latestAssessmentData);
+      console.log('Evolution Paths:', latestAssessmentData?.evolution_paths);
+      console.log('Risk Result:', latestAssessmentData?.risk_result);
+      console.log('Answers:', latestAssessmentData?.answers);
       if (latestError && latestError.code !== 'PGRST116') {
         console.error('Error fetching latest assessment:', latestError);
       } else if (latestAssessmentData) {
@@ -181,6 +187,14 @@ const UserDashboard = () => {
       handleUpgrade();
     }
   };
+    const handleViewPlan = () => {
+    if (isPremium) {
+      navigate('/plan');
+    } else {
+      handleUpgrade();
+    }
+  };
+
 
   const handleViewAIUpdates = () => {
     if (isPremium) {
@@ -314,12 +328,14 @@ const UserDashboard = () => {
           <div className="space-y-8">
             
             {/* Quick Actions */}
-            <QuickActions 
-              isPremium={isPremium}
-              daysSinceAssessment={daysSinceAssessment}
-              onRetakeAssessment={() => navigate('/assessment')}
-              onViewResults={() => navigate('/plan')}
-              onUpgrade={handleUpgrade}
+            <QuickActions
+                isPremium={isPremium}
+                daysSinceAssessment={daysSinceAssessment}
+                onRetakeAssessment={handleExploreCareers}
+                onViewResults={() => navigate('/results')}
+                onUpgrade={handleUpgrade}
+                onViewPlan={handleViewPlan}
+                onViewSkillsRoadmap={handleViewSkillsRoadmap}
             />
 
             {/* AI Tools Recommendations */}

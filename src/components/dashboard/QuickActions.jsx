@@ -1,13 +1,15 @@
 // src/components/dashboard/QuickActions.jsx
 import React from 'react';
-import { RefreshCw, BarChart3, Download, Crown, AlertTriangle, Clock } from 'lucide-react';
+import { RefreshCw, BarChart3, TrendingUp, Crown, AlertTriangle, Clock } from 'lucide-react';
 
 const QuickActions = ({ 
   isPremium, 
   daysSinceAssessment, 
   onRetakeAssessment, 
   onViewResults, 
-  onUpgrade 
+  onUpgrade,
+  onViewPlan,
+  onViewSkillsRoadmap
 }) => {
   
   const getAssessmentStatus = () => {
@@ -68,24 +70,24 @@ const QuickActions = ({
         {isPremium ? (
         <>
             <button 
-            onClick={() => navigate('/templates')}
+            onClick={onViewPlan}
             className="w-full flex items-center gap-3 p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-left"
             >
-            <Download className="w-5 h-5 text-purple-600" />
+            <TrendingUp className="w-5 h-5 text-purple-600" />
             <div className="flex-1">
-                <div className="font-medium text-gray-900">Download Templates</div>
-                <div className="text-sm text-gray-600">LinkedIn scripts, boss proposals</div>
+                <div className="font-medium text-gray-900">View 90-Day Plan</div>
+                <div className="text-sm text-gray-600">Personalized AI-proofing roadmap</div>
             </div>
             </button>
             
             <button 
-            onClick={() => navigate('/ai-leadership-guide')}
+            onClick={onViewSkillsRoadmap}
             className="w-full flex items-center gap-3 p-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left"
             >
             <Crown className="w-5 h-5 text-indigo-600" />
             <div className="flex-1">
-                <div className="font-medium text-gray-900">AI Leadership Guide</div>
-                <div className="text-sm text-gray-600">Become your team's AI coordinator</div>
+                <div className="font-medium text-gray-900">Skills Roadmap</div>
+                <div className="text-sm text-gray-600">Track your AI-resistant skills</div>
             </div>
             </button>
         </>
