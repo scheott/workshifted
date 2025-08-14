@@ -14,7 +14,7 @@ const SourceLink = ({ href, children }) => (
   </a>
 );
 
-const StatCard = ({ value, label, sublabel, tone }) => {
+const StatCard = ({ value, label, sublabel, tone, sourceHref, sourceText }) => {
   const toneMap = {
     red: 'bg-red-50 border-red-200 text-red-700',
     orange: 'bg-orange-50 border-orange-200 text-orange-700',
@@ -27,12 +27,17 @@ const StatCard = ({ value, label, sublabel, tone }) => {
       <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
       <div className="text-sm text-gray-700">{label}</div>
       {sublabel && <div className="text-xs text-gray-500 mt-1">{sublabel}</div>}
+      {sourceHref && sourceText && (
+        <div className="text-[11px] text-gray-500 mt-3">
+          Source: <SourceLink href={sourceHref}>{sourceText}</SourceLink>
+        </div>
+      )}
     </div>
   );
 };
 
 const Bar = ({ pct, color = 'bg-gray-900' }) => (
-  <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
+  <div className="w-32 bg-gray-200 rounded-full h-2 mr-3" aria-hidden="true">
     <div className={`${color} h-2 rounded-full`} style={{ width: `${pct}%` }} />
   </div>
 );
@@ -87,7 +92,7 @@ const AIJobDisplacementStats = () => {
             className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
             Get My Personal AI Strategy
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
@@ -97,29 +102,37 @@ const AIJobDisplacementStats = () => {
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">The Reality Check</h2>
           <div className="grid md:grid-cols-4 gap-6">
-            <StatCard 
-              value="40%" 
-              label="Jobs with high automation risk" 
-              sublabel="But 60% remain secure with right strategy"
-              tone="orange" 
+            <StatCard
+              value="14%"
+              label="Jobs with high automation risk"
+              sublabel="But most remain secure with the right strategy"
+              tone="orange"
+              sourceHref="https://wecglobal.org/uploads/2019/07/2016_OECD_Risk-Automation-Jobs.pdf"
+              sourceText="OECD (task-based estimate)"
             />
-            <StatCard 
-              value="65%" 
-              label="New roles created by AI adoption" 
+            <StatCard
+              value="69M"
+              label="New roles created by AI adoption"
               sublabel="AI coordinators, prompt specialists, etc."
-              tone="green" 
+              tone="green"
+              sourceHref="https://www.weforum.org/publications/the-future-of-jobs-report-2023/digest/"
+              sourceText="WEF Future of Jobs 2023"
             />
-            <StatCard 
-              value="$15-25k" 
-              label="Average salary boost" 
+            <StatCard
+              value="$18k+"
+              label="Average salary boost"
               sublabel="For professionals who embrace AI tools"
-              tone="blue" 
+              tone="blue"
+              sourceHref="https://www.prnewswire.com/news-releases/new-lightcast-report-ai-skills-command-28-salary-premium-as-demand-shifts-beyond-tech-industry-302511141.html"
+              sourceText="Lightcast (2025)"
             />
-            <StatCard 
-              value="90 days" 
-              label="Time to become AI-proficient" 
+            <StatCard
+              value="~100 days"
+              label="Time to become AI-proficient"
               sublabel="In your current role with right plan"
-              tone="green" 
+              tone="green"
+              sourceHref="https://www.weforum.org/stories/2018/09/future-of-jobs-2018-things-to-know/"
+              sourceText="WEF (2018) avg. reskilling"
             />
           </div>
         </section>
@@ -159,12 +172,16 @@ const AIJobDisplacementStats = () => {
         {/* Automation Risk by Role */}
         <section className="mb-16">
           <div className="bg-white rounded-2xl border border-gray-200 p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">
               Automation Risk by Job Role
             </h2>
-            <p className="text-gray-600 mb-8 text-center max-w-3xl mx-auto">
+            <p className="text-gray-600 mb-6 text-center max-w-3xl mx-auto">
               Understanding your risk level is the first step to building your AI strategy. 
               Higher risk = greater opportunity to become the AI expert in your field.
+            </p>
+            <p className="text-[11px] text-gray-500 text-center mb-8">
+              Percentages below use <em>probability of computerization</em> from Frey &amp; Osborne (2013).
+              <SourceLink href="https://www.oxfordmartin.ox.ac.uk/publications/the-future-of-employment"> Source</SourceLink>
             </p>
             
             <div className="space-y-4">
@@ -172,7 +189,7 @@ const AIJobDisplacementStats = () => {
               <div className="border-b border-gray-200 pb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <span className="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-                  High Risk = High Leadership Opportunity (70-90% tasks automatable)
+                  High Risk = High Leadership Opportunity (70–99% tasks automatable)
                 </h3>
                 
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -181,8 +198,8 @@ const AIJobDisplacementStats = () => {
                     <div className="text-sm text-blue-600">→ AI Data Managers, Process Automation Specialists</div>
                   </div>
                   <div className="flex items-center">
-                    <Bar pct={98} color="bg-red-600" />
-                    <span className="text-red-700 font-semibold">98%</span>
+                    <Bar pct={99} color="bg-red-600" />
+                    <span className="text-red-700 font-semibold">99%</span>
                   </div>
                 </div>
                 
@@ -192,8 +209,8 @@ const AIJobDisplacementStats = () => {
                     <div className="text-sm text-blue-600">→ Financial AI Coordinators, Automated Finance Analysts</div>
                   </div>
                   <div className="flex items-center">
-                    <Bar pct={86} color="bg-red-600" />
-                    <span className="text-red-700 font-semibold">86%</span>
+                    <Bar pct={98} color="bg-red-600" />
+                    <span className="text-red-700 font-semibold">98%</span>
                   </div>
                 </div>
                 
@@ -213,7 +230,7 @@ const AIJobDisplacementStats = () => {
               <div className="border-b border-gray-200 pb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <span className="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
-                  Medium Risk = Strategic Evolution (30-70% tasks automatable)
+                  Medium Risk = Strategic Evolution (30–70% tasks automatable)
                 </h3>
                 
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -254,7 +271,7 @@ const AIJobDisplacementStats = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                  Low Risk = AI Amplification (10-30% tasks automatable)
+                  Low Risk = AI Amplification (≤10% tasks automatable)
                 </h3>
                 
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -263,8 +280,8 @@ const AIJobDisplacementStats = () => {
                     <div className="text-sm text-blue-600">→ AI-Augmented Developers, Human-AI Development Leads</div>
                   </div>
                   <div className="flex items-center">
-                    <Bar pct={8} color="bg-green-500" />
-                    <span className="text-green-600 font-semibold">8%</span>
+                    <Bar pct={4.2} color="bg-green-500" />
+                    <span className="text-green-600 font-semibold">4.2%</span>
                   </div>
                 </div>
                 
@@ -282,7 +299,7 @@ const AIJobDisplacementStats = () => {
                 <div className="flex items-center justify-between py-3">
                   <div>
                     <span className="font-medium text-gray-900">HR Managers</span>
-                    <div className="text-sm text-blue-600">→ People & AI Integration Leaders, Human Experience Directors</div>
+                    <div className="text-sm text-blue-600">→ People &amp; AI Integration Leaders, Human Experience Directors</div>
                   </div>
                   <div className="flex items-center">
                     <Bar pct={0.55} color="bg-green-500" />
@@ -290,6 +307,18 @@ const AIJobDisplacementStats = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="text-[11px] text-gray-500 mt-4">
+              Specific occupation figures sourced from Frey &amp; Osborne (2013): 
+              Data Entry Keyers 0.99; Bookkeeping, Accounting &amp; Auditing Clerks 0.98; 
+              Secretaries &amp; Admin Assistants (except legal/medical/executive) 0.96; 
+              Customer Service Representatives 0.55; Market Research Analysts &amp; Marketing Specialists 0.61; 
+              Financial Analysts 0.23; Software Developers, Applications 0.042; Sales Managers 0.013; 
+              Human Resources Managers 0.0055.{" "}
+              <SourceLink href="https://www.oxfordmartin.ox.ac.uk/publications/the-future-of-employment">Main paper</SourceLink>,{" "}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">table PDF</SourceLink>,{" "}
+              <SourceLink href="https://www.americanactionforum.org/insight/the-future-of-employment-high-risk-occupations-for-automation/">marketing specialists ref</SourceLink>.
             </div>
           </div>
         </section>
@@ -332,7 +361,7 @@ const AIJobDisplacementStats = () => {
               className="inline-flex items-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
             >
               Get My Personalized Plan
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
@@ -343,22 +372,28 @@ const AIJobDisplacementStats = () => {
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Research Sources</h2>
           <div className="bg-gray-50 rounded-lg p-6">
-            <p className="text-sm text-gray-700 mb-4">All statistics and projections are sourced from peer-reviewed research:</p>
+            <p className="text-sm text-gray-700 mb-4">All statistics and projections are sourced from peer-reviewed research or primary analyses:</p>
             <p className="text-xs text-gray-600 mb-2">
-              • McKinsey Global Institute (2023): <SourceLink href="https://www.mckinsey.com/featured-insights/future-of-work/the-age-of-ai-and-its-implications-for-workers">The age of AI and its implications for workers</SourceLink>
+              • OECD (2016): <SourceLink href="https://wecglobal.org/uploads/2019/07/2016_OECD_Risk-Automation-Jobs.pdf">The Risk of Automation for Jobs in OECD Countries</SourceLink>
             </p>
             <p className="text-xs text-gray-600 mb-2">
-              • World Economic Forum (2023): <SourceLink href="https://www.weforum.org/reports/the-future-of-jobs-report-2023">Future of Jobs Report 2023</SourceLink>
+              • World Economic Forum (2023): <SourceLink href="https://www.weforum.org/publications/the-future-of-jobs-report-2023/digest/">Future of Jobs Report 2023</SourceLink>
             </p>
             <p className="text-xs text-gray-600 mb-2">
-              • Brookings Institution (2023): <SourceLink href="https://www.brookings.edu/articles/automation-and-the-future-of-work-in-the-united-states">Automation and the Future of Work in the United States</SourceLink>
+              • Lightcast (2025): <SourceLink href="https://www.prnewswire.com/news-releases/new-lightcast-report-ai-skills-command-28-salary-premium-as-demand-shifts-beyond-tech-industry-302511141.html">AI Skills Command ~28% Salary Premium (~$18k)</SourceLink>
             </p>
             <p className="text-xs text-gray-600 mb-2">
-              • Frey & Osborne (2013/2017): <SourceLink href="https://www.oxfordmartin.ox.ac.uk/publications/the-future-of-employment">The Future of Employment</SourceLink>
+              • World Economic Forum (2018): <SourceLink href="https://www.weforum.org/stories/2018/09/future-of-jobs-2018-things-to-know/">Avg. 101 days reskilling</SourceLink>
+            </p>
+            <p className="text-xs text-gray-600 mb-2">
+              • Frey &amp; Osborne (2013): <SourceLink href="https://www.oxfordmartin.ox.ac.uk/publications/the-future-of-employment">The Future of Employment: How Susceptible Are Jobs to Computerisation?</SourceLink> (occupation probabilities)
+            </p>
+            <p className="text-xs text-gray-600 mb-2">
+              • Supporting lookup for specific occupations: <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">table PDF</SourceLink>, <SourceLink href="https://www.americanactionforum.org/insight/the-future-of-employment-high-risk-occupations-for-automation/">AAF summary (marketing specialists)</SourceLink>
             </p>
           </div>
           <p className="text-xs text-gray-500 mt-4">
-            Last updated: Jan 2025. We prioritize peer-reviewed research and avoid speculation. All projections include confidence intervals and methodology notes.
+            Last updated: Aug 2025. We prioritize primary research and avoid speculation. Percentages for occupations reflect <em>probability of computerization</em>, not certainty.
           </p>
         </section>
       </div>

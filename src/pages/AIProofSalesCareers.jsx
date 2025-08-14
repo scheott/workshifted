@@ -4,16 +4,28 @@ import { Link } from 'react-router-dom';
 import LandingHeader from '../components/LandingHeader';
 import Footer from '../components/Footer';
 
+const SourceLink = ({ href, children }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer noopener"
+    className="underline decoration-dotted hover:decoration-solid hover:text-blue-700"
+  >
+    {children}
+  </a>
+);
+
 const AIProofSalesCareers = () => {
+  // Mapped to closest SOC roles from Frey & Osborne (see Sources section)
   const salesRiskData = [
-    { role: 'Inside Sales Reps (Transactional)', risk: 68, automation: 'High', reason: 'Lead qualification, basic product demos, order processing' },
-    { role: 'Telemarketing/Cold Callers', risk: 75, automation: 'High', reason: 'Automated dialing, script-based conversations, initial outreach' },
-    { role: 'Sales Development Reps', risk: 55, automation: 'Medium-High', reason: 'Lead research, initial qualification, meeting scheduling' },
-    { role: 'Customer Success Reps', risk: 48, automation: 'Medium', reason: 'Basic account monitoring, renewal notifications, usage reporting' },
-    { role: 'Account Executives', risk: 42, automation: 'Medium', reason: 'Complex sales cycles, relationship building, negotiation' },
-    { role: 'Sales Engineers', risk: 35, automation: 'Low-Medium', reason: 'Technical consulting, custom solutions, client education' },
-    { role: 'Enterprise Sales Directors', risk: 25, automation: 'Low', reason: 'Strategic relationships, complex deals, executive selling' },
-    { role: 'VP Sales/CRO', risk: 18, automation: 'Very Low', reason: 'Sales strategy, team leadership, organizational relationships' }
+    { role: 'Inside Sales Reps (Transactional)', risk: 85, automation: 'High', reason: 'Lead qualification, basic product demos, order processing' }, // 41-4012: 0.85
+    { role: 'Telemarketing/Cold Callers', risk: 99, automation: 'High', reason: 'Automated dialing, script-based conversations, initial outreach' }, // 41-9041: 0.99
+    { role: 'Sales Development Reps', risk: 55, automation: 'Medium-High', reason: 'Lead research, initial qualification, meeting scheduling' }, // 41-3011: 0.54 (~55)
+    { role: 'Customer Success Reps', risk: 55, automation: 'Medium', reason: 'Basic account monitoring, renewal notifications, usage reporting' }, // 43-4051: 0.55
+    { role: 'Account Executives', risk: 25, automation: 'Low-Medium', reason: 'Complex sales cycles, relationship building, negotiation' }, // 41-4011: 0.25
+    { role: 'Sales Engineers', risk: 0.41, automation: 'Low-Medium', reason: 'Technical consulting, custom solutions, client education' }, // 41-9031: 0.0041 (~0.41%)
+    { role: 'Enterprise Sales Directors', risk: 1.3, automation: 'Low', reason: 'Strategic relationships, complex deals, executive selling' }, // 11-2022: 0.013
+    { role: 'VP Sales/CRO', risk: 1.5, automation: 'Very Low', reason: 'Sales strategy, team leadership, organizational relationships' } // 11-1011: 0.015
   ];
 
   const evolutionPaths = [
@@ -130,58 +142,35 @@ const AIProofSalesCareers = () => {
     }
   ];
 
+  // Updated to reflect evidence-based probabilities (see Sources).
   const salesSpecializations = [
     {
       area: 'Enterprise Sales',
-      riskLevel: 'Low (25%)',
+      riskLevel: 'Low (1.3%)', // Sales Managers 11-2022
       aiImpact: 'Account research, competitive intelligence, proposal automation',
       humanOpportunity: 'Executive relationships, complex negotiations, strategic partnerships',
       evolutionTip: 'Use AI for research and preparation while becoming the trusted advisor for C-level relationships'
     },
     {
       area: 'Technical Sales',
-      riskLevel: 'Low-Medium (35%)',
+      riskLevel: 'Low (0.41%)', // Sales Engineers 41-9031
       aiImpact: 'Product demonstrations, technical documentation, configuration tools',
       humanOpportunity: 'Solution design, technical consulting, custom integrations',
       evolutionTip: 'Leverage AI for standard demos while specializing in complex technical consulting'
     },
     {
       area: 'Inside Sales',
-      riskLevel: 'High (68%)',
+      riskLevel: 'High (85%)', // Wholesale & Manufacturing Sales Reps (non-technical) 41-4012
       aiImpact: 'Lead qualification, initial outreach, basic product information',
       humanOpportunity: 'Consultative selling, relationship building, complex problem solving',
       evolutionTip: 'Use AI for efficiency while moving upmarket to more complex, relationship-driven sales'
     },
     {
       area: 'Channel Sales',
-      riskLevel: 'Medium (45%)',
+      riskLevel: 'Low-Medium (25%)', // Wholesale & Manufacturing Sales Reps (technical/scientific) 41-4011
       aiImpact: 'Partner onboarding, performance tracking, basic partner communication',
       humanOpportunity: 'Strategic partnerships, conflict resolution, joint business planning',
       evolutionTip: 'Leverage AI for partner management while focusing on strategic relationship development'
-    }
-  ];
-
-  const industryInsights = [
-    {
-      industry: 'SaaS/Technology',
-      riskLevel: 'Medium-High',
-      trends: ['Product-led growth', 'Self-service onboarding', 'AI-powered demos'],
-      humanValue: 'Enterprise deals, custom implementations, strategic consulting',
-      advice: 'Move upmarket to enterprise accounts where human relationships and strategic selling remain crucial'
-    },
-    {
-      industry: 'Financial Services',
-      riskLevel: 'Medium',
-      trends: ['Robo-advisors', 'Automated underwriting', 'Digital onboarding'],
-      humanValue: 'Complex financial planning, regulatory compliance, trust building',
-      advice: 'Focus on high-touch advisory roles and complex financial products requiring human expertise'
-    },
-    {
-      industry: 'Manufacturing/Industrial',
-      riskLevel: 'Low-Medium',
-      trends: ['Digital catalogs', 'Automated quoting', 'Self-service ordering'],
-      humanValue: 'Custom solutions, technical consulting, long-term partnerships',
-      advice: 'Leverage industry expertise and technical knowledge for consultative, solution-based selling'
     }
   ];
 
@@ -219,7 +208,7 @@ const AIProofSalesCareers = () => {
             AI Automation Risk by Sales Role
           </h2>
           <p className="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
-            <em>Risk percentages based on current AI capabilities in sales technology. Individual results may vary by industry, deal complexity, and specific responsibilities.</em>
+            <em>Risk percentages based on published probabilities for closely related occupations. Individual results may vary by industry, deal complexity, and specific responsibilities.</em>
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -272,43 +261,65 @@ const AIProofSalesCareers = () => {
             AI Impact by Sales Industry
           </h2>
           
-          <div className="space-y-8">
-            {industryInsights.map((industry, index) => (
-              <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-2xl p-8 border">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{industry.industry}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      industry.riskLevel.includes('High') ? 'bg-red-100 text-red-800' :
-                      industry.riskLevel.includes('Medium') ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {industry.riskLevel} Risk
-                    </span>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-red-700 mb-2">AI Trends:</h4>
-                    <ul className="text-gray-600 text-sm space-y-1">
-                      {industry.trends.map((trend, trendIndex) => (
-                        <li key={trendIndex}>• {trend}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-green-700 mb-2">Human Value:</h4>
-                    <p className="text-gray-600 text-sm">{industry.humanValue}</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-blue-700 mb-2">Strategy:</h4>
-                    <p className="text-gray-600 text-sm">{industry.advice}</p>
-                  </div>
+        <div className="space-y-8">
+          {[
+            {
+              industry: 'SaaS/Technology',
+              riskLevel: 'Medium-High',
+              trends: ['Product-led growth', 'Self-service onboarding', 'AI-powered demos'],
+              humanValue: 'Enterprise deals, custom implementations, strategic consulting',
+              advice: 'Move upmarket to enterprise accounts where human relationships and strategic selling remain crucial'
+            },
+            {
+              industry: 'Financial Services',
+              riskLevel: 'Medium',
+              trends: ['Robo-advisors', 'Automated underwriting', 'Digital onboarding'],
+              humanValue: 'Complex financial planning, regulatory compliance, trust building',
+              advice: 'Focus on high-touch advisory roles and complex financial products requiring human expertise'
+            },
+            {
+              industry: 'Manufacturing/Industrial',
+              riskLevel: 'Low-Medium',
+              trends: ['Digital catalogs', 'Automated quoting', 'Self-service ordering'],
+              humanValue: 'Custom solutions, technical consulting, long-term partnerships',
+              advice: 'Leverage industry expertise and technical knowledge for consultative, solution-based selling'
+            }
+          ].map((industry, index) => (
+            <div key={index} className="bg-gradient-to-r from-blue-50 to-white rounded-2xl p-8 border">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{industry.industry}</h3>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    industry.riskLevel.includes('High') ? 'bg-red-100 text-red-800' :
+                    industry.riskLevel.includes('Medium') ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {industry.riskLevel} Risk
+                  </span>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-red-700 mb-2">AI Trends:</h4>
+                  <ul className="text-gray-600 text-sm space-y-1">
+                    {industry.trends.map((trend, trendIndex) => (
+                      <li key={trendIndex}>• {trend}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-green-700 mb-2">Human Value:</h4>
+                  <p className="text-gray-600 text-sm">{industry.humanValue}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-blue-700 mb-2">Strategy:</h4>
+                  <p className="text-gray-600 text-sm">{industry.advice}</p>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
         </div>
       </section>
 
@@ -320,7 +331,38 @@ const AIProofSalesCareers = () => {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {salesSpecializations.map((spec, index) => (
+            {[
+              ...[
+                {
+                  area: 'Enterprise Sales',
+                  riskLevel: 'Low (1.3%)',
+                  aiImpact: 'Account research, competitive intelligence, proposal automation',
+                  humanOpportunity: 'Executive relationships, complex negotiations, strategic partnerships',
+                  evolutionTip: 'Use AI for research and preparation while becoming the trusted advisor for C-level relationships'
+                },
+                {
+                  area: 'Technical Sales',
+                  riskLevel: 'Low (0.41%)',
+                  aiImpact: 'Product demonstrations, technical documentation, configuration tools',
+                  humanOpportunity: 'Solution design, technical consulting, custom integrations',
+                  evolutionTip: 'Leverage AI for standard demos while specializing in complex technical consulting'
+                },
+                {
+                  area: 'Inside Sales',
+                  riskLevel: 'High (85%)',
+                  aiImpact: 'Lead qualification, initial outreach, basic product information',
+                  humanOpportunity: 'Consultative selling, relationship building, complex problem solving',
+                  evolutionTip: 'Use AI for efficiency while moving upmarket to more complex, relationship-driven sales'
+                },
+                {
+                  area: 'Channel Sales',
+                  riskLevel: 'Low-Medium (25%)',
+                  aiImpact: 'Partner onboarding, performance tracking, basic partner communication',
+                  humanOpportunity: 'Strategic partnerships, conflict resolution, joint business planning',
+                  evolutionTip: 'Leverage AI for partner management while focusing on strategic relationship development'
+                }
+              ]
+            ].map((spec, index) => (
               <div key={index} className="bg-white rounded-2xl p-8 shadow-sm border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-gray-900">{spec.area}</h3>
@@ -398,94 +440,6 @@ const AIProofSalesCareers = () => {
         </div>
       </section>
 
-      {/* Career Evolution Paths */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Sales Career Evolution Paths
-          </h2>
-          <p className="text-center text-gray-600 mb-12 max-w-3xl mx-auto">
-            Transform your existing sales role into an AI-resistant position. These evolution paths build on your sales skills while positioning you for an AI-augmented sales future.
-            <em> Timeline estimates based on focused skill development and may vary by individual circumstances.</em>
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {evolutionPaths.map((path, index) => (
-              <div key={index} className="bg-white rounded-2xl p-8 shadow-sm border">
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-medium text-gray-600 mb-2">From:</h3>
-                  <p className="text-xl font-semibold text-gray-900 mb-4">{path.from}</p>
-                  <div className="text-3xl mb-4">⬇️</div>
-                  <h3 className="text-lg font-medium text-blue-600 mb-2">To:</h3>
-                  <p className="text-xl font-bold text-blue-600">{path.to}</p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Key Skills to Develop:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {path.keySkills.map((skill, skillIndex) => (
-                        <span key={skillIndex} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Evolution Strategy:</h4>
-                    <p className="text-gray-600 text-sm">{path.description}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <span className="text-sm text-gray-500">Timeline: {path.timeline}</span>
-                    <Link
-                      to="/auth"
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Get My Plan
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AI-Resistant Sales Skills */}
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Essential AI-Resistant Sales Skills
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {aiResistantSkills.map((category, index) => (
-              <div key={index} className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 border">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{category.category}</h3>
-                
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Core Skills:</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    {category.skills.map((skill, skillIndex) => (
-                      <span key={skillIndex} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-sm">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Why AI-Resistant:</h4>
-                  <p className="text-gray-600 text-sm">{category.whyImportant}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* 90-Day Implementation Plan */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -531,72 +485,26 @@ const AIProofSalesCareers = () => {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-white">
+      {/* Sources */}
+      <section className="py-12 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Sales Career Evolution FAQ
-          </h2>
-          
-          <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Will AI replace salespeople entirely?</h3>
-              <p className="text-gray-600">
-                AI will automate many routine sales tasks, but complex B2B sales, relationship building, and strategic selling remain fundamentally human activities. AI creates opportunities for salespeople to focus on higher-value activities while handling administrative tasks more efficiently. The most successful salespeople will learn to collaborate with AI rather than compete against it.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">How quickly is AI changing sales?</h3>
-              <p className="text-gray-600">
-                AI adoption in sales is accelerating rapidly, with lead generation, email sequencing, and CRM automation already widespread. However, complex deal closing, relationship management, and strategic selling remain primarily human-driven. The pace varies significantly by industry, deal size, and company maturity.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Should I move to enterprise sales to be AI-resistant?</h3>
-              <p className="text-gray-600">
-                Enterprise sales generally offers more AI resistance due to relationship complexity and deal size, but it's not the only path. You can also evolve within your current segment by developing consultative skills, industry expertise, and AI collaboration capabilities. The key is adding human value that complements AI efficiency.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">What sales AI tools should I learn?</h3>
-              <p className="text-gray-600">
-                Focus on tools in your current tech stack first - most CRMs now have AI features. Learn prospecting automation (Outreach, Apollo), conversation intelligence (Gong, Chorus), and forecasting tools. However, don't neglect fundamental sales skills - AI tools enhance good salespeople but can't fix poor sales fundamentals.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Are these evolution timelines realistic for sales roles?</h3>
-              <p className="text-gray-600">
-                Timeline estimates assume focused effort and vary based on your experience, current skills, and market conditions. Sales roles often require relationship building and trust development, which take time. Some salespeople may evolve faster, others slower. Success depends on individual effort, market opportunity, and company support for skill development.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 bg-blue-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Evolve Your Sales Career Before AI Disruption
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Take our sales-specific assessment to discover your automation risk and get a personalized roadmap to become a relationship-focused, AI-enhanced sales professional.
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Research Sources</h2>
+          <p className="text-sm text-gray-700 mb-4">
+            Role risk percentages are mapped to the closest U.S. SOC occupation using:
           </p>
-          <Link
-            to="/auth"
-            className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg inline-block"
-          >
-            Start My Sales Evolution Assessment
-          </Link>
-          <p className="text-sm text-blue-200 mt-4">
-            ✨ Sales-specific analysis • 90-day roadmap • Join 723+ sales professionals
-          </p>
-          <p className="text-xs text-blue-300 mt-2">
-            <em>Educational guidance only. Career outcomes depend on market conditions, individual effort, and company decisions.</em>
+          <ul className="text-xs text-gray-600 space-y-2">
+            <li>
+              • Frey, C. B., & Osborne, M. A. (2013). <em>The Future of Employment</em>. Oxford Martin. 
+              <SourceLink href="https://oms-www.files.svdcdn.com/production/downloads/academic/The_Future_of_Employment.pdf">Full paper (occupation probabilities table)</SourceLink>
+            </li>
+            <li>
+              Mapping examples: Telemarketers (99%), Customer Service Representatives (55%), Advertising Sales Agents (54%), 
+              Sales Representatives—Wholesale & Manufacturing (Non-Technical) (85%), Sales Representatives—Technical & Scientific Products (25%), 
+              Sales Engineers (0.41%), Sales Managers (1.3%), Chief Executives (1.5%).
+            </li>
+          </ul>
+          <p className="text-xs text-gray-500 mt-4">
+            Notes: We align modern titles to the most comparable SOC roles. Actual risk depends on company, product complexity, and responsibilities.
           </p>
         </div>
       </section>

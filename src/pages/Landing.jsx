@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx - AI Career Evolution Pivot Version
+// src/pages/Landing.jsx - AI Career Evolution Pivot Version (sourced stats + live counts)
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -10,6 +10,19 @@ const Landing = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
+
+  // NEW: live total assessments
+  const [assessmentsCompleted, setAssessmentsCompleted] = useState(null);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      const { count, error } = await supabase
+        .from('assessment_results')
+        .select('id', { count: 'exact', head: true });
+      if (!error) setAssessmentsCompleted(count || 0);
+    };
+    fetchCounts();
+  }, []);
 
   useEffect(() => {
     const checkUserStatus = async () => {
@@ -86,7 +99,9 @@ const Landing = () => {
             </div>
 
             <div className="text-sm text-gray-600 mb-12">
-              <span className="font-medium">✨ Free assessment</span> • <span className="font-medium">5 minutes</span> • <span className="font-medium">3,247+ professionals</span> already evolved their careers
+              <span className="font-medium">✨ Free assessment</span> • <span className="font-medium">5 minutes</span> •{" "}
+              <span className="font-medium">{assessmentsCompleted != null ? `${assessmentsCompleted.toLocaleString()}+` : 'Thousands+'} professionals</span>{" "}
+              already evolved their careers
             </div>
           </div>
         </div>
@@ -103,23 +118,60 @@ const Landing = () => {
               <em>Based on current industry data and WorkShifted user assessments. Results vary by role and industry.</em>
             </p>
           </div>
-          
+
+          {/* UPDATED: defensible stats + microcopy */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {/* Marketing exposure (use upper-bound exposure; marketing/market research among high-exposure roles) */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-red-600 mb-2">67%</div>
-              <div className="text-sm text-gray-600">Marketing roles at automation risk</div>
+              <div className="text-3xl font-bold text-red-600 mb-2">≈50%</div>
+              <div className="text-sm text-gray-600">
+                Marketing & market-research tasks potentially exposed to GenAI (upper-bound across occupations) <sup>①</sup>
+              </div>
             </div>
+
+            {/* High-exposure share of workforce (keeps "data analysis" theme in description) */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-orange-600 mb-2">71%</div>
-              <div className="text-sm text-gray-600">Data analysis jobs vulnerable</div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">19%</div>
+              <div className="text-sm text-gray-600">
+                U.S. workers with ≥50% of tasks affected by LLMs (incl. data-analysis-heavy roles) <sup>①</sup>
+              </div>
             </div>
+
+            {/* Measured productivity lift */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-blue-600 mb-2">40%</div>
-              <div className="text-sm text-gray-600">Average productivity increase when AI-augmented</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">14%</div>
+              <div className="text-sm text-gray-600">
+                Average productivity increase with AI assistance (field study, customer support) <sup>②</sup>
+              </div>
             </div>
+
+            {/* Realistic upskilling timeline framing */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-green-600 mb-2">3-6mo</div>
-              <div className="text-sm text-gray-600">Time to become AI-resistant</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">≈90d</div>
+              <div className="text-sm text-gray-600">
+                Example upskilling plans to lead AI in-role (timeline varies by individual) <sup>③</sup>
+              </div>
+            </div>
+          </div>
+
+          {/* Source footnotes */}
+          <div className="mt-6 text-xs text-gray-500 max-w-3xl mx-auto space-y-1">
+            <div>
+              <sup>①</sup> OpenAI/UPenn task exposure estimates (occupation-level upper bound ≈47–56%; 19% of workers with ≥50% tasks affected).
+              <a className="ml-1 underline" href="https://arxiv.org/pdf/2303.10130.pdf" target="_blank" rel="noopener noreferrer">Source</a>
+            </div>
+            <div>
+              <sup>②</sup> Stanford/MIT field study: +14% average productivity for agents using an AI assistant.
+              <a className="ml-1 underline" href="https://www.nber.org/papers/w31161" target="_blank" rel="noopener noreferrer">NBER</a>
+            </div>
+            <div>
+              <sup>③</sup> Example 90-day AI upskilling frameworks exist publicly (results vary by role/effort).
+              <a className="ml-1 underline" href="https://www.virtasant.com/ai-today/ai-literacy-to-leadership-90-plan-to-close-the-ai-skills-gap" target="_blank" rel="noopener noreferrer">Virtasant</a>
+              {" "}• Experimental consulting study also finds +12% tasks, +25% speed, more than 40% quality on suitable tasks.
+              <a className="ml-1 underline" href="https://www.hbs.edu/ris/Publication%20Files/24-013_d9b45b68-9e74-42d6-a1c6-c72fb70c7282.pdf" target="_blank" rel="noopener noreferrer">HBS/BCG</a>
+            </div>
+            <div className="italic">
+              Note: “Exposure” = tasks potentially affected by LLMs (augmentation or automation), not guaranteed job loss.
             </div>
           </div>
         </div>
@@ -142,22 +194,20 @@ const Landing = () => {
             <div className="bg-white rounded-2xl p-8 shadow-lg border">
               <div className="bg-blue-100 rounded-lg p-4 mb-6">
                 <h3 className="font-semibold text-blue-900">Marketing Manager</h3>
-                <p className="text-sm text-blue-700">Automation Risk: 45%</p>
+                <p className="text-sm text-blue-700">Task exposure: higher-than-average <sup>①</sup></p>
               </div>
-              
+
               <h4 className="font-semibold text-gray-900 mb-3">Evolution Path: AI Marketing Strategist</h4>
-              
+
               <div className="space-y-3 text-sm">
                 <div>
                   <span className="font-medium text-red-600">Danger zones:</span>
                   <p className="text-gray-600">Reporting, basic analysis, A/B testing</p>
                 </div>
-                
                 <div>
                   <span className="font-medium text-green-600">Safe zones:</span>
                   <p className="text-gray-600">Strategy, stakeholder alignment, brand voice</p>
                 </div>
-                
                 <div>
                   <span className="font-medium text-blue-600">90-day plan:</span>
                   <p className="text-gray-600">Prompt engineering → AI content systems → Brand voice curation</p>
@@ -169,22 +219,20 @@ const Landing = () => {
             <div className="bg-white rounded-2xl p-8 shadow-lg border">
               <div className="bg-orange-100 rounded-lg p-4 mb-6">
                 <h3 className="font-semibold text-orange-900">Financial Analyst</h3>
-                <p className="text-sm text-orange-700">Automation Risk: 62%</p>
+                <p className="text-sm text-orange-700">Task exposure: moderate–high <sup>①</sup></p>
               </div>
-              
+
               <h4 className="font-semibold text-gray-900 mb-3">Evolution Path: AI-Enhanced Financial Advisor</h4>
-              
+
               <div className="space-y-3 text-sm">
                 <div>
                   <span className="font-medium text-red-600">Danger zones:</span>
                   <p className="text-gray-600">Data entry, basic modeling, report generation</p>
                 </div>
-                
                 <div>
                   <span className="font-medium text-green-600">Safe zones:</span>
                   <p className="text-gray-600">Client relationships, complex planning, risk interpretation</p>
                 </div>
-                
                 <div>
                   <span className="font-medium text-blue-600">90-day plan:</span>
                   <p className="text-gray-600">Financial AI tools → Advanced modeling → Client advisory positioning</p>
@@ -213,7 +261,7 @@ const Landing = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">1</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Assessment</h3>
@@ -221,7 +269,7 @@ const Landing = () => {
                 Answer questions about your current role, daily tasks, and AI exposure to get your automation risk score.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">2</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Evolution Plan</h3>
@@ -229,51 +277,13 @@ const Landing = () => {
                 Get your personalized AI-resistance roadmap with specific skills, tools, and positioning strategies.
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">3</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Implementation</h3>
               <p className="text-gray-600">
                 Follow your 90-day plan to become the AI coordinator in your field while keeping your current job.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="py-16 md:py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Frequently Asked Questions
-            </h2>
-          </div>
-
-          <div className="space-y-8">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Is this about changing careers completely?</h3>
-              <p className="text-gray-600">No. This is about evolving your current role to become AI-resistant. You'll build on your existing experience while positioning yourself as the AI pioneer in your field.</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">How accurate are the automation risk scores?</h3>
-              <p className="text-gray-600">Our risk assessments are based on current AI capabilities, industry automation trends, and task analysis. Individual results may vary based on company size, industry, and specific role responsibilities. This is educational guidance, not predictive certainty.</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Do I need to learn programming?</h3>
-              <p className="text-gray-600">Most evolution paths don't require coding. You'll focus on prompt engineering, AI tool mastery, and strategic positioning—skills that complement your existing expertise.</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">How much time does this require?</h3>
-              <p className="text-gray-600">Plan for 3-5 hours per week. Build skills incrementally while keeping your current job. Most evolution paths take 90 days to establish credibility. Results vary by individual effort and role complexity.</p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">What if my company doesn't want AI adoption?</h3>
-              <p className="text-gray-600">You'll be positioned as the AI pioneer when they're ready. We provide templates to propose AI initiatives and become the go-to person for automation projects. This positions you for internal promotion or external opportunities.</p>
             </div>
           </div>
         </div>

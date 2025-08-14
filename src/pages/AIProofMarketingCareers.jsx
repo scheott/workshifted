@@ -4,16 +4,35 @@ import { Link } from 'react-router-dom';
 import LandingHeader from '../components/LandingHeader';
 import Footer from '../components/Footer';
 
+const SourceLink = ({ href, children }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer noopener"
+    className="underline decoration-dotted hover:decoration-solid hover:text-blue-700"
+  >
+    {children}
+  </a>
+);
+
 const AIProofMarketingCareers = () => {
+  // Mapped to closest SOC roles from Frey & Osborne (2013) for probability of computerisation
+  // 13-1161 Market Research Analysts & Marketing Specialists -> 61%
+  // 41-3011 Advertising Sales Agents -> 54%
+  // 27-3043 Writers & Authors -> 3.8%
+  // 11-2021 Marketing Managers -> 1.4%
+  // 11-2011 Advertising & Promotions Managers -> 3.9%
+  // 11-2022 Sales Managers -> 1.3%
+  // 27-1011 Art Directors -> 2.3%
   const marketingRiskData = [
-    { role: 'Marketing Coordinators', risk: 75, automation: 'High', reason: 'Email scheduling, basic analytics, content distribution' },
-    { role: 'PPC Specialists', risk: 65, automation: 'Medium-High', reason: 'Bid management, keyword research, basic optimization' },
-    { role: 'Content Writers (SEO)', risk: 70, automation: 'High', reason: 'Template-based writing, basic optimization' },
-    { role: 'Marketing Analysts', risk: 60, automation: 'Medium-High', reason: 'Reporting, data collection, trend analysis' },
-    { role: 'Marketing Managers', risk: 45, automation: 'Medium', reason: 'Strategy, team management, stakeholder relations' },
-    { role: 'Brand Strategists', risk: 25, automation: 'Low', reason: 'Creative vision, brand voice, strategic planning' },
-    { role: 'Growth Product Managers', risk: 35, automation: 'Low-Medium', reason: 'User psychology, complex experimentation' },
-    { role: 'Creative Directors', risk: 20, automation: 'Low', reason: 'Artistic vision, team leadership, client relationships' }
+    { role: 'Marketing Coordinators', risk: 61, automation: 'Medium-High', reason: 'Email scheduling, basic analytics, content distribution' }, // 13-1161
+    { role: 'PPC Specialists', risk: 54, automation: 'Medium-High', reason: 'Bid management, keyword research, basic optimization' }, // 41-3011
+    { role: 'Content Writers (SEO)', risk: 3.8, automation: 'Low', reason: 'Template-based writing, basic optimization' }, // 27-3043
+    { role: 'Marketing Analysts', risk: 61, automation: 'Medium-High', reason: 'Reporting, data collection, trend analysis' }, // 13-1161
+    { role: 'Marketing Managers', risk: 1.4, automation: 'Low', reason: 'Strategy, team management, stakeholder relations' }, // 11-2021
+    { role: 'Brand Strategists', risk: 3.9, automation: 'Low', reason: 'Creative vision, brand voice, strategic planning' }, // 11-2011
+    { role: 'Growth Product Managers', risk: 1.3, automation: 'Low', reason: 'User psychology, complex experimentation' }, // 11-2022
+    { role: 'Creative Directors', risk: 2.3, automation: 'Low', reason: 'Artistic vision, team leadership, client relationships' } // 27-1011
   ];
 
   const evolutionPaths = [
@@ -163,8 +182,11 @@ const AIProofMarketingCareers = () => {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             AI Automation Risk by Marketing Role
           </h2>
-          <p className="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
-            <em>Risk percentages based on current AI capabilities and marketing automation trends. Individual results may vary by company, industry, and specific responsibilities.</em>
+          <p className="text-center text-gray-600 mb-2 max-w-3xl mx-auto">
+            <em>Risk percentages are mapped to closely related US occupations from peer-reviewed research on job computerisation. Individual results may vary by company, industry, and responsibilities.</em>
+          </p>
+          <p className="text-center text-xs text-gray-500 mb-8">
+            Mapping examples: Marketing Coordinators/Analysts → Market Research Analysts; PPC Specialists → Advertising Sales Agents; Content Writers → Writers & Authors; Brand Strategists → Advertising & Promotions Managers; Growth PMs → Sales Managers; Creative Directors → Art Directors.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -385,49 +407,21 @@ const AIProofMarketingCareers = () => {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-white">
+      {/* Sources */}
+      <section className="py-10 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Marketing Career Evolution FAQ
-          </h2>
-          
-          <div className="space-y-6">
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Will AI really replace marketing jobs?</h3>
-              <p className="text-gray-600">
-                AI will automate many marketing tasks, but it creates opportunities for marketers to focus on strategy, creativity, and relationship building. The most successful marketers will learn to collaborate with AI rather than compete against it. Job displacement varies significantly by role, company, and individual adaptation to new tools.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">How quickly is AI changing marketing?</h3>
-              <p className="text-gray-600">
-                AI adoption in marketing is accelerating rapidly. Content generation, email marketing, and PPC management are already heavily automated. However, strategic roles, creative direction, and relationship management remain primarily human-driven. Timeline for change varies by company size and industry.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Do I need technical skills to be AI-resistant in marketing?</h3>
-              <p className="text-gray-600">
-                You don't need to code, but you should understand how to use AI marketing tools effectively. Focus on prompt engineering, AI tool evaluation, and understanding how to maintain brand voice across AI-generated content. Technical literacy is helpful but not essential for most marketing evolution paths.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">What if I'm already using AI tools in marketing?</h3>
-              <p className="text-gray-600">
-                Great! You're ahead of the curve. Focus on becoming the AI coordinator in your organization. Help colleagues adopt AI tools, develop best practices, and position yourself as the expert in human-AI collaboration. Document your productivity improvements and present strategic AI initiatives to leadership.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-6">
-              <h3 className="font-semibold text-gray-900 mb-3">Are these evolution timelines realistic?</h3>
-              <p className="text-gray-600">
-                Timeline estimates assume focused effort and vary based on your starting point, current skills, and time commitment. Some marketers may evolve faster, others slower. Success depends on individual dedication, learning agility, market conditions, and company openness to AI adoption. Use timelines as guidance, not guarantees.
-              </p>
-            </div>
-          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Research Sources</h3>
+          <ul className="list-disc pl-6 text-sm text-gray-700 space-y-2">
+            <li>
+              Frey, C.B. & Osborne, M.A. (2013). <SourceLink href="https://oms-www.files.svdcdn.com/production/downloads/academic/The_Future_of_Employment.pdf">The Future of Employment: How Susceptible Are Jobs to Computerisation?</SourceLink> (role probabilities used for the risk figures)
+            </li>
+            <li>
+              McKinsey (2023). <SourceLink href="https://www.mckinsey.com/~/media/mckinsey/business%20functions/quantumblack/our%20insights/the%20state%20of%20ai%20in%202023%20generative%20ais%20breakout%20year/the-state-of-ai-in-2023-generative-ais-breakout-year-v3.pdf">The State of AI in 2023: Generative AI’s Breakout Year</SourceLink> (marketing & sales among the most common genAI use cases)
+            </li>
+          </ul>
+          <p className="text-xs text-gray-500 mt-3">
+            Notes: Role titles are mapped to the closest US SOC occupation for comparability. Probabilities reflect the cited research and may not capture post-2023 genAI advances or your specific job design.
+          </p>
         </div>
       </section>
 

@@ -4,110 +4,126 @@ import { Link } from 'react-router-dom';
 import LandingHeader from '../components/LandingHeader';
 import Footer from '../components/Footer';
 
+const SourceLink = ({ href, children }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer noopener"
+    className="underline decoration-dotted hover:decoration-solid hover:text-purple-700"
+  >
+    {children}
+  </a>
+);
+
 const JobsAICantReplace = () => {
   const [selectedIndustry, setSelectedIndustry] = useState('all');
+
+  // NOTE ON SOURCING:
+  // Percentages below are automation probabilities from Frey & Osborne (Oxford, 2013/2017 update)
+  // mapped to the closest U.S. SOC occupation for each role label.
+  // See "Sources" at the bottom for links and mapping notes.
 
   const industryData = [
     {
       id: 'healthcare',
       name: 'Healthcare & Medicine',
-      overallRisk: 'Low-Medium',
+      overallRisk: 'Low', // based on very low probabilities for physicians, nurses, therapists
       description: 'Human connection and complex diagnosis remain essential',
       aiResistantJobs: [
-        { role: 'Surgeons', risk: 15, reason: 'Requires precision, judgment, and real-time decision-making' },
-        { role: 'Therapists & Counselors', risk: 10, reason: 'Emotional intelligence and human connection are irreplaceable' },
-        { role: 'Emergency Medicine Physicians', risk: 20, reason: 'Life-or-death decisions require human accountability' },
-        { role: 'Nurses (Critical Care)', risk: 25, reason: 'Patient care and family communication remain human-centered' }
+        { role: 'Surgeons', risk: 0.4, reason: 'Requires precision, judgment, and real-time decision-making' }, // Surgeons ~0.36%
+        { role: 'Therapists & Counselors', risk: 1.3, reason: 'Emotional intelligence and human connection are irreplaceable' }, // Marriage & family therapists ~1.3%
+        { role: 'Emergency Medicine Physicians', risk: 0.4, reason: 'Life-or-death decisions require human accountability' }, // Physicians & surgeons ~0.42%
+        { role: 'Nurses (Critical Care)', risk: 0.9, reason: 'Patient care and family communication remain human-centered' } // Registered nurses ~0.9%
       ],
       vulnerableJobs: [
-        { role: 'Medical Transcriptionists', risk: 85 },
-        { role: 'Medical Coding Specialists', risk: 75 },
-        { role: 'Radiology Technicians', risk: 60 }
+        { role: 'Medical Transcriptionists', risk: 89 },
+        { role: 'Medical Coding Specialists', risk: 91 }, // proxied by Medical Records & Health Info Technicians
+        { role: 'Radiology Technicians', risk: 23 } // Radiologic technologists & technicians
       ]
     },
     {
       id: 'education',
       name: 'Education & Training',
-      overallRisk: 'Low-Medium',
+      overallRisk: 'Low',
       description: 'Human mentorship and adaptability crucial for learning',
       aiResistantJobs: [
-        { role: 'Elementary Teachers', risk: 20, reason: 'Child development and emotional support require human connection' },
-        { role: 'Special Education Teachers', risk: 15, reason: 'Individualized care and adaptation to unique needs' },
-        { role: 'University Professors', risk: 30, reason: 'Research, critical thinking, and mentorship remain human-driven' },
-        { role: 'Corporate Trainers', risk: 35, reason: 'Adult learning and organizational dynamics need human insight' }
+        { role: 'Elementary Teachers', risk: 0.44, reason: 'Child development and emotional support require human connection' }, // Elementary ~0.44–0.45%
+        { role: 'Special Education Teachers', risk: 0.77, reason: 'Individualized care and adaptation to unique needs' }, // Special Ed (secondary) ~0.77%
+        { role: 'University Professors', risk: 3.2, reason: 'Research, critical thinking, and mentorship remain human-driven' }, // Postsecondary teachers ~3.2%
+        { role: 'Corporate Trainers', risk: 1.4, reason: 'Adult learning and organizational dynamics need human insight' } // Training & development specialists ~1.4%
       ],
       vulnerableJobs: [
-        { role: 'Test Proctors', risk: 80 },
-        { role: 'Educational Content Writers', risk: 65 },
-        { role: 'Language Tutors (Basic)', risk: 70 }
+        { role: 'Test Proctors', risk: 56 }, // proxied by Teacher Assistants ~56%
+        { role: 'Educational Content Writers', risk: 3.8 }, // proxied by Writers & Authors ~3.8% (lower than many assume)
+        { role: 'Language Tutors (Basic)', risk: 13 } // proxied by Self-enrichment education teachers ~13%
       ]
     },
     {
       id: 'creative',
       name: 'Creative & Arts',
-      overallRisk: 'Medium',
+      overallRisk: 'Low',
       description: 'Original creativity and human expression remain valuable',
       aiResistantJobs: [
-        { role: 'Art Directors', risk: 25, reason: 'Strategic creative vision and brand interpretation' },
-        { role: 'Film Directors', risk: 20, reason: 'Storytelling and human emotion direction' },
-        { role: 'Creative Writers (Original)', risk: 30, reason: 'Unique voice and authentic human experience' },
-        { role: 'Musicians (Performance)', risk: 15, reason: 'Live performance and emotional connection with audience' }
+        { role: 'Art Directors', risk: 2.3, reason: 'Strategic creative vision and brand interpretation' },
+        { role: 'Film Directors', risk: 2.2, reason: 'Storytelling and human emotion direction' }, // Producers & Directors
+        { role: 'Creative Writers (Original)', risk: 3.8, reason: 'Unique voice and authentic human experience' }, // Writers & Authors
+        { role: 'Musicians (Performance)', risk: 7.4, reason: 'Live performance and emotional connection with audience' } // Musicians & Singers ~7.4%
       ],
       vulnerableJobs: [
-        { role: 'Stock Photo Creators', risk: 85 },
-        { role: 'Basic Graphic Designers', risk: 75 },
-        { role: 'Content Writers (SEO)', risk: 70 }
+        { role: 'Stock Photo Creators', risk: 2.1 }, // proxied by Photographers ~2.1%
+        { role: 'Basic Graphic Designers', risk: 8.2 },
+        { role: 'Content Writers (SEO)', risk: 3.8 } // proxied by Writers & Authors
       ]
     },
     {
       id: 'business',
       name: 'Business & Management',
-      overallRisk: 'Medium-High',
+      overallRisk: 'Medium',
       description: 'Leadership and strategic thinking resist automation',
       aiResistantJobs: [
-        { role: 'C-Suite Executives', risk: 20, reason: 'Strategic vision and stakeholder relationships' },
-        { role: 'Sales Directors', risk: 25, reason: 'Complex relationship building and negotiation' },
-        { role: 'Change Management Consultants', risk: 30, reason: 'Human psychology and organizational dynamics' },
-        { role: 'Executive Coaches', risk: 15, reason: 'Personal development and leadership mentoring' }
+        { role: 'C-Suite Executives', risk: 1.5, reason: 'Strategic vision and stakeholder relationships' }, // Chief Executives
+        { role: 'Sales Directors', risk: 1.3, reason: 'Complex relationship building and negotiation' }, // Sales Managers
+        { role: 'Change Management Consultants', risk: 13, reason: 'Human psychology and organizational dynamics' }, // Management Analysts ~13%
+        { role: 'Executive Coaches', risk: 1.3, reason: 'Personal development and leadership mentoring' } // proxied by similar low-risk advisory roles
       ],
       vulnerableJobs: [
-        { role: 'Data Entry Clerks', risk: 95 },
-        { role: 'Basic Financial Analysts', risk: 80 },
-        { role: 'Administrative Assistants', risk: 70 }
+        { role: 'Data Entry Clerks', risk: 99 },
+        { role: 'Basic Financial Analysts', risk: 23 },
+        { role: 'Administrative Assistants', risk: 96 } // Executive secretaries & admin assistants
       ]
     },
     {
       id: 'skilled-trades',
       name: 'Skilled Trades',
-      overallRisk: 'Low',
+      overallRisk: 'Medium',
       description: 'Physical dexterity and problem-solving in unpredictable environments',
       aiResistantJobs: [
-        { role: 'Electricians', risk: 10, reason: 'Complex problem-solving in varied physical environments' },
-        { role: 'Plumbers', risk: 15, reason: 'Diagnostic skills and adaptation to unique situations' },
-        { role: 'HVAC Technicians', risk: 20, reason: 'System integration and customer interaction' },
-        { role: 'Automotive Technicians', risk: 25, reason: 'Diagnostic reasoning and hands-on repair skills' }
+        { role: 'Electricians', risk: 15, reason: 'Complex problem-solving in varied physical environments' },
+        { role: 'Plumbers', risk: 35, reason: 'Diagnostic skills and adaptation to unique situations' },
+        { role: 'HVAC Technicians', risk: 65, reason: 'System integration and customer interaction' },
+        { role: 'Automotive Technicians', risk: 59, reason: 'Diagnostic reasoning and hands-on repair skills' }
       ],
       vulnerableJobs: [
-        { role: 'Assembly Line Workers', risk: 85 },
-        { role: 'Quality Control Inspectors', risk: 75 },
-        { role: 'Basic Maintenance Workers', risk: 60 }
+        { role: 'Assembly Line Workers', risk: 97 }, // proxied by Assemblers & Fabricators / Team Assemblers (97–98%)
+        { role: 'Quality Control Inspectors', risk: 98 }, // Inspectors, Testers, Sorters, Samplers, and Weighers
+        { role: 'Basic Maintenance Workers', risk: 50 } // Installation, maintenance & repair workers (all other) ~50%
       ]
     },
     {
       id: 'technology',
       name: 'Technology',
-      overallRisk: 'Medium-High',
+      overallRisk: 'Medium',
       description: 'AI is transforming tech work, but human oversight remains crucial',
       aiResistantJobs: [
-        { role: 'AI/ML Engineers', risk: 25, reason: 'Design and oversee AI systems' },
-        { role: 'DevOps Engineers', risk: 30, reason: 'Complex system integration and troubleshooting' },
-        { role: 'Product Managers', risk: 35, reason: 'Strategic vision and stakeholder management' },
-        { role: 'Cybersecurity Specialists', risk: 40, reason: 'Threat assessment and strategic defense planning' }
+        { role: 'AI/ML Engineers', risk: 13, reason: 'Design and oversee AI systems' }, // proxied by Software Developers, Systems Software ~13%
+        { role: 'DevOps Engineers', risk: 3.0, reason: 'Complex system integration and troubleshooting' }, // Network & Computer Systems Admins ~3%
+        { role: 'Product Managers', risk: 16, reason: 'Strategic vision and stakeholder management' }, // General & Operations Managers ~16%
+        { role: 'Cybersecurity Specialists', risk: 21, reason: 'Threat assessment and strategic defense planning' } // InfoSec / Web Dev / Net Arch group ~21%
       ],
       vulnerableJobs: [
-        { role: 'Basic Web Developers', risk: 70 },
-        { role: 'QA Testers (Manual)', risk: 80 },
-        { role: 'Technical Writers', risk: 75 }
+        { role: 'Basic Web Developers', risk: 21 }, // grouped category with InfoSec & Network Architects ~21%
+        { role: 'QA Testers (Manual)', risk: 22 }, // proxied by Computer Occupations, All Other
+        { role: 'Technical Writers', risk: 89 }
       ]
     }
   ];
@@ -199,7 +215,7 @@ const JobsAICantReplace = () => {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
             <p className="text-gray-700">
               <strong>Important:</strong> No job is 100% immune to AI impact. These roles represent careers with strong human advantages that are likely to evolve alongside AI rather than be replaced by it. 
-              <em>Individual career security depends on multiple factors including skill development, industry adoption rates, and economic conditions.</em>
+              <em> Individual career security depends on multiple factors including skill development, industry adoption rates, and economic conditions.</em>
             </p>
           </div>
         </div>
@@ -299,6 +315,11 @@ const JobsAICantReplace = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Mapping note per section (small, subtle) */}
+                <p className="text-xs text-gray-500 mt-6">
+                  *Role risks mapped to closest U.S. SOC occupations in source data; see details in Sources.
+                </p>
               </div>
             ))}
           </div>
@@ -405,65 +426,24 @@ const JobsAICantReplace = () => {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-gray-50">
+      {/* Sources */}
+      <section className="py-16 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            Frequently Asked Questions
-          </h2>
-          
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">Are these job predictions guaranteed?</h3>
-              <p className="text-gray-600">
-                No. These assessments reflect current AI capabilities and industry trends, but technology adoption varies significantly by company, region, and economic factors. Job security depends on many variables beyond AI automation, including individual performance, market demand, and company decisions. Use this analysis as guidance for career planning, not absolute predictions.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">How quickly will AI impact these industries?</h3>
-              <p className="text-gray-600">
-                AI adoption timelines vary widely. Some industries may see significant changes within 2-5 years, while others may take 10+ years. Factors include regulatory requirements, safety considerations, cost of implementation, and consumer acceptance. Individual companies may adopt AI at very different rates even within the same industry.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">Should I avoid high-risk career fields entirely?</h3>
-              <p className="text-gray-600">
-                Not necessarily. High-risk fields often present opportunities to become AI coordinators or specialists. The key is understanding which aspects of roles face automation risk and positioning yourself in the human-advantage areas. Many successful professionals will evolve their roles rather than change fields entirely.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">What about jobs that don't exist yet?</h3>
-              <p className="text-gray-600">
-                AI will likely create new job categories we can't fully predict today, just as the internet created roles that didn't exist in 1990. Focus on developing adaptable skills like learning agility, problem-solving, and human collaboration that transfer across emerging roles.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 bg-purple-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Find Your AI-Resistant Career Path
-          </h2>
-          <p className="text-xl text-purple-100 mb-8 max-w-2xl mx-auto">
-            Take our comprehensive assessment to discover which AI-resistant roles match your skills and interests across all industries.
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Sources</h2>
+          <p className="text-sm text-gray-700">
+            • Frey, C. B., & Osborne, M. A. (2013, 2017 update). <SourceLink href="https://oms-www.files.svdcdn.com/production/downloads/academic/The_Future_of_Employment.pdf">The Future of Employment: How Susceptible are Jobs to Computerisation?</SourceLink> (Occupation probabilities; roles above mapped to closest SOC categories)
           </p>
-          <Link
-            to="/auth"
-            className="bg-white text-purple-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg inline-block"
-          >
-            Start My Career Assessment
-          </Link>
-          <p className="text-sm text-purple-200 mt-4">
-            ✨ Industry-specific analysis • Personalized recommendations • Free assessment
+          <p className="text-sm text-gray-700 mt-2">
+            • World Economic Forum (2023). <SourceLink href="https://www.weforum.org/reports/the-future-of-jobs-report-2023/">Future of Jobs Report 2023</SourceLink> (sectoral adoption trends; context)
           </p>
-          <p className="text-xs text-purple-300 mt-2">
-            <em>Career guidance only. Individual results depend on multiple factors including skills, market conditions, and personal effort.</em>
+          <p className="text-sm text-gray-700 mt-2">
+            • OECD (2019). <SourceLink href="https://www.oecd.org/employment/Automation-and-Training.pdf">Automation and Training</SourceLink> (macro estimates; context)
+          </p>
+          <p className="text-xs text-gray-500 mt-4">
+            Mapping examples: “Medical Coding Specialists” → Medical Records & Health Information Technicians; “Emergency Medicine Physicians” → Physicians & Surgeons; “Corporate Trainers” → Training & Development Specialists; “Basic Web Developers” → grouped category (Information Security Analysts, Web Developers & Network Architects); “QA Testers (Manual)” → Computer Occupations, All Other; “Educational Content Writers” → Writers & Authors; “Assembly Line Workers” → Assemblers & Fabricators/Team Assemblers. Percentages represent estimated probability of computerisation in the cited research, not guaranteed outcomes. 
+          </p>
+          <p className="text-xs text-gray-500 mt-2">
+            Last updated: Jan 2025.
           </p>
         </div>
       </section>

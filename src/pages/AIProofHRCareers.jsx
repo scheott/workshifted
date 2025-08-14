@@ -4,16 +4,35 @@ import { Link } from 'react-router-dom';
 import LandingHeader from '../components/LandingHeader';
 import Footer from '../components/Footer';
 
+const SourceLink = ({ href, children }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noreferrer noopener"
+    className="underline decoration-dotted hover:decoration-solid hover:text-blue-700"
+  >
+    {children}
+  </a>
+);
+
 const AIProofHRCareers = () => {
+  // Notes on mapping:
+  // • “HR Coordinators” -> SOC 43-4161 Human Resources Assistants (0.90)
+  // • “Recruiters (Volume)” -> SOC 13-1071 Human Resources Specialists (recruiting tasks); closest FO listed group: 13-1078 "HR, Training & Labor Relations Specialists, All Other" (0.31)
+  // • “Benefits Administrators” -> SOC 13-1141 Compensation, Benefits, and Job Analysis Specialists (0.47)
+  // • “HR Analysts” -> SOC 13-1111 Management Analysts (0.13)
+  // • “Training Coordinators” -> SOC 13-1151 Training and Development Specialists (0.014)
+  // • “HR Business Partners”, “Talent Acquisition Leaders”, “CHRO/HR Directors” -> SOC 11-3121 Human Resources Managers (0.0055)
+
   const hrRiskData = [
-    { role: 'HR Coordinators', risk: 67, automation: 'High', reason: 'Scheduling, basic inquiries, document processing, benefits enrollment' },
-    { role: 'Recruiters (Volume)', risk: 59, automation: 'Medium-High', reason: 'Resume screening, candidate sourcing, initial interview scheduling' },
-    { role: 'Benefits Administrators', risk: 54, automation: 'Medium-High', reason: 'Enrollment processing, basic inquiries, compliance tracking' },
-    { role: 'HR Analysts', risk: 62, automation: 'High', reason: 'Data reporting, trend analysis, compliance reporting' },
-    { role: 'Training Coordinators', risk: 48, automation: 'Medium', reason: 'Learning management, basic training delivery, progress tracking' },
-    { role: 'HR Business Partners', risk: 32, automation: 'Low-Medium', reason: 'Strategic consulting, employee relations, organizational development' },
-    { role: 'Talent Acquisition Leaders', risk: 28, automation: 'Low', reason: 'Strategic hiring, relationship building, complex negotiations' },
-    { role: 'CHRO/HR Directors', risk: 20, automation: 'Low', reason: 'People strategy, organizational culture, executive leadership' }
+    { role: 'HR Coordinators', risk: 90, automation: 'Very High', reason: 'Scheduling, basic inquiries, document processing, benefits enrollment' },
+    { role: 'Recruiters (Volume)', risk: 31, automation: 'Medium', reason: 'Resume screening, candidate sourcing, initial interview scheduling' },
+    { role: 'Benefits Administrators', risk: 47, automation: 'Medium', reason: 'Enrollment processing, basic inquiries, compliance tracking' },
+    { role: 'HR Analysts', risk: 13, automation: 'Low-Medium', reason: 'Data reporting, trend analysis, compliance reporting' },
+    { role: 'Training Coordinators', risk: 1.4, automation: 'Low', reason: 'Learning management, basic training delivery, progress tracking' },
+    { role: 'HR Business Partners', risk: 13, automation: 'Low-Medium', reason: 'Strategic consulting, employee relations, organizational development' },
+    { role: 'Talent Acquisition Leaders', risk: 0.55, automation: 'Low', reason: 'Strategic hiring, relationship building, complex negotiations' },
+    { role: 'CHRO/HR Directors', risk: 0.55, automation: 'Low', reason: 'People strategy, organizational culture, executive leadership' }
   ];
 
   const evolutionPaths = [
@@ -133,28 +152,28 @@ const AIProofHRCareers = () => {
   const hrSpecializations = [
     {
       area: 'Talent Acquisition',
-      riskLevel: 'Medium-High (59%)',
+      riskLevel: 'Medium (31%)',
       aiImpact: 'Automated sourcing, resume screening, initial candidate matching',
       humanOpportunity: 'Complex role requirements, cultural fit assessment, candidate experience',
       evolutionTip: 'Become the relationship builder who uses AI for efficiency while focusing on strategic hires'
     },
     {
       area: 'Employee Experience',
-      riskLevel: 'Medium (45%)',
+      riskLevel: 'Medium (31%)',
       aiImpact: 'Chatbots for basic questions, automated surveys, data analysis',
       humanOpportunity: 'Culture building, engagement strategy, complex employee needs',
       evolutionTip: 'Use AI for data insights while leading human-centered experience design'
     },
     {
       area: 'Learning & Development',
-      riskLevel: 'Medium (48%)',
+      riskLevel: 'Low (1.4%)',
       aiImpact: 'Personalized learning, content delivery, skill gap analysis',
       humanOpportunity: 'Coaching, mentoring, soft skills development, leadership training',
       evolutionTip: 'Leverage AI for personalization while focusing on human development and facilitation'
     },
     {
       area: 'Compensation & Benefits',
-      riskLevel: 'High (54%)',
+      riskLevel: 'Medium (47%)',
       aiImpact: 'Market analysis, benefits administration, compliance tracking',
       humanOpportunity: 'Strategy development, complex negotiations, executive compensation',
       evolutionTip: 'Use AI for analysis and administration while specializing in strategic compensation design'
@@ -195,7 +214,7 @@ const AIProofHRCareers = () => {
             AI Automation Risk by HR Role
           </h2>
           <p className="text-center text-gray-600 mb-8 max-w-3xl mx-auto">
-            <em>Risk percentages based on current AI capabilities in HR technology. Individual results may vary by company size, industry, and specific job responsibilities.</em>
+            <em>Risk percentages reflect published probabilities of computerization for the closest Standard Occupational Classification (SOC) roles.</em>
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -227,9 +246,10 @@ const AIProofHRCareers = () => {
                   <strong>AI Impact:</strong> {role.reason}
                 </p>
                 <span className={`text-xs px-2 py-1 rounded ${
-                  role.automation === 'High' ? 'bg-red-50 text-red-700' :
-                  role.automation === 'Medium-High' ? 'bg-orange-50 text-orange-700' :
-                  role.automation === 'Medium' ? 'bg-yellow-50 text-yellow-700' :
+                  role.automation === 'Very High' ? 'bg-red-50 text-red-700' :
+                  role.automation === 'High' ? 'bg-orange-50 text-orange-700' :
+                  role.automation === 'Medium-High' ? 'bg-yellow-50 text-yellow-700' :
+                  role.automation === 'Medium' ? 'bg-blue-50 text-blue-700' :
                   'bg-green-50 text-green-700'
                 }`}>
                   {role.automation} Automation Risk
@@ -237,6 +257,11 @@ const AIProofHRCareers = () => {
               </div>
             ))}
           </div>
+
+          {/* Small inline mapping note */}
+          <p className="text-xs text-gray-500 mt-6 text-center">
+            Mapped to nearest SOC roles from BLS. See full sources at the bottom of this page.
+          </p>
         </div>
       </section>
 
@@ -254,7 +279,8 @@ const AIProofHRCareers = () => {
                   <h3 className="text-xl font-semibold text-gray-900">{spec.area}</h3>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                     spec.riskLevel.includes('High') ? 'bg-red-100 text-red-800' :
-                    'bg-yellow-100 text-yellow-800'
+                    spec.riskLevel.includes('Medium') ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
                   }`}>
                     {spec.riskLevel}
                   </span>
@@ -420,7 +446,7 @@ const AIProofHRCareers = () => {
             Your 90-Day HR Evolution Plan
           </h2>
           
-          <div className="space-y-8">
+        <div className="space-y-8">
             {ninetyDayPlan.map((phase, index) => (
               <div key={index} className="bg-gradient-to-r from-purple-50 to-white rounded-2xl p-8 shadow-sm border">
                 <div className="flex items-center mb-6">
@@ -458,49 +484,52 @@ const AIProofHRCareers = () => {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-gray-50">
+      {/* Sources */}
+      <section className="py-12 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
-            HR Career Evolution FAQ
-          </h2>
-          
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">Will AI eliminate HR jobs?</h3>
-              <p className="text-gray-600">
-                AI will automate many routine HR tasks, but the core purpose of HR - managing human relationships, culture, and complex workplace situations - remains fundamentally human. AI creates opportunities to focus on higher-value strategic work while handling administrative tasks more efficiently. Job evolution rather than elimination is the likely outcome for most HR roles.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">How is AI currently being used in HR?</h3>
-              <p className="text-gray-600">
-                AI is increasingly used for resume screening, candidate sourcing, employee engagement surveys, chatbots for basic HR questions, and predictive analytics for turnover. However, complex employee relations, strategic planning, and culture building remain primarily human-driven. The pace of adoption varies significantly by company size and industry.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">What about AI bias in HR decisions?</h3>
-              <p className="text-gray-600">
-                AI bias in HR is a significant concern, creating opportunities for HR professionals who understand both technology and fairness principles. Roles focused on AI governance, bias detection, and ensuring equitable AI implementation are emerging. This represents a human-advantage area where HR expertise combines with AI oversight.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">Should I specialize in HR technology?</h3>
-              <p className="text-gray-600">
-                HR technology knowledge is valuable, but don't abandon core people skills. The most successful HR professionals combine deep understanding of human behavior with proficiency in AI tools. Focus on becoming the bridge between technology capabilities and human needs rather than purely technical specialization.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3">Are these evolution timelines realistic for HR?</h3>
-              <p className="text-gray-600">
-                Timeline estimates assume focused effort and vary based on your starting point, current skills, and company culture. HR roles often require relationship building and trust, which can take time to establish. Some professionals may evolve faster, others slower. Success depends on individual effort, organizational support, and market conditions.
-              </p>
-            </div>
-          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Sources</h2>
+          <p className="text-sm text-gray-700 mb-3">
+            Percentages are the published “probabilities of computerization” for the closest SOC roles:
+          </p>
+          <ul className="text-xs text-gray-600 space-y-2 list-disc pl-5">
+            <li>
+              <strong>HR Assistants (43-4161):</strong> 90% — Frey & Osborne Appendix Table.{' '}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">
+                PDF
+              </SourceLink>
+            </li>
+            <li>
+              <strong>HR Managers (11-3121):</strong> 0.55% — Frey & Osborne Appendix Table.{' '}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">
+                PDF
+              </SourceLink>
+            </li>
+            <li>
+              <strong>Compensation, Benefits & Job Analysis (13-1141):</strong> 47% — Frey & Osborne Appendix Table.{' '}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">
+                PDF
+              </SourceLink>
+            </li>
+            <li>
+              <strong>Training & Development Specialists (13-1151):</strong> 1.4% — Frey & Osborne Appendix Table.{' '}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">
+                PDF
+              </SourceLink>
+            </li>
+            <li>
+              <strong>Human Resources Specialists / Recruiters (13-1071):</strong> recruiting tasks fall under HR Specialists per BLS SOC. Closest FO-listed group: 13-1078 “HR, Training & Labor Relations Specialists, All Other” at 31%.{' '}
+              <SourceLink href="https://www.bls.gov/soc/2018/soc_2018_manual.pdf">BLS SOC manual</SourceLink>{' '}
+              •{' '}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">FO PDF</SourceLink>
+            </li>
+            <li>
+              <strong>Management Analysts (13-1111):</strong> 13% — proxy for “HR Analysts” strategy/analytics work.{' '}
+              <SourceLink href="https://www.fhi.ox.ac.uk/wp-content/uploads/The-Future-of-Employment-How-Susceptible-Are-Jobs-to-Computerization.pdf">
+                FO PDF
+              </SourceLink>
+            </li>
+          </ul>
+          <p className="text-xs text-gray-500 mt-4">Last updated: Aug 2025.</p>
         </div>
       </section>
 
