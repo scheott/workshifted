@@ -68,11 +68,6 @@ const UserDashboard = () => {
         .limit(1)
         .single();
 
-      console.log('🔍 DASHBOARD DEBUG:');
-      console.log('Latest Assessment Data:', latestAssessmentData);
-      console.log('Evolution Paths:', latestAssessmentData?.evolution_paths);
-      console.log('Risk Result:', latestAssessmentData?.risk_result);
-      console.log('Answers:', latestAssessmentData?.answers);
       if (latestError && latestError.code !== 'PGRST116') {
         console.error('Error fetching latest assessment:', latestError);
       } else if (latestAssessmentData) {
