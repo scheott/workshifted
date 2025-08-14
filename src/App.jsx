@@ -15,6 +15,8 @@ import Contact from './pages/Contact';
 import RefundPolicy from './pages/legal/RefundPolicy';
 import PasswordReset from './pages/PasswordReset';
 import GoogleAnalytics from './components/GoogleAnalytics';
+import PremiumPlan from './pages/PremiumPlan';
+
 
 // Existing SEO pages
 import AIJobDisplacementStats from './pages/AIJobDisplacementStats';
@@ -51,7 +53,8 @@ function App() {
           <Route path="/assessment" element={<PrivateRoute><Assessment /></PrivateRoute>} />
           <Route path="/results" element={<PrivateRoute><Results /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
-          
+          <Route path="/plan" element={<PrivateRoute><PremiumPlan /></PrivateRoute>} />
+
           {/* Legal Pages */}
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -1,8 +1,11 @@
 // src/components/dashboard/EvolutionPaths.jsx
 import React from 'react';
 import { Star, ChevronRight, CheckCircle, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 const EvolutionPaths = ({ evolutionPaths, selectedCareer, onSelectPath, isPremium }) => {
+  const navigate = useNavigate();
   if (!evolutionPaths || evolutionPaths.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border p-8 text-center">
@@ -58,13 +61,20 @@ const EvolutionPaths = ({ evolutionPaths, selectedCareer, onSelectPath, isPremiu
         )}
 
         <div className="flex gap-3">
-          <button
-            onClick={onSelectPath}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-          >
-            {isPremium ? 'View Full Plan' : 'Get Complete Roadmap'}
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <button
+                onClick={() => {
+                    if (isPremium) {
+                // Navigate to premium plan instead of showing upgrade modal
+                    navigate('/plan');
+                    } else {
+                    onSelectPath(); // Show upgrade modal
+                    }
+                }}
+                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+                {isPremium ? 'View My 90-Day Plan' : 'Get Complete Roadmap'}
+                <ChevronRight className="w-4 h-4" />
+            </button>
         </div>
       </div>
 
