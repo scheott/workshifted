@@ -158,7 +158,7 @@ const LandingHeader = () => {
               to="/auth"
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm hover:shadow-md"
             >
-              Free Assessment
+              Free Assessment/ Sign In
             </Link>
           </div>
 

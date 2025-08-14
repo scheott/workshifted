@@ -55,16 +55,6 @@ const QuickActions = ({
           </div>
         </button>
 
-        <button
-          onClick={onViewResults}
-          className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors text-left"
-        >
-          <BarChart3 className="w-5 h-5 text-green-600" />
-          <div className="flex-1">
-            <div className="font-medium text-gray-900">View Full Results</div>
-            <div className="text-sm text-gray-600">See detailed risk analysis</div>
-          </div>
-        </button>
 
         {/* Premium Actions */}
         {isPremium ? (

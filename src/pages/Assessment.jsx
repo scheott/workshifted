@@ -317,12 +317,26 @@ const Assessment = () => {
             )}
           </div>
 
-          {/* Retake Notice */}
+          {/* Retake Notice - ALTERNATIVE VERSION WITH PROMINENT BACK BUTTON */}
           {hasCompletedBefore && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-              <p className="text-blue-800 text-sm">
-                <strong>Note:</strong> You've taken this assessment before. Your new results will replace your previous assessment.
-              </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+              <div className="text-center">
+                <p className="text-blue-800 text-sm">
+                  <strong>Note:</strong> You've taken this assessment before. Your new results will replace your previous assessment.
+                </p>
+              </div>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-white text-blue-600 border border-blue-300 px-6 py-2 rounded-lg text-sm font-medium hover:bg-blue-50 transition-colors inline-flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to Dashboard
+                </button>
+              </div>
             </div>
           )}
         </form>

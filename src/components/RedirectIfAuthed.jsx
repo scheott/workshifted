@@ -1,4 +1,4 @@
-// src/components/RedirectIfAuthed.jsx - FIXED VARIABLE NAMES
+// src/components/RedirectIfAuthed.jsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -15,21 +15,24 @@ export default function RedirectIfAuthed({ children }) {
     const checkUserStatus = async () => {
       setChecking(true);
       try {
-        // Check for assessment results
-        const { count, error } = await supabase
-          .from('ai_risk_assessments')
-          .select('id', { count: 'exact', head: true })
+        console.log('RedirectIfAuthed: Checking status for user:', user.id);
+        
+        // Check for assessment results - make sure table name matches your database
+        const { data: assessmentData, error: assessmentError } = await supabase
+          .from('assessment_results') // Ensure this matches your actual table name
+          .select('id')
           .eq('user_id', user.id)
           .limit(1);
 
-        if (error) {
-          console.error('Error checking assessment results:', error);
+        if (assessmentError) {
+          console.error('Error checking assessment:', assessmentError);
           setRedirectPath('/assessment');
           return;
         }
 
         // If no assessment, go to assessment
-        if (!count || count === 0) {
+        if (!assessmentData || assessmentData.length === 0) {
+          console.log('No assessment found, redirecting to assessment');
           setRedirectPath('/assessment');
           return;
         }
@@ -42,12 +45,15 @@ export default function RedirectIfAuthed({ children }) {
           .single();
 
         if (profileError) {
-          console.error('Error checking user profile:', profileError);
+          console.error('Error checking profile:', profileError);
           // Fallback to dashboard
           setRedirectPath('/dashboard');
           return;
         }
 
+        // Always send authenticated users with assessments to dashboard
+        // They can navigate to results from there if they want
+        console.log('User has assessment, going to dashboard');
         setRedirectPath('/dashboard');
 
       } catch (error) {
@@ -62,11 +68,28 @@ export default function RedirectIfAuthed({ children }) {
     checkUserStatus();
   }, [user, loading]);
 
-  if (loading || checking) return null; // or a spinner
+  // Show loading while checking auth or user status
+  if (loading || checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
   
+  // If user is authenticated and we have a redirect path, redirect
   if (user && redirectPath) {
     return <Navigate to={redirectPath} replace />;
   }
   
-  return user && !redirectPath ? <Navigate to="/dashboard" replace /> : children;
+  // If user is authenticated but no specific redirect path determined, go to dashboard
+  if (user && !redirectPath) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  // If no user, render children (the auth form/landing page)
+  return children;
 }

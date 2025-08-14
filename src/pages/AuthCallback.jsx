@@ -1,9 +1,8 @@
-// src/pages/AuthCallback.jsx - FIXED LOGIN ROUTING
+// src/pages/AuthCallback.jsx - FIXED VERSION
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import Footer from '../components/Footer';
-
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -11,49 +10,62 @@ export default function AuthCallback() {
   useEffect(() => {
     let active = true;
 
-    const go = async () => {
-      // Wait for session (supabase parses the URL hash)
-      const { data: { session } } = await supabase.auth.getSession();
-      let user = session?.user ?? null;
+    const handleAuthCallback = async () => {
+      try {
+        // Wait for session (supabase parses the URL hash)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          navigate('/auth', { replace: true });
+          return;
+        }
 
-      if (!user) {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-          user = s?.user ?? null;
-          if (user && active) check(user);
-        });
-        setTimeout(() => subscription.unsubscribe(), 3000);
-      } else {
-        check(user);
+        let user = session?.user;
+
+        if (!user) {
+          // Listen for auth state changes if no immediate session
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user && active) {
+              checkUserAndRoute(session.user);
+            }
+          });
+          
+          // Clean up subscription after timeout
+          setTimeout(() => subscription.unsubscribe(), 5000);
+          return;
+        }
+
+        await checkUserAndRoute(user);
+      } catch (err) {
+        console.error('Auth callback error:', err);
+        if (active) navigate('/auth', { replace: true });
       }
     };
 
-    const check = async (user) => {
+    const checkUserAndRoute = async (user) => {
       try {
-        console.log('Auth callback - user data:', user);
+        console.log('Checking user routing for:', user.id);
         
-        // For OAuth users, ensure profile is created/updated with proper name
+        // For OAuth users, ensure profile is created/updated
         if (user.app_metadata?.provider && user.app_metadata.provider !== 'email') {
           console.log('OAuth user detected, updating profile...');
           
-          // Call our helper function to update profile from OAuth data
           const { error: profileError } = await supabase.rpc('update_user_profile_from_oauth', {
             p_user_id: user.id
           });
           
           if (profileError) {
             console.error('Error updating OAuth profile:', profileError);
-          } else {
-            console.log('OAuth profile updated successfully');
           }
         }
         
-        // FIXED: Check for both assessment results AND selected career
-        // To this:
-        const { count, error } = await supabase
-        .from('ai_risk_assessments')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .limit(1);
+        // Check for assessment results - use the correct table name
+        const { data: assessmentData, error: assessmentError } = await supabase
+          .from('assessment_results') // Make sure this matches your actual table name
+          .select('id')
+          .eq('user_id', user.id)
+          .limit(1);
 
         if (!active) return;
         
@@ -63,13 +75,14 @@ export default function AuthCallback() {
           return;
         }
 
-        // If no assessment, go to assessment
+        // If no assessment exists, send to assessment
         if (!assessmentData || assessmentData.length === 0) {
+          console.log('No assessment found, redirecting to assessment');
           navigate('/assessment', { replace: true });
           return;
         }
 
-        // FIXED: Check if user has selected a career
+        // Check if user has selected a career
         const { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('selected_career, selected_career_data')
@@ -83,21 +96,26 @@ export default function AuthCallback() {
           return;
         }
 
+        // Always send authenticated users with assessments to dashboard
+        // They can navigate to results from there if they want
+        console.log('User has assessment, going to dashboard');
         navigate('/dashboard', { replace: true });
-
         
       } catch (err) {
-        console.error('Auth callback error:', err);
+        console.error('User check error:', err);
         if (active) navigate('/assessment', { replace: true });
       }
     };
 
-    go();
-    return () => { active = false; };
+    handleAuthCallback();
+    
+    return () => { 
+      active = false; 
+    };
   }, [navigate]);
 
   return (
-    <div className="min-h-screen grid place-items-center">
+    <div className="min-h-screen grid place-items-center bg-gray-50">
       <div className="text-center">
         <div className="flex items-center justify-center space-x-2 mb-4">
           <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -108,7 +126,6 @@ export default function AuthCallback() {
         </div>
         <p className="text-sm text-gray-500">Setting up your account...</p>
       </div>
-      {/* Footer at bottom */}
       <Footer />
     </div>
   );
