@@ -99,9 +99,8 @@ const Landing = () => {
             </div>
 
             <div className="text-sm text-gray-600 mb-12">
-              <span className="font-medium">✨ Free assessment</span> • <span className="font-medium">5 minutes</span> •{" "}
-              <span className="font-medium">{assessmentsCompleted != null ? `${assessmentsCompleted.toLocaleString()}+` : 'Thousands+'} professionals</span>{" "}
-              already evolved their careers
+              <span className="font-medium">✨ Free assessment</span> • <span className="font-medium">5 minutes</span> {" "}
+              
             </div>
           </div>
         </div>

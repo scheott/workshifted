@@ -195,7 +195,7 @@ const AIProofSalesCareers = () => {
               Get My Sales Career Evolution Plan
             </Link>
             <p className="text-sm text-gray-500 mt-4">
-              ✨ Free assessment • Sales-specific roadmap • Join 723+ sales professionals
+              ✨ Free assessment • Sales-specific roadmap 
             </p>
           </div>
         </div>

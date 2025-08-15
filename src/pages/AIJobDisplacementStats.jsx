@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';
+import LandingHeader from '../components/LandingHeader';
 
 const SourceLink = ({ href, children }) => (
   <a
@@ -46,28 +47,7 @@ const AIJobDisplacementStats = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4 md:py-6">
-            <Link to="/" className="flex items-center">
-              <div className="text-2xl md:text-3xl font-bold text-blue-600">WorkShifted</div>
-            </Link>
-            <div className="flex items-center space-x-4 md:space-x-8">
-              <nav className="hidden sm:flex items-center space-x-6" aria-label="Primary">
-                <Link to="/#how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">How it Works</Link>
-                <Link to="/#careers" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">Careers</Link>
-                <Link to="/#faq" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">FAQ</Link>
-              </nav>
-              <Link
-                to="/auth"
-                className="bg-blue-600 text-white px-4 py-2 md:px-6 md:py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
-              >
-                Get My AI Strategy
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <LandingHeader />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}

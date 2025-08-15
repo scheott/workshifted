@@ -549,7 +549,7 @@ const AIProofHRCareers = () => {
             Start My HR Evolution Assessment
           </Link>
           <p className="text-sm text-purple-200 mt-4">
-            ✨ HR-specific analysis • 90-day roadmap • Join 543+ HR professionals
+            ✨ HR-specific analysis • 90-day roadmap 
           </p>
           <p className="text-xs text-purple-300 mt-2">
             <em>Educational guidance only. Career outcomes depend on organizational culture, individual effort, and market conditions.</em>

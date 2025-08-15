@@ -550,7 +550,7 @@ const AIProofFinanceCareers = () => {
             Start My Finance Evolution Assessment
           </Link>
           <p className="text-sm text-green-200 mt-4">
-            ✨ Finance-specific analysis • 90-day roadmap • Join 625+ finance professionals
+            ✨ Finance-specific analysis • 90-day roadmap 
           </p>
           <p className="text-xs text-green-300 mt-2">
             <em>Educational guidance only. Career outcomes depend on market conditions, regulatory changes, individual effort, and company decisions.</em>

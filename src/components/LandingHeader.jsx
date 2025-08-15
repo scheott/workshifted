@@ -132,13 +132,7 @@ const LandingHeader = () => {
                 )}
               </div>
 
-              <a 
-                href="#faq" 
-                onClick={(e) => { e.preventDefault(); handleLinkClick('#faq'); }}
-                className="text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer"
-              >
-                FAQ
-              </a>
+
             </nav>
 
             {/* CTA Button - Always goes to /auth */}

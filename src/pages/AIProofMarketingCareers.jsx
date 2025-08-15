@@ -170,7 +170,7 @@ const AIProofMarketingCareers = () => {
               Get My Marketing Career Evolution Plan
             </Link>
             <p className="text-sm text-gray-500 mt-4">
-              ✨ Free assessment • Marketing-specific roadmap • Join 847+ marketing professionals
+              ✨ Free assessment • Marketing-specific roadmap
             </p>
           </div>
         </div>
