@@ -103,7 +103,7 @@ const DashboardHeader = ({
                 }}
                 className="px-3 py-2 rounded-md text-sm font-medium bg-blue-600 text-white"
               >
-                My 90-Day Plan (TEST)
+                My 90-Day Plan
               </button>
             </nav>
 

@@ -154,11 +154,17 @@ const EvolutionPaths = ({
         )}
 
         <button
-          onClick={() => onSelectPath(primaryPath)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+        onClick={() => {
+            if (isPremium) {
+            navigate('/plan');
+            } else {
+            onSelectPath(primaryPath);
+            }
+        }}
+        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
         >
-          {isPremium ? 'Get Your 90-Day AI Plan' : 'Get Complete AI Roadmap'}
-          <ChevronRight className="w-4 h-4" />
+        {isPremium ? 'Get Your 90-Day AI Plan' : 'Get Complete AI Roadmap'}
+        <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
@@ -207,7 +213,6 @@ const EvolutionPaths = ({
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-5 h-5 text-purple-600" />
           <h4 className="font-semibold text-gray-900">Career Opportunities</h4>
-          <span className="text-sm text-gray-500">(Optional)</span>
         </div>
 
         <p className="text-sm text-gray-600 mb-4">

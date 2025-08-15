@@ -190,7 +190,13 @@ const UserDashboard = () => {
     }
   };
 
-
+  const handleViewResults = () => {
+    if (isPremium) {
+      navigate('/plan');
+    } else {
+      handleUpgrade(); // This opens the checkout modal
+    }
+  };
   const handleViewAIUpdates = () => {
     if (isPremium) {
       navigate('/ai-updates');
@@ -293,7 +299,8 @@ const UserDashboard = () => {
             assessmentHistory={assessmentHistory}
             daysSinceAssessment={daysSinceAssessment}
             onRetakeAssessment={() => navigate('/assessment')}
-            onViewResults={() => navigate('/plan')}
+            onViewResults={handleViewResults}
+            isPremium={isPremium}
           />
         </div>
 
