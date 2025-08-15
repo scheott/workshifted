@@ -35,8 +35,30 @@ const EvolutionPaths = ({
     );
   }
 
-  const primaryPath = evolutionPaths[0];
-  const secondaryPaths = evolutionPaths.slice(1, 3);
+    // Handle both old and new evolution paths format
+    const getPathsArray = () => {
+    if (!evolutionPaths) return [];
+    
+    // New format: { tracks: [...] }
+    if (evolutionPaths.tracks && Array.isArray(evolutionPaths.tracks)) {
+        return evolutionPaths.tracks.map(track => ({
+        title: track.title,
+        description: track.goal,
+        fit: 85
+        }));
+    }
+    
+    // Old format: array
+    if (Array.isArray(evolutionPaths)) {
+        return evolutionPaths;
+    }
+    
+    return [];
+    };
+
+    const pathsArray = getPathsArray();
+    const primaryPath = pathsArray[0];
+    const secondaryPaths = pathsArray.slice(1, 3);
 
   // Use actual AI-resistant skills from your data or assessment results
   // Get AI-resistant skills from your skills database
