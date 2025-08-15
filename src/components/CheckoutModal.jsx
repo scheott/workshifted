@@ -130,7 +130,6 @@ const CheckoutModal = ({ isOpen, onClose, onSuccess, trigger }) => {
                   <h3 className="font-semibold text-gray-900 mb-3">90-Day Evolution Plan</h3>
                   <ul className="space-y-2">
                     <Feature>Step-by-step roadmap</Feature>
-                    <Feature>Skill gap analysis</Feature>
                     <Feature>Career positioning guide</Feature>
                   </ul>
                 </div>
@@ -141,7 +140,6 @@ const CheckoutModal = ({ isOpen, onClose, onSuccess, trigger }) => {
                   <ul className="space-y-2">
                     <Feature>30+ curated tools by role</Feature>
                     <Feature>Advanced search & filters</Feature>
-                    <Feature>Implementation guides</Feature>
                     <Feature>Regular updates</Feature>
                   </ul>
                 </div>
@@ -151,8 +149,7 @@ const CheckoutModal = ({ isOpen, onClose, onSuccess, trigger }) => {
                   <h3 className="font-semibold text-gray-900 mb-3">AI News Updates</h3>
                   <ul className="space-y-2">
                     <Feature>Industry-specific intelligence</Feature>
-                    <Feature>Role-specific news</Feature>
-                    <Feature>Threat timeline updates</Feature>
+                    <Feature>Timeline updates</Feature>
                     <Feature>Monthly reports</Feature>
                   </ul>
                 </div>

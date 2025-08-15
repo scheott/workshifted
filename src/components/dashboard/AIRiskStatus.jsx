@@ -1,6 +1,6 @@
 // src/components/dashboard/AIRiskStatus.jsx
-import React from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, Shield, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { TrendingUp, TrendingDown, AlertTriangle, Shield, Clock, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 const AIRiskStatus = ({ 
   latestAssessment, 
@@ -11,6 +11,7 @@ const AIRiskStatus = ({
 }) => {
   const riskResult = latestAssessment?.risk_result;
   const currentScore = riskResult?.score || 0;
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   
   // Calculate trend
   const getTrend = () => {
@@ -86,6 +87,12 @@ const AIRiskStatus = ({
             </div>
           </div>
           
+          {/* Micro-disclaimer right under the score */}
+          <div className="text-xs text-gray-500 mb-3 flex items-center justify-center lg:justify-start gap-1">
+            <Info className="w-3 h-3" />
+            <span>Educational estimate based on current trends</span>
+          </div>
+          
           <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${riskInfo.bgColor} ${riskInfo.color} mb-2`}>
             {riskInfo.level}
           </div>
@@ -93,6 +100,23 @@ const AIRiskStatus = ({
           <p className="text-gray-600 text-sm">
             {userRole} • {userIndustry}
           </p>
+
+          {/* Trend Display */}
+          {trend && (
+            <div className="mt-3 flex items-center justify-center lg:justify-start gap-2">
+              {trend.direction === 'up' ? (
+                <TrendingUp className="w-4 h-4 text-red-500" />
+              ) : trend.direction === 'down' ? (
+                <TrendingDown className="w-4 h-4 text-green-500" />
+              ) : null}
+              <span className={`text-sm ${
+                trend.improved ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {trend.direction === 'same' ? 'No change' : 
+                 `${trend.improved ? 'Decreased' : 'Increased'} by ${trend.change} points`}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Risk Summary & Advice */}
@@ -104,9 +128,35 @@ const AIRiskStatus = ({
           <p className={`text-sm font-medium ${riskInfo.color}`}>
             {getAdvice(currentScore)}
           </p>
-          
 
-          
+          {/* Collapsible Disclaimer Section */}
+          <div className="mt-4">
+            <button
+              onClick={() => setShowDisclaimer(!showDisclaimer)}
+              className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <span>How we calculate this</span>
+              {showDisclaimer ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+            
+            {showDisclaimer && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-600 space-y-2">
+                <div>
+                  <strong>Methodology:</strong> Score combines routine work patterns (45%), role/industry baselines (22%), 
+                  AI tool exposure (13%), and protective factors like human judgment (-10%) and stakeholder interaction (-10%).
+                </div>
+                <div>
+                  <strong>Limitations:</strong> This is an educational tool based on current research and trends. 
+                  AI development is unpredictable. Individual circumstances, company culture, and market changes 
+                  may differ significantly from these estimates.
+                </div>
+                <div>
+                  <strong>Purpose:</strong> Designed to encourage proactive career planning, not predict definitive outcomes. 
+                  Use as one factor among many in your career decisions.
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Actions */}

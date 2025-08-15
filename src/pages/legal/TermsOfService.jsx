@@ -1,10 +1,11 @@
+// src/pages/legal/TermsOfService.jsx - Updated for AI Career Evolution Pivot
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Footer from '../../components/Footer'; // Fixed: go up two levels
+import Footer from '../../components/Footer';
 
 const TermsOfService = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header with back button */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -24,7 +25,7 @@ const TermsOfService = () => {
       </header>
 
       {/* Main content */}
-      <div className="py-12">
+      <div className="py-12 flex-1">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Terms of Service</h1>
@@ -32,32 +33,34 @@ const TermsOfService = () => {
               
               <h2>1. Acceptance of Terms</h2>
               <p>
-                By accessing, registering for, or using WorkShifted ("Service"), you agree to be bound by these Terms of Service ("Terms"). 
-                If you do not agree to these Terms, do not use our Service.
+                By accessing or using WorkShifted ("the Service"), you agree to be bound by these Terms of Service 
+                ("Terms"). If you disagree with any part of these terms, you may not access the Service.
               </p>
 
-              <h2>2. Eligibility</h2>
+              <h2>2. Description of Service</h2>
               <p>
-                You must be at least 13 years old to use WorkShifted. If you are under 18, you represent that you have your parent's 
-                or guardian's permission to use this Service. By using WorkShifted, you represent and warrant that you have the legal 
-                capacity to enter into these Terms.
-              </p>
-
-              <h2>3. Service Description</h2>
-              <p>
-                WorkShifted provides educational career guidance, skills assessments, and training resource recommendations to help users 
-                explore skilled trade careers. Our Service includes:
+                WorkShifted is an AI career evolution platform that helps professionals assess their automation risk 
+                and develop strategies to become AI-resistant in their careers. Our Service includes:
               </p>
               <ul>
-                <li>Free skills assessments and basic career matching</li>
-                <li>Premium career transition plans and detailed guidance (one-time $29 payment)</li>
-                <li>Course recommendations and apprenticeship opportunity information</li>
-                <li>Educational content about skilled trades</li>
+                <li>Free AI career risk assessments and basic resistance recommendations</li>
+                <li>Premium AI-resistance roadmaps and detailed evolution strategies (one-time $29 payment)</li>
+                <li>Course recommendations and AI tool guidance</li>
+                <li>Educational content about AI workplace trends and human-AI collaboration</li>
               </ul>
               <p>
-                <strong>Important:</strong> WorkShifted provides educational guidance only. We do not guarantee employment, specific salary outcomes, 
-                job placement, or career success. Individual results vary based on many factors including market conditions, personal effort, 
-                qualifications, and economic factors beyond our control.
+                <strong>Important:</strong> WorkShifted provides educational guidance only. We do not guarantee employment, 
+                specific salary outcomes, job security, career advancement, or protection from automation. Individual results 
+                vary based on many factors including market conditions, personal effort, AI development speed, industry changes, 
+                and economic factors beyond our control.
+              </p>
+
+              <h2>3. AI Development Uncertainty</h2>
+              <p>
+                AI technology develops rapidly and unpredictably. Our assessments and recommendations are based on current 
+                trends and available research, but we explicitly disclaim any ability to predict future AI capabilities, 
+                adoption timelines, or workplace impacts. The pace and direction of AI development may differ significantly 
+                from current projections.
               </p>
 
               <h2>4. User Accounts and Data</h2>
@@ -74,7 +77,7 @@ const TermsOfService = () => {
               <p>When you use WorkShifted, we may collect:</p>
               <ul>
                 <li>Account information (email, name, authentication data)</li>
-                <li>Assessment responses and career preferences</li>
+                <li>AI risk assessment responses and career preferences</li>
                 <li>Usage data and activity within the platform</li>
                 <li>Location information only if you voluntarily provide a state or city</li>
                 <li>Payment information (processed securely through Stripe)</li>
@@ -111,10 +114,10 @@ const TermsOfService = () => {
                 WorkShifted and its content are protected by copyright, trademark, and other laws. This includes:
               </p>
               <ul>
-                <li><strong>Our content:</strong> Skills assessments, career guidance materials, and platform design are owned by WorkShifted</li>
-                <li><strong>Third-party content:</strong> We may link to external courses, programs, and resources owned by third parties</li>
+                <li><strong>Our content:</strong> AI risk assessments, career evolution materials, and platform design are owned by WorkShifted</li>
+                <li><strong>Third-party content:</strong> We may link to external courses, AI tools, and resources owned by third parties</li>
                 <li><strong>Your data:</strong> You retain ownership of your personal information and assessment responses</li>
-                <li><strong>Limited license:</strong> We grant you a limited, non-transferable license to use our Service for personal career exploration</li>
+                <li><strong>Limited license:</strong> We grant you a limited, non-transferable license to use our Service for personal career development</li>
               </ul>
 
               <h2>8. Third-Party Services</h2>
@@ -125,7 +128,8 @@ const TermsOfService = () => {
                 <li>Google (for authentication)</li>
                 <li>Stripe (for payment processing)</li>
                 <li>External educational platforms and course providers</li>
-                <li>Apprenticeship programs and job boards</li>
+                <li>AI tool platforms and software providers</li>
+                <li>Career development resources and job boards</li>
               </ul>
               <p>
                 We are not responsible for the availability, content, or practices of these third-party services. 
@@ -137,11 +141,12 @@ const TermsOfService = () => {
                 WorkShifted is provided "as is" without warranties of any kind. We specifically disclaim:
               </p>
               <ul>
-                <li><strong>Employment outcomes:</strong> We do not guarantee job placement, interviews, or hiring</li>
-                <li><strong>Salary expectations:</strong> Salary information is educational and not guaranteed</li>
-                <li><strong>Market conditions:</strong> Trade job availability varies by location and economic factors</li>
-                <li><strong>Third-party accuracy:</strong> We cannot guarantee the accuracy of external course or program information</li>
+                <li><strong>Career security:</strong> We do not guarantee job security, career advancement, or protection from automation</li>
+                <li><strong>AI predictions:</strong> AI development is unpredictable; our risk assessments are estimates based on current trends</li>
+                <li><strong>Market conditions:</strong> Workplace AI adoption varies by industry, company, and economic factors</li>
+                <li><strong>Third-party accuracy:</strong> We cannot guarantee the accuracy of external course, tool, or resource information</li>
                 <li><strong>Continuous availability:</strong> Service may be interrupted for maintenance or technical issues</li>
+                <li><strong>Individual outcomes:</strong> Success depends entirely on personal implementation, market factors, and circumstances beyond our control</li>
               </ul>
 
               <h2>10. Limitation of Liability</h2>
@@ -149,11 +154,12 @@ const TermsOfService = () => {
                 To the maximum extent permitted by law, WorkShifted and its team are not liable for any:
               </p>
               <ul>
-                <li>Career decisions made based on our guidance</li>
-                <li>Financial losses from career changes or training investments</li>
+                <li>Career decisions made based on our guidance or assessments</li>
+                <li>Financial losses from career changes, training investments, or missed opportunities</li>
                 <li>Indirect, incidental, or consequential damages</li>
                 <li>Loss of income, profits, or business opportunities</li>
-                <li>Issues with third-party services or programs</li>
+                <li>Issues with third-party services, tools, or programs</li>
+                <li>Damages related to AI development that differs from our predictions</li>
               </ul>
               <p>
                 Our total liability is limited to the amount you paid for premium features (maximum $29).
@@ -205,8 +211,8 @@ const TermsOfService = () => {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-8">
                 <h3 className="text-blue-800 font-semibold mb-2">Quick Summary</h3>
                 <p className="text-blue-700 text-sm">
-                  WorkShifted provides educational career guidance for skilled trades. We offer free assessments and 
-                  premium features for $29 (one-time). We don't guarantee job outcomes. Use our Service responsibly 
+                  WorkShifted provides educational career guidance for AI workplace evolution. We offer free assessments and 
+                  premium features for $29 (one-time). We don't guarantee career outcomes or AI predictions. Use our Service responsibly 
                   and contact us with questions.
                 </p>
               </div>

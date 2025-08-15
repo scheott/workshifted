@@ -21,7 +21,7 @@ const QuickActions = ({ isPremium, onUpgrade, isLoading }) => {
       textColor: 'text-purple-700',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
-      features: ['Step-by-step roadmap', 'Skill gap analysis', 'Career positioning guide']
+      features: ['Step-by-step roadmap', 'Career positioning guide']
     },
     {
       id: 'ai-tools',
@@ -34,7 +34,7 @@ const QuickActions = ({ isPremium, onUpgrade, isLoading }) => {
       textColor: 'text-blue-700',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
-      features: ['Advanced search & filters', 'Implementation guides', 'Regular updates']
+      features: ['Advanced search & filters', 'Regular updates']
     },
     {
       id: 'ai-news',
@@ -47,7 +47,7 @@ const QuickActions = ({ isPremium, onUpgrade, isLoading }) => {
       textColor: 'text-orange-700',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
-      features: ['Role-specific news', 'Threat timeline updates', 'Monthly reports']
+      features: ['AI updates', 'Monthly reports']
     },
     {
       id: 'retake-assessment',
