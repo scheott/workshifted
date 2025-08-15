@@ -1,5 +1,5 @@
 // src/pages/PremiumPlan.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -9,7 +9,10 @@ import { Lock } from 'lucide-react';
 // NEW IMPORTS
 import { fetchOrGeneratePlan } from '../lib/fetchOrGeneratePlan';
 import { buildTasksFromPlan } from '../lib/buildTasksFromPlan';
+import enrichPlan from '../lib/enrichPlan';
+import phaseAlignWeeks from '../lib/phaseAlignWeeks';
 import { ProgressHeader, TrackCard, CoreSection } from '../components/plan/PlanProgressComponents';
+import CheckoutModal from '../components/CheckoutModal';
 
 const PremiumPlan = () => {
   const { user, loading: authLoading } = useAuth();
@@ -26,8 +29,30 @@ const PremiumPlan = () => {
   // NEW STATE
   const [tasks, setTasks] = useState([]);
   const [taskProgress, setTaskProgress] = useState({});
+  const [noteMap, setNoteMap] = useState({});
   const [overallPercent, setOverallPercent] = useState(0);
-  const [phasePercents, setPhasePercents] = useState([0, 0, 0]);
+  const [phasePercents, setPhasePercents] = useState({ fastStart: 0, momentum: 0, positioning: 0 });
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+
+  // Phase ranges constant to avoid re-allocation
+  const PHASE_RANGES = [
+    { start: 1, end: 4, key: 'fastStart' },
+    { start: 5, end: 8, key: 'momentum' },
+    { start: 9, end: 12, key: 'positioning' }
+  ];
+
+  // Memoize trackData to avoid recomputation on every render
+  const trackData = useMemo(() => (
+    ['writing_comms', 'data_reporting', 'workflow_automation']
+      .map(trackId => {
+        const track = personalizedPlan?.tracks?.find(t => t.id === trackId);
+        if (!track) return null;
+        const trackTasks = tasks.filter(t => t.trackId === trackId);
+        const completedSteps = trackTasks.filter(t => taskProgress[t.key]).length;
+        return { track, tasks: trackTasks, completedSteps };
+      })
+      .filter(Boolean)
+  ), [personalizedPlan, tasks, taskProgress]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -39,6 +64,11 @@ const PremiumPlan = () => {
     
     fetchData();
   }, [user, authLoading, navigate]);
+
+  // Recompute progress when tasks or taskProgress changes
+  useEffect(() => {
+    calculateProgress(taskProgress);
+  }, [tasks, taskProgress]);
 
   const fetchData = async () => {
     try {
@@ -59,183 +89,189 @@ const PremiumPlan = () => {
       }
 
       setUserProfile(profile);
-      setIsPremium(profile?.subscription_status === 'premium');
+      
+      // Check premium status - your subscription_status is 'premium'
+      const isPremiumUser = profile?.subscription_status === 'premium' || 
+                           profile?.subscription_status === 'active' ||
+                           profile?.subscription_tier === 'premium' || 
+                           profile?.is_premium === true;
+      
+      setIsPremium(isPremiumUser);
 
-      // Redirect if not premium
-      if (profile?.subscription_status !== 'premium') {
-        navigate('/dashboard');
+      if (!isPremiumUser) {
+        setLoading(false);
         return;
       }
 
-      setLoadingStep('Loading your assessment...');
-
       // Fetch latest assessment
-      const { data: assessment, error: assessmentError } = await supabase
+      setLoadingStep('Loading your assessment...');
+      const { data: assessments, error: assessmentError } = await supabase
         .from('ai_risk_assessments')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
-      if (assessment) {
-        setLatestAssessment(assessment);
-        
-        // Check if plan already exists or generate new one
-        if (assessment.evolution_paths && assessment.evolution_paths.tracks) {
-          const planTasks = buildTasksFromPlan(assessment.evolution_paths);
-          setTasks(planTasks);
-          setPersonalizedPlan(assessment.evolution_paths);
-          await loadTaskProgress(assessment.id);
-        } else {
-          await generatePlan(assessment);
-        }
+      if (assessmentError) {
+        console.error('Assessment error:', assessmentError);
+        setLoading(false);
+        return;
+      }
+
+      if (!assessments || assessments.length === 0) {
+        navigate('/assessment');
+        return;
+      }
+
+      const assessment = assessments[0];
+      setLatestAssessment(assessment);
+
+      // Check if plan exists, generate if not
+      if (!assessment.evolution_paths) {
+        await generatePlan(assessment);
+      } else {
+        await loadExistingPlan(assessment);
       }
 
     } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
+      console.error('Error in fetchData:', error);
       setLoading(false);
-      setLoadingStep('');
     }
   };
 
   const generatePlan = async (assessment) => {
     try {
       setLoadingStep('Generating your personalized plan...');
-      
-      console.log('🟡 Starting plan generation for assessment:', assessment.id);
-      console.log('🟡 Assessment answers:', assessment.answers);
-      
-      const { evolution_paths } = await fetchOrGeneratePlan(
-        assessment.id, 
-        user.id, 
-        assessment.answers
+      const { evolution_paths } = await fetchOrGeneratePlan(assessment.id, user.id, assessment.answers);
+
+      // Enrich locally with context (why, prompts, toolkit, DoD)
+      const enriched = enrichPlan(
+        { ...evolution_paths, recommended_tools: evolution_paths.recommended_tools || [] },
+        {
+          answers: assessment.answers,
+          tools_for_role: evolution_paths.recommended_tools || []
+        }
       );
-      
-      console.log('🟢 Plan generated:', evolution_paths);
-      
-      if (!evolution_paths || !evolution_paths.tracks) {
-        console.error('❌ No tracks in evolution_paths, using fallback');
-        
-        // Use fallback plan
-        const fallbackPlan = {
-          version: 1,
-          persona: "AI Strategy Lead",
-          weekly_investment_hours: 3,
-          tracks: [
-            {
-              id: "writing_comms",
-              title: "Communication Optimization",
-              goal: "Cut comms time 50%",
-              kpis: ["time_saved_per_week"],
-              week_plan: ["W1: Setup baseline", "W2: Create templates", "W3: Test & refine", "W4: Deploy & measure"]
-            },
-            {
-              id: "data_reporting",
-              title: "Data Analysis Automation", 
-              goal: "Automate 60% of reporting",
-              kpis: ["cycle_time"],
-              week_plan: ["W1: Audit current process", "W2: Build AI pipeline", "W3: Add quality checks", "W4: Go live"]
-            },
-            {
-              id: "workflow_automation",
-              title: "Process Optimization",
-              goal: "Remove 5+ manual steps", 
-              kpis: ["manual_steps_removed"],
-              week_plan: ["W1: Map workflows", "W2: Identify automation", "W3: Build & test", "W4: Scale deployment"]
-            }
-          ]
-        };
-        
-        setPersonalizedPlan(fallbackPlan);
-        const planTasks = buildTasksFromPlan(fallbackPlan);
-        console.log('🟡 Fallback tasks:', planTasks);
-        setTasks(planTasks);
-        await loadTaskProgress(assessment.id);
-        return;
-      }
-      
-      const planTasks = buildTasksFromPlan(evolution_paths);
-      console.log('🟢 Built tasks:', planTasks);
-      
+
+      // Build tasks and align to phases
+      let planTasks = buildTasksFromPlan(enriched);
+      planTasks = phaseAlignWeeks(planTasks);
+
+      setPersonalizedPlan(enriched);
       setTasks(planTasks);
-      setPersonalizedPlan(evolution_paths);
-      
+
       await loadTaskProgress(assessment.id);
-      
-      // Save plan back to assessment
-      await supabase
-        .from('ai_risk_assessments')
-        .update({ evolution_paths })
-        .eq('id', assessment.id);
-        
+      setLoading(false);
+
     } catch (error) {
-      console.error('❌ Error generating plan:', error);
-      
-      // Fallback on error
-      const fallbackPlan = {
-        version: 1,
-        persona: "AI Strategy Lead", 
-        weekly_investment_hours: 3,
-        tracks: [
-          {
-            id: "writing_comms",
-            title: "Communication Optimization",
-            goal: "Cut comms time 50%",
-            kpis: ["time_saved_per_week"],
-            week_plan: ["W1: Setup", "W2: Draft", "W3: Test", "W4: Deploy"]
-          },
-          {
-            id: "data_reporting", 
-            title: "Data Analysis",
-            goal: "Automate reporting",
-            kpis: ["cycle_time"],
-            week_plan: ["W1: Setup", "W2: Draft", "W3: Test", "W4: Deploy"]
-          },
-          {
-            id: "workflow_automation",
-            title: "Process Automation", 
-            goal: "Remove manual steps",
-            kpis: ["manual_steps_removed"],
-            week_plan: ["W1: Setup", "W2: Draft", "W3: Test", "W4: Deploy"]
-          }
-        ]
-      };
-      
-      setPersonalizedPlan(fallbackPlan);
-      const planTasks = buildTasksFromPlan(fallbackPlan);
+      console.error('Error generating plan:', error);
+      setLoading(false);
+    }
+  };
+
+  const loadExistingPlan = async (assessment) => {
+    try {
+      setLoadingStep('Loading your existing plan...');
+
+      // Enrich the existing plan with new context features
+      const enriched = enrichPlan(
+        assessment.evolution_paths,
+        {
+          answers: assessment.answers,
+          tools_for_role: assessment.evolution_paths.recommended_tools || []
+        }
+      );
+
+      // Build tasks and align to phases
+      let planTasks = buildTasksFromPlan(enriched);
+      planTasks = phaseAlignWeeks(planTasks);
+
+      setPersonalizedPlan(enriched);
       setTasks(planTasks);
+
       await loadTaskProgress(assessment.id);
+      setLoading(false);
+
+    } catch (error) {
+      console.error('Error loading existing plan:', error);
+      setLoading(false);
     }
   };
 
   const loadTaskProgress = async (assessmentId) => {
     try {
-      const { data: progressData } = await supabase
+      console.log('🔍 Loading task progress for assessment:', assessmentId);
+      
+      // Load both progress and notes
+      const { data: rows, error } = await supabase
         .from('ai_plan_task_progress')
-        .select('*')
+        .select('task_key, completed, notes')
         .eq('user_id', user.id)
         .eq('assessment_id', assessmentId);
-      
+
+      if (error) {
+        console.error('Error loading task progress:', error);
+        return;
+      }
+
+      console.log('📊 Raw task progress data:', rows);
+
       const progressMap = {};
-      progressData?.forEach(row => {
-        progressMap[row.task_key] = row.completed;
-      });
+      const noteMapInit = {};
       
+      rows?.forEach(row => {
+        progressMap[row.task_key] = row.completed;
+        if (row.notes) noteMapInit[row.task_key] = row.notes;
+      });
+
+      console.log('📋 Progress map:', progressMap);
+      console.log('📝 Note map:', noteMapInit);
+
       setTaskProgress(progressMap);
-      calculateProgress(progressMap);
+      setNoteMap(noteMapInit);
+      // Progress will be calculated by useEffect
+
     } catch (error) {
-      console.error('Error loading progress:', error);
+      console.error('Error loading task progress:', error);
     }
   };
 
   const handleTaskToggle = async (task, completed) => {
     try {
-      const newProgress = { ...taskProgress, [task.key]: completed };
-      setTaskProgress(newProgress);
-      calculateProgress(newProgress);
+      console.log('🔄 Toggling task:', task.key, 'to:', completed);
       
+      // Update local state immediately with functional update
+      setTaskProgress(prev => {
+        const newProgress = { ...prev, [task.key]: completed };
+        console.log('📊 New progress state:', newProgress);
+        return newProgress;
+      });
+
+      // Update database
+      const result = await supabase
+        .from('ai_plan_task_progress')
+        .upsert({
+          user_id: user.id,
+          assessment_id: latestAssessment.id,
+          track_id: task.trackId,
+          task_key: task.key,
+          completed: completed,
+          completed_at: completed ? new Date().toISOString() : null
+        }, { 
+          onConflict: 'user_id,assessment_id,task_key' 
+        });
+        
+      console.log('💾 Database update result:', result);
+        
+    } catch (error) {
+      console.error('Error updating task:', error);
+      // Revert local state on error
+      setTaskProgress(prev => ({ ...prev, [task.key]: !completed }));
+    }
+  };
+
+  const saveNote = async (task, note) => {
+    try {
       await supabase
         .from('ai_plan_task_progress')
         .upsert({
@@ -243,14 +279,14 @@ const PremiumPlan = () => {
           assessment_id: latestAssessment.id,
           track_id: task.trackId,
           task_key: task.key,
-          completed,
-          completed_at: completed ? new Date().toISOString() : null
+          notes: note
         }, { 
           onConflict: 'user_id,assessment_id,task_key' 
         });
-        
+      
+      setNoteMap(prev => ({ ...prev, [task.key]: note }));
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error('Error saving note:', error);
     }
   };
 
@@ -258,11 +294,16 @@ const PremiumPlan = () => {
     const completedCount = Object.values(progressMap).filter(Boolean).length;
     const totalTasks = tasks.length;
     
-    const overall = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
-    setOverallPercent(overall);
+    setOverallPercent(totalTasks ? Math.round((completedCount / totalTasks) * 100) : 0);
     
-    // Simple phase calculation
-    const phases = [overall, overall, overall];
+    // Calculate phase percentages based on week alignment - using object structure
+    const phases = {};
+    PHASE_RANGES.forEach(range => {
+      const phaseTasks = tasks.filter(t => t.week >= range.start && t.week <= range.end);
+      const done = phaseTasks.filter(t => progressMap[t.key]).length;
+      phases[range.key] = phaseTasks.length ? Math.round((done / phaseTasks.length) * 100) : 0;
+    });
+
     setPhasePercents(phases);
   };
 
@@ -283,17 +324,46 @@ const PremiumPlan = () => {
   if (!isPremium) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto p-8">
           <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Premium Access Required</h2>
           <p className="text-gray-600 mb-6">Upgrade to access your personalized 90-day AI-proofing plan.</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-          >
-            Back to Dashboard
-          </button>
+          
+          <div className="space-y-3">
+            <button
+              onClick={() => setShowCheckoutModal(true)}
+              className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Upgrade to Premium - $29
+            </button>
+            
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+          
+          {/* Debug info - remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 p-3 bg-yellow-50 rounded text-xs text-left">
+              <strong>Debug:</strong> subscription_status: {userProfile?.subscription_status}, 
+              subscription_tier: {userProfile?.subscription_tier}, 
+              is_premium: {userProfile?.is_premium?.toString()}
+            </div>
+          )}
         </div>
+
+        <CheckoutModal
+          isOpen={showCheckoutModal}
+          onClose={() => setShowCheckoutModal(false)}
+          onSuccess={() => {
+            setShowCheckoutModal(false);
+            // Refresh the page to re-check premium status
+            window.location.reload();
+          }}
+        />
       </div>
     );
   }
@@ -309,14 +379,7 @@ const PremiumPlan = () => {
       );
     }
 
-    const coreTasks = tasks.filter(t => t.trackId === 'core');
-    const trackData = ['writing_comms', 'data_reporting', 'workflow_automation'].map(trackId => {
-      const track = personalizedPlan.tracks?.find(t => t.id === trackId);
-      const trackTasks = tasks.filter(t => t.trackId === trackId);
-      const completedSteps = trackTasks.filter(t => taskProgress[t.key]).length;
-      
-      return { track, tasks: trackTasks, completedSteps };
-    }).filter(item => item.track);
+    const coreTasks = tasks.filter(t => t.trackId === 'core' && t.type === 'non_negotiable'); // Only non-negotiables now
 
     return (
       <div className="space-y-8">
@@ -325,12 +388,17 @@ const PremiumPlan = () => {
           phases={phasePercents}
           persona={personalizedPlan.persona || 'AI Strategy Lead'}
           weeklyHours={personalizedPlan.weekly_investment_hours || 3}
+          userProfile={userProfile}
+          userRole={userProfile?.current_role || userProfile?.profile_role_family}
         />
         
         <CoreSection 
           coreTasks={coreTasks}
           progressMap={taskProgress}
+          noteMap={noteMap}
           onToggle={handleTaskToggle}
+          onSaveNote={saveNote}
+          plan={personalizedPlan}
         />
         
         {trackData.map(({ track, tasks: trackTasks, completedSteps }) => (
@@ -339,10 +407,25 @@ const PremiumPlan = () => {
             track={track}
             steps={trackTasks}
             progressMap={taskProgress}
+            noteMap={noteMap}
             onToggle={handleTaskToggle}
+            onSaveNote={saveNote}
             completedSteps={completedSteps}
+            plan={personalizedPlan}
           />
         ))}
+
+        {/* Quality Gates Section */}
+        {personalizedPlan.core?.qualityGates && (
+          <section className="rounded-2xl border p-4 bg-white">
+            <h3 className="text-lg font-semibold">Quality Gates</h3>
+            <ul className="mt-2 list-disc pl-5 text-sm text-gray-700">
+              {Object.entries(personalizedPlan.core.qualityGates).map(([k, v]) => (
+                <li key={k}><strong className="capitalize">{k}:</strong> {v}</li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
     );
   };

@@ -34,20 +34,8 @@ const LandingHeader = () => {
           <div className="hidden lg:flex items-center space-x-8">
             <nav className="flex items-center space-x-6" aria-label="Primary">
               
-              {/* Main Assessment Links - All go to /auth */}
-              <Link 
-                to="/auth"
-                className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
-              >
-                Risk Assessment
-              </Link>
+
               
-              <Link 
-                to="/auth"
-                className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
-              >
-                AI-Proof Guide
-              </Link>
 
               {/* Role-Specific Dropdown */}
               <div className="relative">
