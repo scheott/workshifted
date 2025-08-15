@@ -11,7 +11,7 @@ import { fetchOrGeneratePlan } from '../lib/fetchOrGeneratePlan';
 import { buildTasksFromPlan } from '../lib/buildTasksFromPlan';
 import enrichPlan from '../lib/enrichPlan';
 import phaseAlignWeeks from '../lib/phaseAlignWeeks';
-import { ProgressHeader, TrackCard, CoreSection } from '../components/plan/PlanProgressComponents';
+import { ProgressHeader, CoreSection, CollapsibleTrackCard } from '../components/plan/PlanProgressComponents';
 import CheckoutModal from '../components/CheckoutModal';
 
 const PremiumPlan = () => {
@@ -551,7 +551,7 @@ const PremiumPlan = () => {
         />
         
         {trackData.map(({ track, tasks: trackTasks, completedSteps }) => (
-          <TrackCard
+        <CollapsibleTrackCard  // CHANGED
             key={track.id}
             track={track}
             steps={trackTasks}
@@ -561,7 +561,7 @@ const PremiumPlan = () => {
             onSaveNote={saveNote}
             completedSteps={completedSteps}
             plan={personalizedPlan}
-          />
+        />
         ))}
 
         {/* Quality Gates Section */}

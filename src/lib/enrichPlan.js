@@ -36,11 +36,40 @@ export function enrichPlan(plan, { answers = {}, tools_for_role = [], skills_for
     ]
   };
 
+  // FIXED: Use the full DOD descriptions directly instead of short keys
   const defaultTaskMeta = {
-    W1: { estimate: 40, priority: "High",   dod: ["Baseline captured","Prompt card v1 saved"] },
-    W2: { estimate: 60, priority: "High",   dod: ["Checks added","Style/validation applied"] },
-    W3: { estimate: 60, priority: "Normal", dod: ["Before/after measured","Target set"] },
-    W4: { estimate: 45, priority: "Normal", dod: ["Pilot feedback logged","SOP + Loom linked"] }
+    W1: { 
+      estimate: 40, 
+      priority: "High", 
+      dod: [
+        "Baseline captured — logged manual vs AI time (T_manual vs T_AI) in task notes.",
+        "Prompt Card v1 created — one-page doc with your best prompt, inputs, style rules, and QA checklist; link saved in task notes."
+      ] 
+    },
+    W2: { 
+      estimate: 60, 
+      priority: "High", 
+      dod: [
+        "Checks added — accuracy/privacy guardrails added to the prompt.",
+        "Style/validation applied — tone rules and review checklist added."
+      ] 
+    },
+    W3: { 
+      estimate: 60, 
+      priority: "Normal", 
+      dod: [
+        "Before/after measured — time reduction and quality score recorded.",
+        "Target set — agreed % time saved and cadence for re-check."
+      ] 
+    },
+    W4: { 
+      estimate: 45, 
+      priority: "Normal", 
+      dod: [
+        "Pilot feedback logged — captured reviewer comments + fixes.",
+        "SOP + Loom linked — documented steps and attached a short demo."
+      ] 
+    }
   };
 
   // Enrich every track
@@ -48,10 +77,15 @@ export function enrichPlan(plan, { answers = {}, tools_for_role = [], skills_for
     const tk = t.id;
     const enriched = { ...t };
 
-    // Why this fits (short, personal)
+    const trackSpecificWhy = {
+        writing_comms: "Focus on stakeholder communications and reducing email load.",
+        data_reporting: "Build dashboards that tell the story without manual analysis.", 
+        workflow_automation: "Remove bottlenecks and create scalable processes."
+    };
+
     const why = [
-      `Role: ${role} — aligns with your ${pref || 'work style'}.`,
-      whyFromMotivation
+        `Role: ${role} — aligns with your ${pref || 'work style'}.`,
+        trackSpecificWhy[tk] || whyFromMotivation
     ];
     enriched.whyThisFits = why;
 
@@ -67,7 +101,7 @@ export function enrichPlan(plan, { answers = {}, tools_for_role = [], skills_for
     enriched.risks = baseRisks;
     enriched.artifacts = ["Prompt card", "SOP page", "Loom demo"];
 
-    // Task meta (W1–W4)
+    // Task meta (W1–W4) - NOW USING THE FULL DESCRIPTIONS
     enriched.task_meta = { ...defaultTaskMeta, ...(t.task_meta || {}) };
 
     // Ensure goals are measurable
@@ -91,4 +125,5 @@ export function enrichPlan(plan, { answers = {}, tools_for_role = [], skills_for
 
   return plan;
 }
+
 export default enrichPlan;
