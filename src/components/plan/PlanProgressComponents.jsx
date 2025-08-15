@@ -250,8 +250,22 @@ export const TaskItem = ({ step, index, completed, onToggle, noteMap, onSaveNote
           <ul className="mt-1 text-xs text-gray-700 list-disc pl-5">
             {meta.dod.map((d, i) => <li key={i}>{d}</li>)}
           </ul>
+        )  : null}
+        {meta?.dod?.length ? (
+           <ul className="mt-1 text-xs text-gray-700 list-disc pl-5">
+            {meta.dod.map((d, i) => {
+                if (typeof d === 'string') return <li key={i}>{DOD_TEXT[d] || d}</li>;
+                // supports richer objects: { label, details }
+                return (
+                    <li key={i}>
+                    <span className="font-medium">{d.label}</span>
+                    {d.details ? <span> — {d.details}</span> : null}
+                    </li>
+                );
+                })}
+            </ul>
         ) : null}
-        
+                    
         {/* Personal Notes with Save/Edit buttons */}
         <div className="mt-2">
           {isEditing ? (

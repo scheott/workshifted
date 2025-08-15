@@ -75,6 +75,8 @@ const PremiumPlan = () => {
       setLoading(true);
       setLoadingStep('Loading your profile...');
 
+      console.log('🔍 Starting fetchData for user:', user.id);
+
       // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
@@ -83,11 +85,12 @@ const PremiumPlan = () => {
         .single();
 
       if (profileError) {
-        console.error('Profile error:', profileError);
+        console.error('❌ Profile error:', profileError);
         navigate('/dashboard');
         return;
       }
 
+      console.log('👤 Profile loaded:', profile);
       setUserProfile(profile);
       
       // Check premium status - your subscription_status is 'premium'
@@ -96,15 +99,25 @@ const PremiumPlan = () => {
                            profile?.subscription_tier === 'premium' || 
                            profile?.is_premium === true;
       
+      console.log('💎 Premium status check:', {
+        subscription_status: profile?.subscription_status,
+        subscription_tier: profile?.subscription_tier,
+        is_premium: profile?.is_premium,
+        isPremiumUser
+      });
+      
       setIsPremium(isPremiumUser);
 
       if (!isPremiumUser) {
+        console.log('❌ User is not premium, stopping here');
         setLoading(false);
         return;
       }
 
       // Fetch latest assessment
       setLoadingStep('Loading your assessment...');
+      console.log('📋 Fetching assessments for user:', user.id);
+      
       const { data: assessments, error: assessmentError } = await supabase
         .from('ai_risk_assessments')
         .select('*')
@@ -113,28 +126,34 @@ const PremiumPlan = () => {
         .limit(1);
 
       if (assessmentError) {
-        console.error('Assessment error:', assessmentError);
+        console.error('❌ Assessment error:', assessmentError);
         setLoading(false);
         return;
       }
 
+      console.log('📊 Assessments found:', assessments);
+
       if (!assessments || assessments.length === 0) {
+        console.log('❌ No assessments found, redirecting to assessment page');
         navigate('/assessment');
         return;
       }
 
       const assessment = assessments[0];
+      console.log('📋 Using assessment:', assessment.id, 'with evolution_paths:', !!assessment.evolution_paths);
       setLatestAssessment(assessment);
 
       // Check if plan exists, generate if not
       if (!assessment.evolution_paths) {
+        console.log('🔄 No existing plan found, generating new plan...');
         await generatePlan(assessment);
       } else {
+        console.log('✅ Existing plan found, loading...');
         await loadExistingPlan(assessment);
       }
 
     } catch (error) {
-      console.error('Error in fetchData:', error);
+      console.error('❌ Error in fetchData:', error);
       setLoading(false);
     }
   };
@@ -142,7 +161,20 @@ const PremiumPlan = () => {
   const generatePlan = async (assessment) => {
     try {
       setLoadingStep('Generating your personalized plan...');
-      const { evolution_paths } = await fetchOrGeneratePlan(assessment.id, user.id, assessment.answers);
+      console.log('🟡 Starting plan generation for assessment:', assessment.id);
+      console.log('🟡 Assessment answers:', assessment.answers);
+      
+      const result = await fetchOrGeneratePlan(assessment.id, user.id, assessment.answers);
+      console.log('🟢 fetchOrGeneratePlan result:', result);
+      
+      if (!result || !result.evolution_paths) {
+        console.error('❌ No evolution_paths in result, using fallback plan');
+        await useFallbackPlan(assessment);
+        return;
+      }
+
+      const { evolution_paths } = result;
+      console.log('🟢 Evolution paths received:', evolution_paths);
 
       // Enrich locally with context (why, prompts, toolkit, DoD)
       const enriched = enrichPlan(
@@ -152,6 +184,92 @@ const PremiumPlan = () => {
           tools_for_role: evolution_paths.recommended_tools || []
         }
       );
+      console.log('🟢 Plan enriched:', enriched);
+
+      // Build tasks and align to phases
+      let planTasks = buildTasksFromPlan(enriched);
+      console.log('🟢 Tasks built:', planTasks);
+      
+      planTasks = phaseAlignWeeks(planTasks);
+      console.log('🟢 Tasks phase-aligned:', planTasks);
+
+      setPersonalizedPlan(enriched);
+      setTasks(planTasks);
+
+      await loadTaskProgress(assessment.id);
+      setLoading(false);
+
+    } catch (error) {
+      console.error('❌ Error generating plan:', error);
+      console.log('🟡 Attempting fallback plan...');
+      await useFallbackPlan(assessment);
+    }
+  };
+
+  const useFallbackPlan = async (assessment) => {
+    try {
+      console.log('🔄 Using fallback plan structure');
+      
+      // Create a basic fallback plan
+      const fallbackPlan = {
+        version: 1,
+        persona: "AI Strategy Lead",
+        weekly_investment_hours: 3,
+        tracks: [
+          {
+            id: "writing_comms",
+            title: "Effective Communication Strategies",
+            goal: "Cut comms time 50–60% by Week 8",
+            kpis: ["time_saved_per_week", "quality_improvement", "cycle_time"],
+            week_plan: [
+              "Experiment with ChatGPT for drafting emails and reports.",
+              "Create templates for common communications using Microsoft Copilot.",
+              "Analyze feedback on communications to improve clarity.",
+              "Implement a review process for all outgoing communications."
+            ]
+          },
+          {
+            id: "data_reporting",
+            title: "Streamlined Reporting Processes", 
+            goal: "One-click refresh + auto-narratives with human sign-off",
+            kpis: ["cycle_time", "adoption", "time_saved_per_week"],
+            week_plan: [
+              "Utilize Notion for organizing data sources and reporting.",
+              "Set up automated data pulls with Microsoft Copilot.",
+              "Train team on using AI tools for data analysis.",
+              "Evaluate reporting cycle time and adjust processes."
+            ]
+          },
+          {
+            id: "workflow_automation",
+            title: "Automating Routine Tasks",
+            goal: "Remove 3–5 manual steps with fallback/override",
+            kpis: ["manual_steps_removed", "sla_compliance", "time_saved_per_week"],
+            week_plan: [
+              "Identify repetitive tasks suitable for automation.",
+              "Implement automation for email sorting with AI tools.",
+              "Create a checklist for task automation processes.",
+              "Review automation impact on workflow efficiency."
+            ]
+          }
+        ],
+        recommended_tools: ["ChatGPT", "Microsoft Copilot", "Notion", "Zapier"],
+        core: {
+          qualityGates: {
+            safety: "Human review for external comms & legal content",
+            privacy: "No PII in prompts; approved data sources only",
+            accuracy: "≥ 95% against human-verified samples",
+            traceability: "Citations/links; versioned prompts",
+            observability: "Log runs, failures, and time saved"
+          }
+        }
+      };
+
+      // Enrich the fallback plan
+      const enriched = enrichPlan(fallbackPlan, {
+        answers: assessment.answers,
+        tools_for_role: fallbackPlan.recommended_tools
+      });
 
       // Build tasks and align to phases
       let planTasks = buildTasksFromPlan(enriched);
@@ -162,9 +280,11 @@ const PremiumPlan = () => {
 
       await loadTaskProgress(assessment.id);
       setLoading(false);
+      
+      console.log('✅ Fallback plan loaded successfully');
 
-    } catch (error) {
-      console.error('Error generating plan:', error);
+    } catch (fallbackError) {
+      console.error('❌ Even fallback plan failed:', fallbackError);
       setLoading(false);
     }
   };
@@ -172,6 +292,28 @@ const PremiumPlan = () => {
   const loadExistingPlan = async (assessment) => {
     try {
       setLoadingStep('Loading your existing plan...');
+      console.log('🔄 Loading existing plan from assessment:', assessment.id);
+      console.log('📊 Raw evolution_paths:', assessment.evolution_paths);
+
+      if (!assessment.evolution_paths) {
+        console.error('❌ No evolution_paths found in assessment, generating new plan');
+        await generatePlan(assessment);
+        return;
+      }
+
+      // Check if this is old-format career paths vs new 90-day plan format
+      if (Array.isArray(assessment.evolution_paths)) {
+        console.log('🔄 Old-format career paths detected, generating new 90-day plan...');
+        await generatePlan(assessment);
+        return;
+      }
+
+      // Check if it has the expected structure for 90-day plans
+      if (!assessment.evolution_paths.tracks) {
+        console.log('🔄 No tracks found in evolution_paths, generating new plan...');
+        await generatePlan(assessment);
+        return;
+      }
 
       // Enrich the existing plan with new context features
       const enriched = enrichPlan(
@@ -181,20 +323,27 @@ const PremiumPlan = () => {
           tools_for_role: assessment.evolution_paths.recommended_tools || []
         }
       );
+      console.log('🟢 Existing plan enriched:', enriched);
 
       // Build tasks and align to phases
       let planTasks = buildTasksFromPlan(enriched);
+      console.log('🟢 Tasks built from existing plan:', planTasks);
+      
       planTasks = phaseAlignWeeks(planTasks);
+      console.log('🟢 Tasks phase-aligned:', planTasks);
 
       setPersonalizedPlan(enriched);
       setTasks(planTasks);
 
       await loadTaskProgress(assessment.id);
       setLoading(false);
+      
+      console.log('✅ Existing plan loaded successfully');
 
     } catch (error) {
-      console.error('Error loading existing plan:', error);
-      setLoading(false);
+      console.error('❌ Error loading existing plan:', error);
+      console.log('🔄 Falling back to generating new plan...');
+      await generatePlan(assessment);
     }
   };
 
