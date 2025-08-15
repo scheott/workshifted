@@ -105,25 +105,8 @@ const AIRiskStatus = ({
             {getAdvice(currentScore)}
           </p>
           
-          {/* Trend Display */}
-          {trend && (
-            <div className="mt-4 flex items-center gap-2">
-              {trend.direction === 'up' ? (
-                <TrendingUp className={`w-4 h-4 ${trend.improved ? 'text-red-500' : 'text-green-500'}`} />
-              ) : trend.direction === 'down' ? (
-                <TrendingDown className={`w-4 h-4 ${trend.improved ? 'text-green-500' : 'text-red-500'}`} />
-              ) : null}
-              <span className="text-sm text-gray-600">
-                {trend.change > 0 ? (
-                  <>
-                    {trend.change} point {trend.improved ? 'improvement' : 'increase'} since last assessment
-                  </>
-                ) : (
-                  'No change since last assessment'
-                )}
-              </span>
-            </div>
-          )}
+
+          
         </div>
 
         {/* Actions */}

@@ -310,12 +310,12 @@ const UserDashboard = () => {
               isPremium={isPremium}
             />
 
-            {/* Premium Features Preview */}
+            {/* Premium Features Preview
             <PremiumFeatures 
               isPremium={isPremium}
               onUpgrade={handleUpgrade}
               userRole={latestAssessment.answers?.profile_role_family}
-            />
+            /> */}
 
           </div>
 
@@ -330,16 +330,18 @@ const UserDashboard = () => {
                 onViewResults={() => navigate('/results')}
                 onUpgrade={handleUpgrade}
                 onViewPlan={handleViewPlan}
+                isLoading={loading} // Add this line
+
                 onViewSkillsRoadmap={handleViewSkillsRoadmap}
             />
 
-            {/* AI Tools Recommendations */}
+            {/* AI Tools Recommendations
             <AIToolsRecommendations 
               userRole={latestAssessment.answers?.profile_role_family}
               userIndustry={latestAssessment.answers?.profile_industry}
               isPremium={isPremium}
               onUpgrade={handleUpgrade}
-            />
+            /> */}
 
           </div>
         </div>

@@ -39,57 +39,82 @@ const EvolutionPaths = ({
   const secondaryPaths = evolutionPaths.slice(1, 3);
 
   // Use actual AI-resistant skills from your data or assessment results
-  // Get AI-resistant skills from assessment results or use defaults
+  // Get AI-resistant skills from your skills database
   const getAIResistantSkills = () => {
-    // If you have role-specific skills from assessment results, use those
+    // Debug logging
+    console.log('User Role:', userRole);
+    console.log('AI_SKILLS_DATABASE:', AI_SKILLS_DATABASE);
+    
+    // If you have role-specific skills from assessment results, use those first
     if (primaryPath.aiResistantSkills) {
+      console.log('Using assessment skills:', primaryPath.aiResistantSkills);
       return primaryPath.aiResistantSkills;
     }
     
-    // Default skills from your actual data
-    const skillsByRole = {
-      marketing: [
-        "Creative strategy & brand thinking",
-        "Stakeholder relationship management", 
-        "Campaign optimization & testing",
-        "Cross-functional collaboration"
-      ],
-      hr: [
-        "Emotional intelligence & empathy",
-        "Complex conflict resolution",
-        "Organizational development",
-        "Cultural sensitivity & trust building"
-      ],
-      finance: [
-        "Strategic financial planning",
-        "Stakeholder communication",
-        "Risk assessment & judgment", 
-        "Regulatory compliance expertise"
-      ],
-      sales: [
-        "Complex negotiation & influence",
-        "Relationship building & trust",
-        "Consultative problem-solving",
-        "Customer psychology understanding"
-      ],
-      default: [
-        "Strategic thinking & problem-solving",
-        "Client relationships & communication", 
-        "Creative strategy & innovation",
-        "Team leadership & change management"
-      ]
+    // Map user role to skills database key
+    const getRoleKey = (role) => {
+      const roleLower = role.toLowerCase();
+      
+      if (roleLower.includes('marketing') || roleLower.includes('brand')) return 'marketing';
+      if (roleLower.includes('hr') || roleLower.includes('people') || roleLower.includes('human')) return 'hr';
+      if (roleLower.includes('finance') || roleLower.includes('accounting') || roleLower.includes('financial')) return 'finance';
+      if (roleLower.includes('sales') || roleLower.includes('business development') || roleLower.includes('account')) return 'sales';
+      if (roleLower.includes('operations') || roleLower.includes('ops')) return 'operations';
+      if (roleLower.includes('project') || roleLower.includes('program') || roleLower.includes('scrum')) return 'project_management';
+      if (roleLower.includes('customer') || roleLower.includes('support') || roleLower.includes('service')) return 'customer_service';
+      if (roleLower.includes('data') || roleLower.includes('analytics') || roleLower.includes('analyst')) return 'data_analytics';
+      if (roleLower.includes('content') || roleLower.includes('writer') || roleLower.includes('copywriter')) return 'content_writing';
+      
+      // Default fallback
+      return 'marketing';
     };
     
-    // Match user role to skills or use default
-    const roleKey = userRole.toLowerCase().includes('marketing') ? 'marketing' :
-                   userRole.toLowerCase().includes('hr') || userRole.toLowerCase().includes('people') ? 'hr' :
-                   userRole.toLowerCase().includes('finance') || userRole.toLowerCase().includes('accounting') ? 'finance' :
-                   userRole.toLowerCase().includes('sales') ? 'sales' : 'default';
+    const roleKey = getRoleKey(userRole);
+    console.log('Mapped role key:', roleKey);
     
-    return skillsByRole[roleKey];
+    const skillsData = AI_SKILLS_DATABASE[roleKey];
+    console.log('Skills data for role:', skillsData);
+    
+    if (skillsData && skillsData.aiResistantSkills) {
+      console.log('Using database skills:', skillsData.aiResistantSkills);
+      return skillsData.aiResistantSkills;
+    }
+    
+    console.log('Using fallback skills');
+    return [
+      "Strategic thinking & problem-solving",
+      "Client relationships & communication", 
+      "Creative strategy & innovation",
+      "Team leadership & change management"
+    ];
+  };
+
+  // Get hybrid skills (AI + Human collaboration skills)
+  const getHybridSkills = () => {
+    const getRoleKey = (role) => {
+      const roleLower = role.toLowerCase();
+      
+      if (roleLower.includes('marketing') || roleLower.includes('brand')) return 'marketing';
+      if (roleLower.includes('hr') || roleLower.includes('people') || roleLower.includes('human')) return 'hr';
+      if (roleLower.includes('finance') || roleLower.includes('accounting') || roleLower.includes('financial')) return 'finance';
+      if (roleLower.includes('sales') || roleLower.includes('business development') || roleLower.includes('account')) return 'sales';
+      if (roleLower.includes('operations') || roleLower.includes('ops')) return 'operations';
+      if (roleLower.includes('project') || roleLower.includes('program') || roleLower.includes('scrum')) return 'project_management';
+      if (roleLower.includes('customer') || roleLower.includes('support') || roleLower.includes('service')) return 'customer_service';
+      if (roleLower.includes('data') || roleLower.includes('analytics') || roleLower.includes('analyst')) return 'data_analytics';
+      if (roleLower.includes('content') || roleLower.includes('writer') || roleLower.includes('copywriter')) return 'content_writing';
+      
+      return 'marketing';
+    };
+    
+    const roleKey = getRoleKey(userRole);
+    const skillsData = AI_SKILLS_DATABASE[roleKey];
+    
+    return skillsData ? skillsData.hybridSkills : [];
   };
 
   const aiResistantSkills = getAIResistantSkills();
+  const hybridSkills = getHybridSkills();
   const aiToolsForRole = primaryPath.tools || [];
 
   return (
@@ -158,9 +183,23 @@ const EvolutionPaths = ({
           ))}
         </div>
 
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 mb-4">
           💡 <strong>Your 90-day plan</strong> shows you exactly how to strengthen these skills while learning AI tools.
         </div>
+
+        {/* Add Hybrid Skills section */}
+        {hybridSkills.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-green-200">
+            <h5 className="font-medium text-gray-900 mb-2">AI + Human Collaboration Skills:</h5>
+            <div className="flex flex-wrap gap-2">
+              {hybridSkills.slice(0, 3).map((skill, index) => (
+                <span key={index} className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs">
+                  {skill}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* SECTION 3: Career Opportunities (Always Visible) */}

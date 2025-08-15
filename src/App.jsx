@@ -13,6 +13,8 @@ import TemplatesLibrary from './pages/TemplatesLibrary';
 import AILeadershipGuide from './pages/AILeadershipGuide';
 import SkillsRoadmap from './pages/SkillsRoadmap';
 import AIUpdates from './pages/AIUpdates';
+import AITools from './pages/AITools';
+
 
 // Auth and payment pages
 import AuthCallback from './pages/AuthCallback';
@@ -102,6 +104,9 @@ function App() {
           <Route path="/ai-leadership-guide" element={<PrivateRoute><AILeadershipGuide /></PrivateRoute>} />
           <Route path="/skills-roadmap" element={<PrivateRoute><SkillsRoadmap /></PrivateRoute>} />
           <Route path="/ai-updates" element={<PrivateRoute><AIUpdates /></PrivateRoute>} />
+          <Route path="/ai-tools-database" element={<PrivateRoute><AITools /></PrivateRoute>} />
+
+
         </Routes>
       </div>
     </Router>
