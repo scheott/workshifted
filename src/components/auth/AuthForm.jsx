@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { computeRiskScore, suggestEvolutionPaths, buildFreeBlurb } from '../../data/aiRiskEngine';
 
 const EnhancedAuthForm = ({ onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -164,12 +165,64 @@ const EnhancedAuthForm = ({ onSuccess }) => {
         console.log('Signup response:', data);
 
         // The trigger should create the profile automatically, but let's be safe
+        // The trigger should create the profile automatically, but let's be safe
+        // The trigger should create the profile automatically, but let's be safe
         if (data?.user?.id) {
           // Wait a moment for the trigger to execute
           setTimeout(() => {
             createUserProfile(data.user.id, formData);
           }, 1000);
-        }
+
+                    // Check if there's temp assessment data to save (from assessment teaser flow)
+          // Check if there's temp assessment data to save (from assessment teaser flow)
+          const tempAssessmentData = localStorage.getItem('tempAssessmentData');
+          if (tempAssessmentData) {
+            console.log('Found temp assessment data, saving...');
+            
+            // Retry logic for saving assessment
+            const saveAssessment = async (retryCount = 0) => {
+              try {
+                const assessmentAnswers = JSON.parse(tempAssessmentData);
+                console.log('Parsed assessment answers:', assessmentAnswers);
+                
+                // Compute all the assessment results
+                const riskResult = computeRiskScore(assessmentAnswers);
+                const evolutionPaths = suggestEvolutionPaths(assessmentAnswers, riskResult);
+                const freeBlurb = buildFreeBlurb(assessmentAnswers, riskResult);
+                
+                console.log('Computed results:', { riskResult, evolutionPaths, freeBlurb });
+                
+                const { error: assessmentError } = await supabase
+                  .from('ai_risk_assessments')
+                  .insert({
+                    user_id: data.user.id,
+                    answers: assessmentAnswers,
+                    risk_result: riskResult,
+                    evolution_paths: evolutionPaths,
+                    free_blurb: freeBlurb
+                  });
+                  
+                if (assessmentError) {
+                  // If it's a foreign key error and we haven't retried too many times, retry
+                  if (assessmentError.message.includes('foreign key constraint') && retryCount < 3) {
+                    console.log(`Foreign key error, retrying in 2 seconds (attempt ${retryCount + 1})`);
+                    setTimeout(() => saveAssessment(retryCount + 1), 2000);
+                    return;
+                  }
+                  console.error('Error saving assessment:', assessmentError);
+                } else {
+                  console.log('Assessment saved successfully!');
+                  localStorage.removeItem('tempAssessmentData');
+                }
+              } catch (error) {
+                console.error('Error processing assessment after signup:', error);
+              }
+            };
+
+            // Start the save process after a longer initial delay
+            setTimeout(() => saveAssessment(), 3000);
+          }
+}
 
         if (data?.user && !data?.user?.email_confirmed_at) {
           setSuccessMessage('Success! Check your email to confirm your account, then you can sign in.');
@@ -178,10 +231,7 @@ const EnhancedAuthForm = ({ onSuccess }) => {
             setIsLogin(true);
             setSuccessMessage('');
           }, 2500);
-        } else if (data?.user) {
-          // Email confirmation not required (auto-confirm enabled)
-          window.location.href = '/assessment';
-        }
+        } 
       }
     } catch (err) {
       console.error('Auth error:', err);

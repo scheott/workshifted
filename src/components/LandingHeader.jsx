@@ -137,7 +137,7 @@ const LandingHeader = () => {
 
             {/* CTA Button - Always goes to /auth */}
             <Link
-              to="/auth"
+              to="/assessment"
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-sm hover:shadow-md"
             >
               Free Assessment/ Sign In
@@ -172,7 +172,7 @@ const LandingHeader = () => {
               
               {/* Core Assessment Links - All go to /auth */}
               <Link
-                to="/auth"
+                to="assessment"
                 className="text-gray-600 hover:text-blue-600 hover:bg-gray-50 py-3 px-4 rounded-md transition-colors font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -180,7 +180,7 @@ const LandingHeader = () => {
               </Link>
               
               <Link
-                to="/auth"
+                to="/assessment"
                 className="text-gray-600 hover:text-blue-600 hover:bg-gray-50 py-3 px-4 rounded-md transition-colors font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -268,7 +268,7 @@ const LandingHeader = () => {
               
               {/* Mobile CTA Button - Always goes to /auth */}
               <Link
-                to="/auth"
+                to="/assessment"
                 className="block w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center shadow-sm hover:shadow-md mt-4"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

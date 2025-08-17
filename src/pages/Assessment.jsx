@@ -72,6 +72,7 @@ const Assessment = () => {
     }
   };
 
+  // FIND this in Assessment.jsx (around line 75-120):
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
@@ -95,33 +96,40 @@ const Assessment = () => {
       console.log('🔍 Evolution paths:', evolutionPaths);
       console.log('🔍 Free blurb:', freeBlurb);
 
-      // 2) Insert into Supabase - store original form data for reference
-      const insertData = {
-        user_id: user.id,
-        answers: data, // Store original form data with question_ prefix
-        risk_result: riskResult,
-        evolution_paths: evolutionPaths,
-        free_blurb: freeBlurb,
-      };
-      
-      console.log('🔍 About to insert:', insertData);
+      // 2) Handle authenticated vs anonymous users
+      if (user) {
+        // AUTHENTICATED USER - Save to database and go to dashboard
+        const insertData = {
+          user_id: user.id,
+          answers: data, // Store original form data with question_ prefix
+          risk_result: riskResult,
+          evolution_paths: evolutionPaths,
+          free_blurb: freeBlurb,
+        };
+        
+        console.log('🔍 About to insert:', insertData);
 
-      const { error } = await supabase
-        .from('ai_risk_assessments')
-        .insert([insertData]);
+        const { error } = await supabase
+          .from('ai_risk_assessments')
+          .insert([insertData]);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // 3) Navigate to dashboard with assessment results
-      navigate('/dashboard', { 
-        state: { 
-          riskResult,
-          evolutionPaths,
-          freeBlurb,
-          answers: transformedData, // Pass transformed data to state
-          fromAssessment: true 
-        } 
-      });
+        // Navigate to dashboard
+        navigate('/dashboard', { 
+          state: { 
+            riskResult,
+            evolutionPaths,
+            freeBlurb,
+            answers: transformedData,
+            fromAssessment: true 
+          } 
+        });
+      } else {
+        // ANONYMOUS USER - Store temporarily and show teaser
+        localStorage.setItem('tempAssessmentData', JSON.stringify(transformedData));
+        navigate('/assessment-signup');
+      }
     } catch (error) {
       console.error('Error saving assessment:', error);
       alert('There was an error saving your responses. Please try again.');

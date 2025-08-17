@@ -37,9 +37,49 @@ const UserDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchUserData();
+      
+      // Check for temp assessment data to save
+      const tempAssessmentData = localStorage.getItem('tempAssessmentData');
+      if (tempAssessmentData) {
+        saveTemporaryAssessment(tempAssessmentData);
+      }
     }
   }, [user]);
 
+  const saveTemporaryAssessment = async (tempData) => {
+    try {
+      console.log('Saving temporary assessment data...');
+      const assessmentAnswers = JSON.parse(tempData);
+      
+      // Import these at the top of Dashboard.jsx
+      const { computeRiskScore, suggestEvolutionPaths, buildFreeBlurb } = await import('../data/aiRiskEngine');
+      
+      const riskResult = computeRiskScore(assessmentAnswers);
+      const evolutionPaths = suggestEvolutionPaths(assessmentAnswers, riskResult);
+      const freeBlurb = buildFreeBlurb(assessmentAnswers, riskResult);
+      
+      const { error } = await supabase
+        .from('ai_risk_assessments')
+        .insert({
+          user_id: user.id,
+          answers: assessmentAnswers,
+          risk_result: riskResult,
+          evolution_paths: evolutionPaths,
+          free_blurb: freeBlurb
+        });
+        
+      if (error) {
+        console.error('Error saving assessment:', error);
+      } else {
+        console.log('Assessment saved successfully!');
+        localStorage.removeItem('tempAssessmentData');
+        // Refresh the data to show the new assessment
+        fetchUserData();
+      }
+    } catch (error) {
+      console.error('Error processing temp assessment:', error);
+    }
+  };
   const fetchUserData = async () => {
     try {
       setLoading(true);

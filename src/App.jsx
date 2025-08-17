@@ -43,7 +43,7 @@ import AIProofHRCareers from './pages/AIProofHRCareers';
 // import AIProofProjectManagerCareers from './pages/AIProofProjectManagerCareers';
 // import AIProofOperationsCareers from './pages/AIProofOperationsCareers';
 // import AIProofConsultantCareers from './pages/AIProofConsultantCareers';
-
+import AssessmentSignup from './pages/AssessmentSignup';
 // Components
 import PrivateRoute from './components/PrivateRoute';
 import RedirectIfAuthed from './components/RedirectIfAuthed';
@@ -95,7 +95,9 @@ function App() {
           <Route path="/refund" element={<RefundPolicy />} />
           
           {/* Protected Routes - Core App */}
-          <Route path="/assessment" element={<PrivateRoute><Assessment /></PrivateRoute>} />
+          <Route path="/assessment" element={<Assessment />} />
+          <Route path="/assessment-signup" element={<AssessmentSignup />} />
+
           <Route path="/dashboard" element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
           
           {/* Protected Routes - Premium Features */}

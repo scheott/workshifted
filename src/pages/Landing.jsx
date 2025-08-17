@@ -84,7 +84,7 @@ const Landing = () => {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Link
-                to="/auth"
+                to="/assessment"
                 className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-200"
                 aria-label="Start your free AI career risk assessment"
               >
@@ -242,7 +242,7 @@ const Landing = () => {
 
           <div className="text-center">
             <Link
-              to="/auth"
+              to="/assessment"
               className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
             >
               Discover My Evolution Path
@@ -298,7 +298,7 @@ const Landing = () => {
             Join thousands of professionals who are getting ahead of AI disruption instead of being disrupted by it.
           </p>
           <Link
-            to="/auth"
+            to="/assessment"
             className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg inline-block"
           >
             Get My Free AI Risk Assessment

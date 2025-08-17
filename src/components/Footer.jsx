@@ -12,7 +12,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <div className="text-base font-bold text-blue-400 mb-2">WorkShifted</div>
             <p className="text-gray-400 text-xs leading-relaxed">
-              Helping you discover and transition into skilled trade careers with personalized guidance and real opportunities.
+              Helping professionals evolve their careers to work alongside AI with personalized risk assessments and evolution roadmaps.
             </p>
           </div>
 
