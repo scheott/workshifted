@@ -4,8 +4,33 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Discover how your white collar skills translate to high-paying blue collar careers with WorkShifted's AI-powered assessment." />
-    <title>WorkShifted - White Collar to Blue Collar Career Transition</title>
+    <meta name="description" content="Don't let AI replace you - learn to lead it. Get your personalized AI-resistance roadmap and become irreplaceable in your career with WorkShifted's AI evolution assessment." />
+    <title>WorkShifted - AI Career Evolution | Don't Get Replaced, Get AI-Augmented</title>
+    
+    <!-- Google Analytics Global Site Tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+    
+    <!-- Google Ads Conversion Tracking -->
+    <script>
+      function gtag_report_conversion(url) {
+        var callback = function () {
+          if (typeof(url) != 'undefined') {
+            window.location = url;
+          }
+        };
+        gtag('event', 'conversion', {
+            'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL',
+            'event_callback': callback
+        });
+        return false;
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
