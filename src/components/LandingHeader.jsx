@@ -1,4 +1,4 @@
-// src/components/LandingHeader.jsx - Updated with Sign In button
+// src/components/LandingHeader.jsx - Updated with Industry Research dropdown
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -40,13 +40,50 @@ const LandingHeader = () => {
               >
                 How it Works
               </a>
-              <a 
-                href="#careers" 
-                className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
-                onClick={(e) => { e.preventDefault(); handleLinkClick('#careers'); }}
-              >
-                Careers
-              </a>
+              
+              {/* Industry Research Dropdown (was Careers) */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsResourcesOpen(!isResourcesOpen)}
+                  className="flex items-center text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
+                >
+                  Industry Research
+                  <svg 
+                    className={`ml-1 h-4 w-4 transition-transform ${isResourcesOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isResourcesOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <Link
+                      to="/ai-job-displacement-statistics"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                      onClick={() => setIsResourcesOpen(false)}
+                    >
+                      AI Job Displacement Statistics
+                    </Link>
+                    <Link
+                      to="/will-ai-take-my-job-by-industry"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                      onClick={() => setIsResourcesOpen(false)}
+                    >
+                      Will AI Take My Job?
+                    </Link>
+                    <Link
+                      to="/ai-vs-human-jobs-complete-guide"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                      onClick={() => setIsResourcesOpen(false)}
+                    >
+                      AI vs Human Jobs Guide
+                    </Link>
+                  </div>
+                )}
+              </div>
               
               {/* Role-Specific Dropdown */}
               <div className="relative">
@@ -66,31 +103,31 @@ const LandingHeader = () => {
                 </button>
                 
                 {isRoleSpecificOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                     <Link
                       to="/ai-proof-marketing-careers"
-                      className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
                       Marketing Professionals
                     </Link>
                     <Link
                       to="/ai-proof-finance-careers"
-                      className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
                       Finance Professionals
                     </Link>
                     <Link
                       to="/ai-proof-sales-careers"
-                      className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
                       Sales Professionals
                     </Link>
                     <Link
                       to="/ai-proof-hr-careers"
-                      className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-gray-50 transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600"
                       onClick={() => setIsRoleSpecificOpen(false)}
                     >
                       HR Professionals
@@ -98,18 +135,11 @@ const LandingHeader = () => {
                   </div>
                 )}
               </div>
-              
-              <a 
-                href="#faq" 
-                className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium"
-                onClick={(e) => { e.preventDefault(); handleLinkClick('#faq'); }}
-              >
-                FAQ
-              </a>
+
             </nav>
-            
-            {/* Desktop Auth Buttons */}
-            <div className="flex items-center space-x-3">
+
+            {/* Auth buttons */}
+            <div className="flex items-center space-x-4">
               <Link
                 to="/auth?mode=signin"
                 className="text-gray-600 hover:text-blue-600 transition-colors font-medium text-sm px-3 py-2 rounded-lg hover:bg-gray-50"
@@ -161,17 +191,32 @@ const LandingHeader = () => {
               >
                 How it Works
               </a>
-              <a 
-                href="#careers" 
-                className="block text-gray-600 hover:text-blue-600 hover:bg-white transition-colors text-sm font-medium py-3 px-4 rounded-md"
-                onClick={(e) => { 
-                  e.preventDefault(); 
-                  setIsMobileMenuOpen(false);
-                  handleLinkClick('#careers'); 
-                }}
-              >
-                Careers
-              </a>
+              
+              {/* Mobile Industry Research Links */}
+              <div className="space-y-1 pl-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Industry Research</p>
+                <Link
+                  to="/ai-job-displacement-statistics"
+                  className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-white rounded-md transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  AI Job Displacement Statistics
+                </Link>
+                <Link
+                  to="/will-ai-take-my-job-by-industry"
+                  className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-white rounded-md transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Will AI Take My Job?
+                </Link>
+                <Link
+                  to="/ai-vs-human-jobs-complete-guide"
+                  className="block text-sm text-gray-700 hover:text-blue-600 py-2 px-3 hover:bg-white rounded-md transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  AI vs Human Jobs Guide
+                </Link>
+              </div>
               
               {/* Mobile Role-Specific Links */}
               <div className="space-y-1 pl-4">
