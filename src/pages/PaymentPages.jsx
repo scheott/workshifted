@@ -105,12 +105,7 @@ const PaymentSuccess = () => {
             </p>
           </div>
           
-          {/* Debug info for development */}
-          <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-left">
-            <strong>Debug Info:</strong><br />
-            URL: {window.location.href}<br />
-            Error: {error}
-          </div>
+
         </div>
       </div>
     );

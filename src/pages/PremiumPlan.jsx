@@ -494,14 +494,7 @@ const PremiumPlan = () => {
             </button>
           </div>
           
-          {/* Debug info - remove in production */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-3 bg-yellow-50 rounded text-xs text-left">
-              <strong>Debug:</strong> subscription_status: {userProfile?.subscription_status}, 
-              subscription_tier: {userProfile?.subscription_tier}, 
-              is_premium: {userProfile?.is_premium?.toString()}
-            </div>
-          )}
+
         </div>
 
         <CheckoutModal
