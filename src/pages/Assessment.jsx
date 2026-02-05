@@ -1,11 +1,11 @@
-// src/pages/Assessment.jsx
+// src/pages/Assessment.jsx - Sales Professional Version
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
-import { aiAssessmentQuestions } from '../data/aiAssessmentQuestions';
-import { computeRiskScore, suggestEvolutionPaths, buildFreeBlurb } from '../data/aiRiskEngine';
+import { salesAssessmentQuestions } from '../data/salesAssessmentQuestions';
+import { computeSalesRiskScore, generateSalesEvolutionPaths, generateQuickWins, getRecommendedTools } from '../data/salesRiskEngine';
 import Footer from '../components/Footer';
 
 const Assessment = () => {
@@ -54,9 +54,9 @@ const Assessment = () => {
     checkAssessmentHistory();
   }, [user]);
 
-  const totalSteps = aiAssessmentQuestions.length;
+  const totalSteps = salesAssessmentQuestions.length;
   const progress = ((currentStep + 1) / totalSteps) * 100;
-  const currentQuestion = aiAssessmentQuestions[currentStep];
+  const currentQuestion = salesAssessmentQuestions[currentStep];
   const watchedValues = watch();
   const currentAnswer = watchedValues[`question_${currentQuestion.id}`];
 
@@ -72,7 +72,6 @@ const Assessment = () => {
     }
   };
 
-  // FIND this in Assessment.jsx (around line 75-120):
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
@@ -84,27 +83,29 @@ const Assessment = () => {
         transformedData[cleanKey] = data[key];
       });
 
-      console.log('🔍 Original form data:', data);
-      console.log('🔍 Transformed data:', transformedData);
+      console.log('🔍 Transformed sales data:', transformedData);
 
-      // 1) Compute AI risk and evolution paths with transformed data
-      const riskResult = computeRiskScore(transformedData);
-      const evolutionPaths = suggestEvolutionPaths(transformedData, riskResult);
-      const freeBlurb = buildFreeBlurb(transformedData, riskResult);
+      // Compute sales-specific risk and evolution paths
+      const riskResult = computeSalesRiskScore(transformedData);
+      const evolutionPaths = generateSalesEvolutionPaths(transformedData, riskResult);
+      const quickWins = generateQuickWins(transformedData);
+      const recommendedTools = getRecommendedTools(transformedData);
 
-      console.log('🔍 Computed risk result:', riskResult);
+      console.log('🔍 Sales risk result:', riskResult);
       console.log('🔍 Evolution paths:', evolutionPaths);
-      console.log('🔍 Free blurb:', freeBlurb);
+      console.log('🔍 Quick wins:', quickWins);
 
-      // 2) Handle authenticated vs anonymous users
+      // Handle authenticated vs anonymous users
       if (user) {
         // AUTHENTICATED USER - Save to database and go to dashboard
         const insertData = {
           user_id: user.id,
-          answers: data, // Store original form data with question_ prefix
+          answers: data,
           risk_result: riskResult,
           evolution_paths: evolutionPaths,
-          free_blurb: freeBlurb,
+          quick_wins: quickWins,
+          recommended_tools: recommendedTools,
+          assessment_type: 'sales', // Mark as sales-specific
         };
         
         console.log('🔍 About to insert:', insertData);
@@ -115,19 +116,28 @@ const Assessment = () => {
 
         if (error) throw error;
 
-        // Navigate to dashboard
+        // Navigate to dashboard with sales-specific state
         navigate('/dashboard', { 
           state: { 
             riskResult,
             evolutionPaths,
-            freeBlurb,
+            quickWins,
+            recommendedTools,
             answers: transformedData,
-            fromAssessment: true 
+            fromAssessment: true,
+            assessmentType: 'sales'
           } 
         });
       } else {
         // ANONYMOUS USER - Store temporarily and show teaser
-        localStorage.setItem('tempAssessmentData', JSON.stringify(transformedData));
+        localStorage.setItem('tempAssessmentData', JSON.stringify({
+          ...transformedData,
+          riskResult,
+          evolutionPaths,
+          quickWins,
+          recommendedTools,
+          assessmentType: 'sales'
+        }));
         navigate('/assessment-signup');
       }
     } catch (error) {
@@ -140,7 +150,7 @@ const Assessment = () => {
 
   if (checkingHistory) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50">
         <div className="flex items-center space-x-2">
           <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -153,21 +163,24 @@ const Assessment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mb-4">
+            🎯 Sales AI Risk Assessment
+          </span>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            AI Career Risk Assessment
+            Sales AI Risk Assessment
           </h1>
           <p className="text-gray-600">
-            Understand your role's AI exposure and discover your next career move
+            Discover if you're at risk of being replaced—and how to become irreplaceable
           </p>
           
           {/* Progress bar */}
           <div className="mt-6 bg-gray-200 rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-blue-600 to-green-600 h-3 rounded-full transition-all duration-300"
+              className="bg-gradient-to-r from-blue-600 to-orange-600 h-3 rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
@@ -199,13 +212,13 @@ const Assessment = () => {
                     {currentQuestion.options.map((option) => (
                       <label 
                         key={option.value} 
-                        className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                        className="flex items-start space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 hover:border-orange-300 transition-colors"
                       >
                         <input
                           type="radio"
                           value={option.value}
                           {...register(`question_${currentQuestion.id}`, { 
-                            required: currentQuestion.required 
+                            required: true 
                           })}
                           className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                         />
@@ -224,13 +237,13 @@ const Assessment = () => {
                     {[1, 2, 3, 4, 5].map((value) => (
                       <label 
                         key={value}
-                        className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                        className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 hover:border-orange-300 transition-colors"
                       >
                         <input
                           type="radio"
                           value={value}
                           {...register(`question_${currentQuestion.id}`, { 
-                            required: currentQuestion.required 
+                            required: true 
                           })}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                         />
@@ -254,19 +267,19 @@ const Assessment = () => {
                         type="range"
                         min={currentQuestion.min || 0}
                         max={currentQuestion.max || 100}
-                        step={currentQuestion.step || 1}
+                        step={currentQuestion.step || 5}
+                        defaultValue={50}
                         {...register(`question_${currentQuestion.id}`, { 
-                          required: currentQuestion.required 
+                          required: true 
                         })}
                         className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                       />
                       <div className="flex justify-between text-xs text-gray-500 mt-2">
-                        <span>{currentQuestion.leftLabel || currentQuestion.min || 0}</span>
-                        <span className="font-medium">
-                          {currentAnswer || currentQuestion.min || 0}
-                          {currentQuestion.max === 100 ? '%' : ''}
+                        <span>{currentQuestion.labels?.[0] || '0% (Strategic work)'}</span>
+                        <span className="font-medium text-lg text-blue-600">
+                          {currentAnswer || 50}%
                         </span>
-                        <span>{currentQuestion.rightLabel || currentQuestion.max || 100}</span>
+                        <span>{currentQuestion.labels?.[100] || '100% (Automatable)'}</span>
                       </div>
                     </div>
                   </div>
@@ -317,15 +330,15 @@ const Assessment = () => {
                 className={`px-8 py-3 rounded-lg font-medium transition-colors ${
                   !currentAnswer || isSubmitting
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-green-600 text-white hover:shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-orange-600 text-white hover:shadow-lg'
                 }`}
               >
-                {isSubmitting ? 'Calculating Your Results...' : 'Get My Results'}
+                {isSubmitting ? 'Calculating Your Risk Score...' : 'Get My Sales AI Risk Score'}
               </button>
             )}
           </div>
 
-          {/* Retake Notice - ALTERNATIVE VERSION WITH PROMINENT BACK BUTTON */}
+          {/* Retake Notice */}
           {hasCompletedBefore && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
               <div className="text-center">
@@ -348,6 +361,11 @@ const Assessment = () => {
             </div>
           )}
         </form>
+
+        {/* Trust Indicators */}
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>✨ Free assessment • 5 minutes • Sales-specific results</p>
+        </div>
       </div>
       
       <Footer />
