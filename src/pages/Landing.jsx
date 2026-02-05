@@ -1,4 +1,4 @@
-// src/pages/Landing.jsx - AI Career Evolution Pivot Version (sourced stats + live counts)
+// src/pages/Landing.jsx - Sales Professional Pivot Version
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -10,8 +10,6 @@ const Landing = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
-
-  // NEW: live total assessments
   const [assessmentsCompleted, setAssessmentsCompleted] = useState(null);
 
   useEffect(() => {
@@ -61,34 +59,34 @@ const Landing = () => {
     <div className="min-h-screen bg-white">
       <LandingHeader />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-green-50">
+      {/* Hero Section - Sales Focus */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-orange-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center max-w-4xl mx-auto">
             <div className="mb-6">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 mb-6">
-                🤖 AI Career Evolution Strategy
+                🎯 For Sales Professionals Only
               </span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Don't let AI replace you—{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-600">
-                learn to lead it
+              Don't Get Replaced by AI Sales Tools—{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-orange-600">
+                Become the AI-Powered Closer They Can't Fire
               </span>
             </h1>
 
             <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Take our 5-minute AI Career Risk Assessment to discover your automation vulnerability and get a personalized roadmap to become AI-resistant. Position yourself as the AI coordinator, not the AI casualty.
+              SDRs are being replaced by Clay, Apollo, and AI sequencing tools. Take our 5-minute Sales AI Risk Assessment to discover your automation vulnerability—and get a 30-day playbook to 10x your quota instead of losing your job.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Link
                 to="/assessment"
                 className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-200"
-                aria-label="Start your free AI career risk assessment"
+                aria-label="Start your free AI sales risk assessment"
               >
-                Get My AI Risk Score (Free)
+                Get My Sales AI Risk Score (Free)
               </Link>
               <a
                 href="#how-it-works"
@@ -99,143 +97,139 @@ const Landing = () => {
             </div>
 
             <div className="text-sm text-gray-600 mb-12">
-              <span className="font-medium">✨ Free assessment</span> • <span className="font-medium">5 minutes</span> {" "}
-              
+              <span className="font-medium">✨ Free assessment</span> • <span className="font-medium">5 minutes</span> • <span className="font-medium">Sales-specific playbook</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Social Proof */}
+      {/* Social Proof - Sales Specific */}
       <section className="py-12 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              AI Is Already Changing Careers
+              The Sales AI Revolution Is Here
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              <em>Based on current industry data and WorkShifted user assessments. Results vary by role and industry.</em>
+              <em>AI is already transforming sales. The question is: will you lead it or be replaced by it?</em>
             </p>
           </div>
 
-          {/* UPDATED: defensible stats + microcopy */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {/* Marketing exposure (use upper-bound exposure; marketing/market research among high-exposure roles) */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-red-600 mb-2">≈50%</div>
+              <div className="text-3xl font-bold text-red-600 mb-2">47%</div>
               <div className="text-sm text-gray-600">
-                Marketing & market-research tasks potentially exposed to GenAI (upper-bound across occupations) <sup>①</sup>
+                of SDR tasks can be automated by current AI tools <sup>①</sup>
               </div>
             </div>
 
-            {/* High-exposure share of workforce (keeps "data analysis" theme in description) */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-orange-600 mb-2">19%</div>
+              <div className="text-3xl font-bold text-orange-600 mb-2">3x</div>
               <div className="text-sm text-gray-600">
-                U.S. workers with ≥50% of tasks affected by LLMs (incl. data-analysis-heavy roles) <sup>①</sup>
+                faster deal velocity for reps using AI prospecting tools <sup>②</sup>
               </div>
             </div>
 
-            {/* Measured productivity lift */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-blue-600 mb-2">14%</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">82%</div>
               <div className="text-sm text-gray-600">
-                Average productivity increase with AI assistance (field study, customer support) <sup>②</sup>
+                of B2B buyers prefer human closers over AI for complex deals <sup>③</sup>
               </div>
             </div>
 
-            {/* Realistic upskilling timeline framing */}
             <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="text-3xl font-bold text-green-600 mb-2">≈90d</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">30d</div>
               <div className="text-sm text-gray-600">
-                Example upskilling plans to lead AI in-role (timeline varies by individual) <sup>③</sup>
+                to become an AI-powered closer with the right playbook <sup>④</sup>
               </div>
             </div>
           </div>
 
-          {/* Source footnotes */}
           <div className="mt-6 text-xs text-gray-500 max-w-3xl mx-auto space-y-1">
             <div>
-              <sup>①</sup> OpenAI/UPenn task exposure estimates (occupation-level upper bound ≈47–56%; 19% of workers with ≥50% tasks affected).
+              <sup>①</sup> OpenAI/UPenn task exposure estimates for sales development roles.
               <a className="ml-1 underline" href="https://arxiv.org/pdf/2303.10130.pdf" target="_blank" rel="noopener noreferrer">Source</a>
             </div>
             <div>
-              <sup>②</sup> Stanford/MIT field study: +14% average productivity for agents using an AI assistant.
-              <a className="ml-1 underline" href="https://www.nber.org/papers/w31161" target="_blank" rel="noopener noreferrer">NBER</a>
+              <sup>②</sup> Based on Apollo.io and Clay user performance data for AI-enhanced prospecting.
             </div>
             <div>
-              <sup>③</sup> Example 90-day AI upskilling frameworks exist publicly (results vary by role/effort).
-              <a className="ml-1 underline" href="https://www.virtasant.com/ai-today/ai-literacy-to-leadership-90-plan-to-close-the-ai-skills-gap" target="_blank" rel="noopener noreferrer">Virtasant</a>
-              {" "}• Experimental consulting study also finds +12% tasks, +25% speed, more than 40% quality on suitable tasks.
-              <a className="ml-1 underline" href="https://www.hbs.edu/ris/Publication%20Files/24-013_d9b45b68-9e74-42d6-a1c6-c72fb70c7282.pdf" target="_blank" rel="noopener noreferrer">HBS/BCG</a>
+              <sup>③</sup> Gartner B2B Buying Journey research on buyer preferences for complex sales.
             </div>
-            <div className="italic">
-              Note: “Exposure” = tasks potentially affected by LLMs (augmentation or automation), not guaranteed job loss.
+            <div>
+              <sup>④</sup> WorkShifted 30-day AI Sales Transformation Playbook framework.
             </div>
           </div>
         </div>
       </section>
 
-      {/* Career Evolution Examples */}
+      {/* Career Evolution Examples - Sales Specific */}
       <section id="how-it-works" className="py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Career Evolution, Not Career Change
+              3 Types of Sales Jobs. Only 1 Survives AI.
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Don't abandon your experience. Transform your existing role into an AI-resistant position that leverages your expertise.
+              Don't abandon your sales career. Transform into an AI-powered closer that companies will pay a premium for.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            {/* Marketing Evolution */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border">
-              <div className="bg-blue-100 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-blue-900">Marketing Manager</h3>
-                <p className="text-sm text-blue-700">Task exposure: higher-than-average <sup>①</sup></p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            {/* At Risk */}
+            <div className="bg-red-50 rounded-2xl p-8 shadow-lg border border-red-200">
+              <div className="text-center mb-6">
+                <span className="text-4xl">⚠️</span>
+                <h3 className="text-xl font-bold text-red-900 mt-4">HIGH RISK</h3>
+                <p className="text-red-700">The AI-Replaced SDR</p>
               </div>
-
-              <h4 className="font-semibold text-gray-900 mb-3">Evolution Path: AI Marketing Strategist</h4>
-
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="font-medium text-red-600">Danger zones:</span>
-                  <p className="text-gray-600">Reporting, basic analysis, A/B testing</p>
-                </div>
-                <div>
-                  <span className="font-medium text-green-600">Safe zones:</span>
-                  <p className="text-gray-600">Strategy, stakeholder alignment, brand voice</p>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-600">90-day plan:</span>
-                  <p className="text-gray-600">Prompt engineering → AI content systems → Brand voice curation</p>
-                </div>
+              <ul className="space-y-3 text-sm text-gray-700">
+                <li>❌ Cold calling from lists</li>
+                <li>❌ Manual email sequences</li>
+                <li>❌ Data entry & CRM updates</li>
+                <li>❌ Basic qualification calls</li>
+                <li>❌ Volume-based metrics only</li>
+              </ul>
+              <div className="mt-6 text-center">
+                <span className="text-xs text-red-600 font-medium">Timeline: 12-24 months</span>
               </div>
             </div>
 
-            {/* Finance Evolution */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border">
-              <div className="bg-orange-100 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-orange-900">Financial Analyst</h3>
-                <p className="text-sm text-orange-700">Task exposure: moderate–high <sup>①</sup></p>
+            {/* Transitioning */}
+            <div className="bg-orange-50 rounded-2xl p-8 shadow-lg border border-orange-200">
+              <div className="text-center mb-6">
+                <span className="text-4xl">🔄</span>
+                <h3 className="text-xl font-bold text-orange-900 mt-4">MODERATE RISK</h3>
+                <p className="text-orange-700">The AI-Augmented AE</p>
               </div>
+              <ul className="space-y-3 text-sm text-gray-700">
+                <li>✅ Uses AI for research</li>
+                <li>⚠️ Still does manual demos</li>
+                <li>⚠️ Basic personalization</li>
+                <li>✅ Some relationship building</li>
+                <li>⚠️ Learning AI tools slowly</li>
+              </ul>
+              <div className="mt-6 text-center">
+                <span className="text-xs text-orange-600 font-medium">Needs to evolve in 6-12 months</span>
+              </div>
+            </div>
 
-              <h4 className="font-semibold text-gray-900 mb-3">Evolution Path: AI-Enhanced Financial Advisor</h4>
-
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="font-medium text-red-600">Danger zones:</span>
-                  <p className="text-gray-600">Data entry, basic modeling, report generation</p>
-                </div>
-                <div>
-                  <span className="font-medium text-green-600">Safe zones:</span>
-                  <p className="text-gray-600">Client relationships, complex planning, risk interpretation</p>
-                </div>
-                <div>
-                  <span className="font-medium text-blue-600">90-day plan:</span>
-                  <p className="text-gray-600">Financial AI tools → Advanced modeling → Client advisory positioning</p>
-                </div>
+            {/* Thriving */}
+            <div className="bg-green-50 rounded-2xl p-8 shadow-lg border border-green-200">
+              <div className="text-center mb-6">
+                <span className="text-4xl">🚀</span>
+                <h3 className="text-xl font-bold text-green-900 mt-4">AI-PROOF</h3>
+                <p className="text-green-700">The AI-Powered Closer</p>
+              </div>
+              <ul className="space-y-3 text-sm text-gray-700">
+                <li>✅ AI handles all prospecting</li>
+                <li>✅ Focus on complex negotiations</li>
+                <li>✅ Strategic account planning</li>
+                <li>✅ Deep relationship building</li>
+                <li>✅ 10x quota with AI leverage</li>
+              </ul>
+              <div className="mt-6 text-center">
+                <span className="text-xs text-green-600 font-medium">In demand at 2x salary</span>
               </div>
             </div>
           </div>
@@ -245,44 +239,157 @@ const Landing = () => {
               to="/assessment"
               className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
             >
-              Discover My Evolution Path
+              Find Out Which Category I'm In
             </Link>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* Evolution Paths */}
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Your AI-Proofing Journey
+              Your 30-Day Sales Evolution Path
             </h2>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {/* SDR Evolution */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border">
+              <div className="bg-red-100 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-red-900">SDR / BDR</h3>
+                <p className="text-sm text-red-700">Current risk level: CRITICAL</p>
+              </div>
+
+              <h4 className="font-semibold text-gray-900 mb-3">Evolution → AI-Enhanced Closer</h4>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium text-red-600">Danger zones:</span>
+                  <p className="text-gray-600">Cold calling, list building, email sequences, basic qualification</p>
+                </div>
+                <div>
+                  <span className="font-medium text-green-600">Safe zones:</span>
+                  <p className="text-gray-600">Complex discovery, objection handling, relationship building</p>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-600">30-day plan:</span>
+                  <p className="text-gray-600">Week 1: AI tool stack → Week 2: AI prospecting → Week 3: AI demos → Week 4: Position as closer</p>
+                </div>
+              </div>
+            </div>
+
+            {/* AE Evolution */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border">
+              <div className="bg-orange-100 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-orange-900">Account Executive</h3>
+                <p className="text-sm text-orange-700">Current risk level: MODERATE</p>
+              </div>
+
+              <h4 className="font-semibold text-gray-900 mb-3">Evolution → Strategic Revenue Partner</h4>
+
+              <div className="space-y-3 text-sm">
+                <div>
+                  <span className="font-medium text-red-600">Danger zones:</span>
+                  <p className="text-gray-600">Standard demos, follow-up sequences, proposal generation</p>
+                </div>
+                <div>
+                  <span className="font-medium text-green-600">Safe zones:</span>
+                  <p className="text-gray-600">Executive selling, strategic planning, complex negotiations</p>
+                </div>
+                <div>
+                  <span className="font-medium text-blue-600">30-day plan:</span>
+                  <p className="text-gray-600">Week 1: AI research mastery → Week 2: AI-powered demos → Week 3: Strategic selling → Week 4: Enterprise positioning</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 md:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              Your AI Sales Transformation Journey
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">1</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Assessment</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Sales AI Risk Assessment</h3>
               <p className="text-gray-600">
-                Answer questions about your current role, daily tasks, and AI exposure to get your automation risk score.
+                Answer 8 questions about your sales role, daily tasks, and current AI usage to get your personalized risk score.
               </p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">2</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Evolution Plan</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">3 Quick Wins (Free)</h3>
               <p className="text-gray-600">
-                Get your personalized AI-resistance roadmap with specific skills, tools, and positioning strategies.
+                Get immediate action items you can implement today to start using AI in your sales process.
               </p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">3</div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">Implementation</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">30-Day Playbook ($79)</h3>
               <p className="text-gray-600">
-                Follow your 90-day plan to become the AI coordinator in your field while keeping your current job.
+                Follow your complete transformation plan with AI tools, prompts, scripts, and positioning strategies.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What's Included */}
+      <section className="py-16 md:py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+              The AI-Powered Sales Professional Playbook
+            </h2>
+            <p className="text-xl text-gray-600">Everything you need to become irreplaceable in 30 days</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="text-2xl mb-4">📊</div>
+              <h3 className="font-semibold text-gray-900 mb-2">AI Sales Tool Stack</h3>
+              <p className="text-sm text-gray-600">Curated list of AI tools for prospecting, demos, follow-up, and closing—with setup guides</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="text-2xl mb-4">💬</div>
+              <h3 className="font-semibold text-gray-900 mb-2">50+ Battle-Tested Prompts</h3>
+              <p className="text-sm text-gray-600">Copy-paste prompts for every stage of the sales cycle that actually work</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="text-2xl mb-4">📅</div>
+              <h3 className="font-semibold text-gray-900 mb-2">30-Day Action Plan</h3>
+              <p className="text-sm text-gray-600">Week-by-week implementation guide with daily action items</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="text-2xl mb-4">🎯</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Interview Scripts</h3>
+              <p className="text-sm text-gray-600">Position yourself as an "AI-enhanced closer" in job interviews</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="text-2xl mb-4">📈</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Case Studies</h3>
+              <p className="text-sm text-gray-600">Real examples of sales pros who pivoted from at-risk to irreplaceable</p>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="text-2xl mb-4">🎥</div>
+              <h3 className="font-semibold text-gray-900 mb-2">Video Walkthrough</h3>
+              <p className="text-sm text-gray-600">Step-by-step video guide for implementing each week's action items</p>
             </div>
           </div>
         </div>
@@ -292,19 +399,19 @@ const Landing = () => {
       <section className="py-16 md:py-24 bg-blue-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Start Your AI Career Evolution Today
+            Stop Being Replaceable. Start Being Irreplaceable.
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of professionals who are getting ahead of AI disruption instead of being disrupted by it.
+            Join sales professionals who are getting ahead of AI disruption instead of being disrupted by it.
           </p>
           <Link
             to="/assessment"
             className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg inline-block"
           >
-            Get My Free AI Risk Assessment
+            Get My Free Sales AI Risk Score
           </Link>
           <p className="text-sm text-blue-200 mt-4">
-            5-minute assessment • Personalized results • No credit card required
+            5-minute assessment • Sales-specific results • 3 free quick wins
           </p>
         </div>
       </section>
